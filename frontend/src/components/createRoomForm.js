@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import iconMapping from "../utils/iconMapping";
 import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const CreateRoomForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -69,8 +69,8 @@ const CreateRoomForm = ({ onSuccess }) => {
     if (formData.image) formPayload.append("image", formData.image);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/room/rooms",
+      const response = await api.post(
+        "/room/rooms",
         formPayload,
         { headers: { "Content-Type": "multipart/form-data" } },
       );

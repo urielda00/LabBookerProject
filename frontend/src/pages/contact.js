@@ -4,6 +4,7 @@ import FormInput from "../components/FormInput";
 import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "../utils/axiosConfig";
 
 const ErrorMessage = ({ message, onClose }) => {
   if (!message) return null;
@@ -46,29 +47,34 @@ const ContactPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
-
+  
     try {
-      const response = await fetch("http://localhost:5000/api/contact/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        let errorMsg = data.message || "Failed to send message";
-        if (data.errors) {
-          errorMsg = data.errors.map((err) => err.msg).join(", ");
-        }
-        throw new Error(errorMsg);
-      }
-
+      await api.post("/contact/submit", formData);
+  
+      // Success case (2xx status)
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
-      setError(error.message || "An unexpected error occurred");
+      let errorMsg = "Failed to send message";
+      
+      // Check if error has response data
+      if (error.response) {
+        const data = error.response.data;
+        
+        // Handle validation errors (array of errors)
+        if (data.errors) {
+          errorMsg = data.errors.map((err) => err.msg).join(", ");
+        } 
+        // Use server-provided message if available
+        else if (data.message) {
+          errorMsg = data.message;
+        }
+      } 
+      // Handle network errors or other exceptions
+      else {
+        errorMsg = error.message || "An unexpected error occurred";
+      }
+  
+      setError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

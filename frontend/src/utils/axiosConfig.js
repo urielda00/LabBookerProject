@@ -2,106 +2,56 @@
 
 import axios from "axios";
 
-// Create an Axios instance with default configurations
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL, // Use environment variable
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 5000, // 5 seconds timeout
+  baseURL: process.env.REACT_APP_API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+  timeout: 5000,
 });
 
-// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-
-    // Log request details in development mode only
-    if (process.env.NODE_ENV === "development") {
-      console.log("Making request to:", config.url);
-      console.log(
-        "With token:",
-        token ? `Bearer ${token.substring(0, 20)}...` : "No token",
-      );
-    }
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Request error:", error);
-    }
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Response Interceptor
+// Updated Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle network or server errors
     if (!error.response) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Network or server error:", error);
-      }
-      return Promise.reject(
-        new Error(
-          "Network error: Unable to reach the server. Please try again later.",
-        ),
-      );
+      const networkError = new Error("Network error: Unable to reach the server.");
+      return Promise.reject(networkError);
     }
 
     const { status, data } = error.response;
 
-    // Handle specific HTTP status codes
+    // Update the existing error's message instead of creating a new error
     switch (status) {
       case 400:
-        if (process.env.NODE_ENV === "development") {
-          console.error("Bad Request:", data);
-        }
-        return Promise.reject(
-          new Error(data.message || "Bad Request. Please check your input."),
-        );
+        error.message = data.message || "Bad request. Check your input.";
+        break;
       case 401:
-        if (process.env.NODE_ENV === "development") {
-          console.error("Unauthorized:", data);
-        }
         localStorage.clear();
-        window.location.href = "/login"; // Redirect to login
-        return Promise.reject(new Error("Unauthorized. Redirecting to login."));
+        window.location.href = "/login";
+        error.message = data.message || "Unauthorized. Redirecting to login.";
+        break;
       case 403:
-        if (process.env.NODE_ENV === "development") {
-          console.error("Forbidden:", data);
-        }
-        return Promise.reject(
-          new Error(data.message || "Forbidden. You don't have access."),
-        );
+        error.message = data.message || "Forbidden. Access denied.";
+        break;
       case 404:
-        if (process.env.NODE_ENV === "development") {
-          console.error("Not Found:", data);
-        }
-        return Promise.reject(new Error(data.message || "Resource not found."));
+        error.message = data.message || "Resource not found.";
+        break;
       case 500:
-        if (process.env.NODE_ENV === "development") {
-          console.error("Internal Server Error:", data);
-        }
-        return Promise.reject(
-          new Error(
-            data.message || "Internal Server Error. Please try again later.",
-          ),
-        );
+        error.message = data.message || "Internal server error.";
+        break;
       default:
-        if (process.env.NODE_ENV === "development") {
-          console.error(`Unhandled error [${status}]:`, data);
-        }
-        return Promise.reject(
-          new Error(data.message || "An unexpected error occurred."),
-        );
+        error.message = data.message || "An unexpected error occurred.";
     }
+
+    return Promise.reject(error); // Reject the modified error
   },
 );
 

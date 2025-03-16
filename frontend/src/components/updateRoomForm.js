@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import iconMapping from "../utils/iconMapping";
 import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const UpdateRoomForm = ({
   roomId,
@@ -35,8 +35,8 @@ const UpdateRoomForm = ({
   useEffect(() => {
     const fetchAllRooms = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/room/rooms",
+        const response = await api.get(
+          "/room/rooms",
         );
         setRoomsList(response.data);
       } catch (err) {
@@ -56,8 +56,8 @@ const UpdateRoomForm = ({
     setSuccessMessage("");
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/room/rooms/${roomId}`,
+      const response = await api.get(
+        `/room/rooms/${roomId}`,
       );
       const room = response.data;
 
@@ -132,8 +132,8 @@ const UpdateRoomForm = ({
     if (formData.image) formPayload.append("image", formData.image);
 
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/room/rooms/${roomId}`,
+      const response = await api.put(
+        `/room/rooms/${roomId}`,
         formPayload,
         { headers: { "Content-Type": "multipart/form-data" } },
       );

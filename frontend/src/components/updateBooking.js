@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const validStatuses = ["Pending", "Confirmed", "Canceled"];
 
@@ -41,8 +41,8 @@ const UpdateBooking = ({ onSuccess }) => {
     setSelectedBookingId("");
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/book/bookings/upcoming/${username}`,
+      const response = await api.get(
+        `/book/bookings/upcoming/${username}`,
       );
 
       if (response.status === 200) {
@@ -88,8 +88,8 @@ const UpdateBooking = ({ onSuccess }) => {
     setLoadingUpdate(true);
 
     try {
-      const response = await axios.patch(
-        `http://localhost:5000/api/book/booking/${selectedBookingId}/status/by-username?username=${username}`,
+      const response = await api.patch(
+        `/book/booking/${selectedBookingId}/status/by-username?username=${username}`,
         { status },
         {
           headers: {

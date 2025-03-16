@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const ImageUpload = () => {
   const [image, setImage] = useState(null);
@@ -28,8 +28,8 @@ const ImageUpload = () => {
     setSuccess(null); // Clear any previous success message
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/upload/upload",
+      const res = await api.post(
+        "/upload/upload",
         formData,
         {
           headers: {

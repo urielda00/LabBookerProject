@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { AlertCircle, Search, CheckCircle, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "../utils/axiosConfig";
 
 const AllIssues = () => {
   const [issues, setIssues] = useState([]);
@@ -67,7 +67,7 @@ const AllIssues = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/issues/all", {
+      const response = await api.get("/issues/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIssues(response.data);
@@ -81,8 +81,8 @@ const AllIssues = () => {
   const handleStatusUpdate = async (issueId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.patch(
-        `http://localhost:5000/api/issues/update-status/${issueId}`,
+      const response = await api.patch(
+        `/issues/update-status/${issueId}`,
         { status: newStatus },
         {
           headers: {
@@ -112,7 +112,7 @@ const AllIssues = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/issues/delete/${issueId}`, {
+      await api.delete(`/issues/delete/${issueId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIssues(issues.filter((issue) => issue._id !== issueId));

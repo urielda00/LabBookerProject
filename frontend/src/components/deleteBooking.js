@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Message from "./Error_successMessage";
 import Modal from "../components/cnfrmModal";
 import { motion, AnimatePresence } from "framer-motion"; // Add AnimatePresence here
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const DeleteBookingByUsername = ({ onSuccess }) => {
   const [username, setUsername] = useState("");
@@ -43,8 +43,8 @@ const DeleteBookingByUsername = ({ onSuccess }) => {
     setSelectedBookingId("");
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/book/bookings/upcoming/${username}`,
+      const response = await api.get(
+        `/book/bookings/upcoming/${username}`,
       );
 
       if (response.status === 200) {
@@ -87,8 +87,8 @@ const DeleteBookingByUsername = ({ onSuccess }) => {
     setLoadingDelete(true);
 
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/book/booking/${selectedBookingId}/by-username?username=${username}`,
+      const response = await api.delete(
+        `/book/booking/${selectedBookingId}/by-username?username=${username}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

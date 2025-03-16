@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import Message from "./Error_successMessage";
 import Modal from "./cnfrmModal"; // Make sure you have the Modal component
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const DeleteRoomForm = ({ operation, onSuccess }) => {
   const [roomsList, setRoomsList] = useState([]);
@@ -32,8 +32,8 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
     const fetchAllRooms = async () => {
       setLoadingRooms(true);
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/room/rooms",
+        const response = await api.get(
+          "/room/rooms",
         );
         setRoomsList(response.data);
       } catch (err) {
@@ -68,8 +68,8 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
   const fetchRelatedBookings = async (roomName) => {
     // setLoadingBookings(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/book/bookings/by-room/${roomName}`,
+      const response = await api.get(
+        `/book/bookings/by-room/${roomName}`,
       );
       if (response.data.success) {
         setRelatedBookings(response.data.bookings);
@@ -91,8 +91,8 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
 
     try {
       // Delete room (this should cascade delete bookings on the backend)
-      const response = await axios.delete(
-        `http://localhost:5000/api/room/rooms/${roomId}`,
+      const response = await api.delete(
+        `/room/rooms/${roomId}`,
       );
 
       if (response.status === 200) {

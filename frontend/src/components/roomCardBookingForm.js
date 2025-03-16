@@ -1,9 +1,10 @@
 // RoomCardBookingForm.js
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Message from "./Error_successMessage"; // For error/success messages
 import CustomDatepicker from "../utils/datePicker"; // Your custom datepicker component
 import { format } from 'date-fns';
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
+
 
 // Define booking constants
 // const BOOKING_CONSTANTS = {
@@ -54,9 +55,9 @@ const RoomCardBookingForm = ({
   // Fetch backend availability when form is active
   useEffect(() => {
     if (activeRoom === room._id) {
-      axios
+      api
         .get(
-          `http://localhost:5000/api/room/rooms/${room._id}/monthly-availability`,
+          `/room/rooms/${room._id}/monthly-availability`,
         )
         .then((res) => {
           // Expected response:
@@ -270,8 +271,8 @@ const RoomCardBookingForm = ({
     setFormError("");
     setIsSubmitting(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/book/booking",
+      const response = await api.post(
+        "/book/booking",
         {
           roomId: room._id,
           userId: userInfo._id,
