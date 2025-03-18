@@ -9,29 +9,20 @@ class RedisClient {
   async connect() {
     try {
       this.client = Redis.createClient({
-        url: process.env.REDIS_URL || "redis://localhost:6379",
+        url: process.env.REDIS_URL || "redis://redis:6379", // Make sure this points to the Redis service in Docker Compose
       });
+      console.log("🔵 Redis URL from ENV:", process.env.REDIS_URL);
 
       this.client.on("error", (err) => {
         console.error("Redis Client Error:", err);
       });
-
-      this.client.on("connect", () => {
-        console.log("Connected to Redis.");
-      });
-
-      this.client.on("disconnect", () => {
-        console.log("Disconnected from Redis. Attempting to reconnect...");
-        this.connect();
-      });
-
       await this.client.connect();
     } catch (error) {
       console.error("Redis connection error:", error);
     }
   }
 
-  //added ping check
+  // Ping check for Redis
   async ping() {
     try {
       const start = process.hrtime.bigint();

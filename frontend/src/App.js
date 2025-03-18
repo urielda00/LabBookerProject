@@ -34,6 +34,7 @@ import IssueReport from "./pages/IssueReport";
 import PrivacyPolicy from "./pages/PrivacyPolicy ";
 import TermsOfService from "./pages/TermsOfService";
 import AllIssues from "./pages/AllIssues";
+import ConfigManagement from "./pages/ConfigManagement";
 
 // Page Transition Wrapper
 const PageTransition = ({ children }) => {
@@ -125,6 +126,14 @@ const AnimatedRoutes = () => {
           element={
             <PageTransition>
               <PrivacyPolicy />{" "}
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/configmanagement"
+          element={
+            <PageTransition>
+              <ConfigManagement />
             </PageTransition>
           }
         />

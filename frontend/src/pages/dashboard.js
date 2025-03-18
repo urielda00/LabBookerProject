@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 const DashBoard = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({ email: "", username: "" });
@@ -24,6 +25,7 @@ const DashBoard = () => {
     totalUsers: 0,
     recentUsers: [],
     usersByRole: [],
+    growthStats: {}, // Added growthStats
   });
   const [bookingCounts, setBookingCounts] = useState({
     total: 0,
@@ -53,7 +55,7 @@ const DashBoard = () => {
           username: parsedUser.username || "",
         });
       } catch (error) {
-        console.error("Error parsing user data:", error);
+        console.error("Error parsing user ", error);
       }
     }
   }, [navigate]);
@@ -139,7 +141,7 @@ const DashBoard = () => {
           totalUsers: response.data.stats.totalUsers,
           recentUsers: response.data.stats.recentUsers || [],
           usersByRole: response.data.stats.usersByRole || [],
-          growthStats: response.data.stats.growthStats || {},
+          growthStats: response.data.stats.growthStats || {}, // Assign growthStats
         });
       }
     } catch (error) {
@@ -396,11 +398,11 @@ const DashBoard = () => {
                       label: "Manage Bookings",
                       path: "/bookingOperationpage",
                     },
-                    {
-                      icon: Settings,
-                      label: "Configurations",
-                      path: "/configmanagement",
-                    },
+                    // {
+                    //   icon: Settings,
+                    //   label: "Configurations",
+                    //   path: "/configmanagement",
+                    // },
                   ].map(({ icon: Icon, label, path }, index) => (
                     <motion.button
                       key={index}

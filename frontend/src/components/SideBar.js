@@ -143,11 +143,11 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                     label="Manage Bookings"
                     allowedRoles={["admin", "manager"]}
                   />
-                  <ProtectedMenuItem
+                  {/* <ProtectedMenuItem
                     path="/configmanagement"
                     label="Configurations"
                     allowedRoles={["admin"]}
-                  />
+                  /> */}
                 </ul>
               )}
             </li>
