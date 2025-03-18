@@ -480,15 +480,24 @@ const NextBooking = ({
               <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3 group">
-                <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
-                  {booking
-                    ? bookingState === "active"
-                      ? "Current Session"
-                      : "Upcoming Reservation"
-                    : "Booking Overview"}
-                </span>
-              </h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3 group">
+  <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
+    {booking
+      ? booking.status === "Pending"
+        ? "Pending Approval"
+        : bookingState === "active"
+        ? "Current Session"
+        : "Upcoming Reservation"
+      : "Booking Overview"}
+  </span>
+</h2>
+
+{booking && booking.status === "Pending" && (
+  <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors">
+    <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+    Awaiting Confirmation
+  </span>
+)}
               {booking && bookingState === "active" && booking.checkedIn && (
                 <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors">
                   <Activity className="w-3.5 h-3.5 mr-1.5" />
@@ -604,6 +613,7 @@ const NextBooking = ({
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center space-x-3">
+
                   <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors">
                     <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
@@ -655,9 +665,22 @@ const NextBooking = ({
 
             {/* Action Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+            {booking.status === "Pending" && (
+  <div className="col-span-full bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+    <div className="flex items-center space-x-3 text-yellow-700 dark:text-yellow-300">
+      <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+      <p className="text-sm">
+        This booking is pending approval. You'll receive a confirmation email 
+        once it's approved. Cancellation may not be available during this stage.
+      </p>
+    </div>
+  </div>
+)}
+
               {bookingState === "upcoming" && (
                 <>
-                  {canCancel && booking.userId.email === userInfo.email ? (
+                  {canCancel && booking.userId.email === userInfo.email && booking.status !== "Pending" ? (
                     <button
                       onClick={() => {
                         setModalConfig({

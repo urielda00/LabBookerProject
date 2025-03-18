@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
-const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
+const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
+
+const ROOM_TYPES = {
+  LARGE_SEMINAR: "Large Seminar",
+  SMALL_SEMINAR: "Small Seminar",
+  OPEN: "Open",
+  COMPUTER_LAB: "Computer Lab",
+  STUDY_ROOM: "Study Room",
+};
 
 const bookingSchema = new mongoose.Schema(
   {
@@ -8,6 +16,11 @@ const bookingSchema = new mongoose.Schema(
       ref: "Room",
       required: true,
     },
+    roomType: {
+    type: String,
+    required: true,
+    enum: Object.values(ROOM_TYPES),
+  },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -75,7 +88,7 @@ const bookingSchema = new mongoose.Schema(
     deletedAt: {
       type: Date,
       default: null,
-      expires: THREE_DAYS_IN_SECONDS,
+      expires: ONE_WEEK_IN_SECONDS,
     },
     adminOverride: {
       type: Boolean,
@@ -135,7 +148,7 @@ bookingSchema.statics.softDelete = async function (bookingId) {
 // Make sure your TTL index is correctly set
 bookingSchema.index(
   { deletedAt: 1 },
-  { expireAfterSeconds: THREE_DAYS_IN_SECONDS },
+  { expireAfterSeconds: ONE_WEEK_IN_SECONDS },
 );
 
 module.exports = mongoose.model("Booking", bookingSchema);

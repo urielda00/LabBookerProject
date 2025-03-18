@@ -67,7 +67,7 @@ router.get("/rooms/:roomId/monthly-availability", async (req, res) => {
   const { roomId } = req.params;
 
   try {
-    const response = await roomController.getRoomAvailabilityForMonth(roomId);
+    const response = await roomController.getRoomAvailabilityForWeek(roomId);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching room availability:", error.message);
@@ -82,7 +82,7 @@ router.get("/rooms-by-name/:name/monthly-availability", async (req, res) => {
   try {
     const { name } = req.params;
     const response =
-      await roomController.getRoomAvailabilityForMonthByName(name);
+      await roomController.getRoomAvailabilityForWeekByName(name);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching room availability by name:", error.message);

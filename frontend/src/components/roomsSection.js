@@ -1,10 +1,10 @@
 // RoomsSection.jsx
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import MoreAboutRoomPopup from "./amenitiesPopup";
 import RoomCard from "./roomCard";
 import { BookOpen } from "lucide-react";
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
 
 const RoomsSection = ({ userInfo }) => {
   const [rooms, setRooms] = useState([]);
@@ -25,8 +25,8 @@ const RoomsSection = ({ userInfo }) => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/room/rooms",
+        const response = await api.get(
+          "/room/rooms",
         );
         setRooms(response.data);
         setLoading(false);

@@ -5,17 +5,6 @@ const uploadMulter = require("../middleware/multer");
 const cloudinary = require("../utils/cloudinary");
 const fs = require("fs");
 
-// async function getRooms() {
-//   try {
-//     // Fetch all room documents from the database
-//     const rooms = await Room.find();
-//     return rooms;
-//   } catch (error) {
-//     console.error("Error in getRooms:", error.message);
-//     throw new Error("Unable to fetch rooms");
-//   }
-// }
-
 async function getRooms(name = null) {
   try {
     if (name) {
@@ -244,152 +233,125 @@ async function deleteRoom(name) {
   }
 }
 
-// const generateNext30Days = () => {
-//   const dates = [];
-//   const today = new Date();
-//   for (let i = 0; i < 30; i++) {
-//     const date = new Date(today);
-//     date.setDate(today.getDate() + i);
-//     dates.push(date.toISOString().split("T")[0]); // Format as YYYY-MM-DD
-//   }
-//   return dates;
-// };
-
-const generateNext30Days = () => {
+const generateNext7Days = () => {
   const dates = [];
-  const today = new Date();
+  const currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0); // Normalize time to midnight
 
-  for (let i = 0; i < 30; i++) {
-    // Create a new Date instance to avoid mutating 'today'
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
-    const day = String(date.getDate()).padStart(2, "0");
-
-    const formattedDate = `${year}-${month}-${day}`; // Format as YYYY-MM-DD
-    dates.push(formattedDate);
+  // Loop until we collect 7 valid dates (excluding Friday/Saturday)
+  while (dates.length < 7) {
+    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+    
+    // Only add if not Friday (5) or Saturday (6)
+    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const day = String(currentDate.getDate()).padStart(2, "0");
+      dates.push(`${year}-${month}-${day}`);
+    }
+    
+    // Move to next day regardless of weekend status
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return dates;
 };
 
-function generateHalfHourlySlots() {
+function generateTwoHourSlots() {
   const slots = [];
-  for (let hour = 8; hour < 22; hour++) {
-    // From 8:00 AM to 10:00 PM
-    const times = [
-      `${String(hour).padStart(2, "0")}:00`,
-      `${String(hour).padStart(2, "0")}:30`,
-    ];
-    for (let i = 0; i < times.length - 1; i++) {
-      const startTime = times[i];
-      const endTime = hour === 21 && i === 1 ? "22:00" : times[i + 1]; // Special handling for the last slot
-      slots.push({ startTime, endTime });
-    }
+  for (let hour = 8; hour <= 20; hour += 2) { // 8 AM to 8 PM (20:00)
+    const startTime = `${String(hour).padStart(2, "0")}:00`;
+    const endHour = hour + 2; // Next even hour
+    const endTime = `${String(endHour - 1).padStart(2, "0")}:59`; // Ends at HH-1:59
+    slots.push({ startTime, endTime });
   }
   return slots;
 }
 
-const getRoomAvailabilityForMonth = async (roomId) => {
-  // Ensure the room exists
+const getRoomAvailabilityForWeek = async (roomId) => {
   const room = await Room.findById(roomId);
-  if (!room) {
-    throw new Error("Room not found.");
-  }
+  if (!room) throw new Error("Room not found.");
 
-  // Generate dates for the next 30 days
-  const dates = generateNext30Days();
-
-  // Fetch all bookings for the room for the next 30 days
+  const dates = generateNext7Days();
   const bookings = await Booking.find({
     roomId,
     date: { $in: dates },
-    status: { $in: ["Pending", "Confirmed", "Active"] }, // Include Pending and Confirmed bookings
+    status: { $in: ["Pending", "Confirmed", "Active"] },
   });
 
-  // Prepare availability for each date
   const availability = dates.map((date) => {
-    // Generate half-hourly slots for the day
-    const halfHourlySlots = generateHalfHourlySlots();
+    const timeSlots = generateTwoHourSlots();
+    const slots = timeSlots.map((slot) => {
+      const isOccupied = bookings.some(b => {
+        if (b.date !== date) return false;
+        
+        // Convert all times to minutes since midnight for comparison
+        const toMinutes = (time) => {
+          const [hours, minutes] = time.split(':').map(Number);
+          return hours * 60 + minutes;
+        };
 
-    // Check each slot for conflicts
-    const slots = halfHourlySlots.map((slot) => {
-      const isOccupied = bookings.some(
-        (booking) =>
-          booking.date === date &&
-          ((slot.startTime >= booking.startTime &&
-            slot.startTime < booking.endTime) || // Slot starts during booking
-            (slot.endTime > booking.startTime &&
-              slot.endTime <= booking.endTime) || // Slot ends during booking
-            (slot.startTime <= booking.startTime &&
-              slot.endTime >= booking.endTime)), // Slot fully overlaps booking
-      );
+        const slotStart = toMinutes(slot.startTime);
+        const slotEnd = toMinutes(slot.endTime);
+        const bookingStart = toMinutes(b.startTime);
+        const bookingEnd = toMinutes(b.endTime);
 
-      return {
-        ...slot,
-        status: isOccupied ? "Occupied" : "Available",
-      };
+        return (
+          (slotStart < bookingEnd && slotEnd > bookingStart) ||
+          (slotStart >= bookingStart && slotStart < bookingEnd) ||
+          (slotEnd > bookingStart && slotEnd <= bookingEnd)
+        );
+      });
+      
+      return { ...slot, status: isOccupied ? "Occupied" : "Available" };
     });
-
-    return {
-      date,
-      slots,
-    };
+    return { date, slots };
   });
 
-  return {
-    room: room.name,
-    availability,
-  };
+  return { room: room.name, availability };
 };
 
-async function getRoomAvailabilityForMonthByName(roomName) {
-  // 1) Ensure the room exists by name
+// Make the same time comparison changes to getRoomAvailabilityForWeekByName
+async function getRoomAvailabilityForWeekByName(roomName) {
   const room = await Room.findOne({ name: roomName });
-  if (!room) {
-    throw new Error("Room not found by that name.");
-  }
+  if (!room) throw new Error("Room not found by that name.");
 
-  const roomId = room._id;
-
-  // 2) Generate next 30 days
-  const dates = generateNext30Days();
-
-  // 3) Fetch all bookings for that room & date in next 30 days
+  const dates = generateNext7Days();
   const bookings = await Booking.find({
-    roomId,
+    roomId: room._id,
     date: { $in: dates },
     status: { $in: ["Pending", "Confirmed"] },
   });
 
-  // 4) Prepare availability
   const availability = dates.map((date) => {
-    // Generate half-hourly slots
-    const halfHourlySlots = generateHalfHourlySlots();
+    const timeSlots = generateTwoHourSlots();
+    const slots = timeSlots.map((slot) => {
+      const isOccupied = bookings.some(b => {
+        if (b.date !== date) return false;
 
-    // Check conflicts
-    const slots = halfHourlySlots.map((slot) => {
-      const isOccupied = bookings.some(
-        (b) =>
-          b.date === date &&
-          // Overlapping start or end
-          ((slot.startTime >= b.startTime && slot.startTime < b.endTime) ||
-            (slot.endTime > b.startTime && slot.endTime <= b.endTime) ||
-            // slot fully covers the booking
-            (slot.startTime <= b.startTime && slot.endTime >= b.endTime)),
-      );
+        const toMinutes = (time) => {
+          const [hours, minutes] = time.split(':').map(Number);
+          return hours * 60 + minutes;
+        };
+
+        const slotStart = toMinutes(slot.startTime);
+        const slotEnd = toMinutes(slot.endTime);
+        const bookingStart = toMinutes(b.startTime);
+        const bookingEnd = toMinutes(b.endTime);
+
+        return (
+          (slotStart < bookingEnd && slotEnd > bookingStart) ||
+          (slotStart >= bookingStart && slotStart < bookingEnd) ||
+          (slotEnd > bookingStart && slotEnd <= bookingEnd)
+        );
+      });
+      
       return { ...slot, status: isOccupied ? "Occupied" : "Available" };
     });
-
     return { date, slots };
   });
 
-  return {
-    room: room.name,
-    availability,
-  };
+  return { room: room.name, availability };
 }
 
 module.exports = {
@@ -397,6 +359,6 @@ module.exports = {
   createRoom,
   updateRoom,
   deleteRoom,
-  getRoomAvailabilityForMonth,
-  getRoomAvailabilityForMonthByName,
+  getRoomAvailabilityForWeek, // Updated function name
+  getRoomAvailabilityForWeekByName, // Updated function name
 };

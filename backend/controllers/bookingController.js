@@ -6,7 +6,9 @@ const User = require("../models/User");
 const Config = require("../models/Config");
 const nodemailer = require("nodemailer");
 const notificationsController = require("../controllers/notificationsController");
-const moment = require("moment-timezone"); // Add this line
+const moment = require("moment-timezone");
+const { sendAdminApprovalRequest, sendBookingConfirmation, sendPendingConfirmation } = require("../utils/emailService");
+
 
 // Constants
 const BOOKING_CONSTANTS = {
@@ -24,7 +26,8 @@ const BOOKING_CONSTANTS = {
 
 const ROOM_TYPES = {
   LARGE_SEMINAR: "Large Seminar",
-  REGULAR: "Regular",
+  SMALL_SEMINAR: "Small Seminar",
+  OPEN: "Open", // Considered as "Open"
   COMPUTER_LAB: "Computer Lab",
   STUDY_ROOM: "Study Room",
 };
@@ -64,55 +67,6 @@ class BookingController {
   static validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
-
-  static async sendAdminNotificationEmail({
-    to,
-    bookingId,
-    roomName,
-    date,
-    startTime,
-    endTime,
-    userEmail,
-    userName,
-  }) {
-    const emailContent = `
-      New Large Seminar Room Booking Request
-
-      Booking ID: ${bookingId}
-      Room: ${roomName}
-      Date: ${date}
-      Time: ${startTime} - ${endTime}
-      Requested by: ${userName} (${userEmail})
-      
-      Please review and confirm this booking through the admin dashboard.
-    `;
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        subject: "New Large Seminar Room Booking Request",
-        text: emailContent,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>New Large Seminar Room Booking Request</h2>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
-              <p><strong>Booking ID:</strong> ${bookingId}</p>
-              <p><strong>Room:</strong> ${roomName}</p>
-              <p><strong>Date:</strong> ${date}</p>
-              <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
-              <p><strong>Requested by:</strong> ${userName} (${userEmail})</p>
-            </div>
-            <p>Please review and confirm this booking through the admin dashboard.</p>
-            <p style="color: #666;">This is an automated message from the LabBooker system.</p>
-          </div>
-        `,
-      });
-      console.log("Admin notification email sent successfully");
-    } catch (error) {
-      console.error("Failed to send admin notification email:", error);
-      throw error;
-    }
   }
 
   // GET /booking/:id
@@ -157,7 +111,7 @@ class BookingController {
       }
 
       const bookings = await Booking.find(query)
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .skip(skip)
@@ -229,8 +183,40 @@ class BookingController {
         });
       }
 
+      // Check for existing upcoming bookings
+const timezone = 'Asia/Jerusalem';
+const today = moment().tz(timezone).format('YYYY-MM-DD');
+const currentTime = moment().tz(timezone).format('HH:mm');
+
+const existingUpcoming = await Booking.findOne({
+  userId: userId,
+  status: { 
+    $nin: [
+      BOOKING_CONSTANTS.STATUSES.CANCELED,
+      BOOKING_CONSTANTS.STATUSES.COMPLETED,
+      BOOKING_CONSTANTS.STATUSES.MISSED
+    ]
+  },
+  $or: [
+    { date: { $gt: today } },
+    { 
+      date: today,
+      endTime: { $gt: currentTime }
+    }
+  ]
+}).session(session);
+
+if (existingUpcoming) {
+  await session.abortTransaction();
+  session.endSession();
+  return res.status(400).json({
+    success: false,
+    message: "You already have an upcoming booking. Please complete it before creating a new one.",
+  });
+}
+
       // Calculate weekly bookings across all rooms
-      const startOfWeek = moment().startOf("isoWeek").toDate();
+      const startOfWeek = moment().tz('Asia/Jerusalem').startOf('week').toDate();
       const weeklyBookingsCount = await Booking.countDocuments({
         userId,
         createdAt: { $gte: startOfWeek },
@@ -256,6 +242,32 @@ class BookingController {
           message: "Room not found",
         });
       }
+
+      // Check per-room type weekly limit
+const roomTypeLimits = {
+  [ROOM_TYPES.OPEN]: 3,
+  [ROOM_TYPES.SMALL_SEMINAR]: 2,
+  [ROOM_TYPES.LARGE_SEMINAR]: 1,
+};
+
+const roomTypeLimit = roomTypeLimits[room.type];
+if (roomTypeLimit !== undefined) {
+  const roomTypeBookingsCount = await Booking.countDocuments({
+    userId: userId,
+    createdAt: { $gte: startOfWeek },
+    status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
+    roomType: room.type,
+  }).session(session);
+
+  if (roomTypeBookingsCount >= roomTypeLimit) {
+    await session.abortTransaction();
+    session.endSession();
+    return res.status(400).json({
+      success: false,
+      message: `Weekly limit for ${room.type} rooms reached. Maximum ${roomTypeLimit} bookings allowed per week.`,
+    });
+  }
+}
 
       // Format date for comparison
       const [year, day, month] = date.split("-");
@@ -384,9 +396,30 @@ class BookingController {
         endTime,
         additionalUsers: additionalUserIds,
         status: bookingStatus,
+        roomType: room.type,
       });
 
       await booking.save({ session });
+
+      const bookingDetails = {
+        roomName: room.name,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+        id: booking._id
+      };
+      
+      const userDetails = {
+        name: user.username,
+        email: user.email
+      };
+      
+      if (room.type === ROOM_TYPES.LARGE_SEMINAR) {
+        await sendPendingConfirmation(user.email, user.username, bookingDetails);
+        await sendAdminApprovalRequest(bookingDetails, userDetails);
+      } else {
+        await sendBookingConfirmation(user.email, user.username, bookingDetails);
+      }
 
       try {
         let message;
@@ -409,27 +442,8 @@ class BookingController {
         );
       }
 
-      if (room.type === ROOM_TYPES.LARGE_SEMINAR) {
-        try {
-          const config = await Config.findOne().session(session);
-          const adminEmail = config?.adminEmail || process.env.ADMIN_EMAIL;
-          await BookingController.sendAdminNotificationEmail({
-            to: adminEmail,
-            bookingId: booking._id,
-            roomName: room.name,
-            date,
-            startTime,
-            endTime,
-            userEmail: user.email,
-            userName: user.username,
-          });
-        } catch (emailError) {
-          console.error("Failed to send admin notification email:", emailError);
-        }
-      }
-
       const populatedBooking = await Booking.findById(booking._id)
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email");
 
@@ -470,7 +484,7 @@ class BookingController {
         });
       }
       const allBookings = await Booking.find({ roomId: room._id })
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .sort({ date: -1, startTime: -1 });
@@ -609,7 +623,7 @@ class BookingController {
       }
 
       const updatedBooking = await Booking.findById(booking._id)
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email");
 
@@ -716,6 +730,19 @@ class BookingController {
 
       booking.status = status;
       await booking.save({ session });
+
+      const bookingDetails = {
+        roomName: room.name,
+        date: booking.date,          
+        startTime: booking.startTime,
+        endTime: booking.endTime,    
+        id: booking._id
+      };
+      
+      if (booking.status === "Confirmed") {
+      
+        await sendBookingConfirmation(user.email, user.username, bookingDetails);
+      }
 
       try {
         await notificationsController.createNotification(
@@ -852,7 +879,7 @@ class BookingController {
       }
 
       const updatedBooking = await Booking.findById(booking._id)
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email");
 
@@ -937,7 +964,7 @@ class BookingController {
         date: { $gte: todayStr },
         status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
       })
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .sort({ date: 1, startTime: 1 });
@@ -1110,7 +1137,7 @@ class BookingController {
 
       // Admin override: Skip weekly limit check
       if (req.user?.role !== "admin") {
-        const startOfWeek = moment().startOf("isoWeek").toDate();
+        const startOfWeek = moment().tz('Asia/Jerusalem').startOf('week').toDate();
         const weeklyBookingsCount = await Booking.countDocuments({
           userId: user._id,
           createdAt: { $gte: startOfWeek },
@@ -1207,29 +1234,8 @@ class BookingController {
         console.error("Admin notification failed:", notificationError.message);
       }
 
-      if (room.type === ROOM_TYPES.LARGE_SEMINAR) {
-        try {
-          const admins = await User.find({ role: "admin" }).select("email");
-          const adminEmails = admins.map((admin) => admin.email);
-
-          await BookingController.sendAdminNotificationEmail({
-            to: adminEmails,
-            bookingId: booking._id,
-            roomName: room.name,
-            date,
-            startTime,
-            endTime,
-            userEmail: user.email,
-            userName: user.username,
-            adminName: req.user?.username,
-          });
-        } catch (emailError) {
-          console.error("Failed to send admin emails:", emailError);
-        }
-      }
-
       const populatedBooking = await Booking.findById(booking._id)
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .session(session);
@@ -1272,7 +1278,7 @@ class BookingController {
       const allBookings = await Booking.find({
         $or: [{ userId: user._id }, { additionalUsers: user._id }],
       })
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .sort({ date: -1, startTime: -1 });
@@ -1390,7 +1396,7 @@ class BookingController {
         date: { $gte: todayStr },
       })
         .sort({ date: 1, startTime: 1 })
-        .populate("roomId", "name type")
+        .populate("roomId", "name type capacity description")
         .populate("userId", "username email");
 
       return res.status(200).json({

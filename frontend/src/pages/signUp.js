@@ -1,19 +1,12 @@
 // SignUpPage.jsx
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../utils/axiosConfig";
 
 // Import assets
 import collegeLogoWhite from "../assets/collegeLogoWhite.png";
 
-// Create axios instance
-const api = axios.create({
-  baseURL: "http://localhost:5000/api/auth",
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+
 
 // FormInput Component (same as LoginPage)
 const FormInput = ({
@@ -147,7 +140,7 @@ const SignUpPage = () => {
         return;
       }
 
-      await api.post("/signup", {
+      await api.post("/auth/signup", {
         username: formData.username,
         name: formData.name,
         email: formData.email,
@@ -167,7 +160,7 @@ const SignUpPage = () => {
     setIsSubmitting(true);
 
     try {
-      await api.post("/verify-signup", {
+      await api.post("/auth/verify-signup", {
         email: formData.email,
         code: formData.verificationCode,
       });

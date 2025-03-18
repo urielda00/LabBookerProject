@@ -123,7 +123,7 @@ mongoose
     // Setup TTL index for bookings (your existing code)
     try {
       const Booking = require("./models/Booking");
-      const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60; // 259200 seconds
+      const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60; // 259200 seconds
 
       // Remove existing index if it exists
       try {
@@ -136,10 +136,10 @@ mongoose
       // Create new TTL index for bookings
       await Booking.collection.createIndex(
         { deletedAt: 1 },
-        { expireAfterSeconds: THREE_DAYS_IN_SECONDS },
+        { expireAfterSeconds: ONE_WEEK_IN_SECONDS },
       );
       console.log(
-        "✅ TTL index for Bookings created successfully (3 days expiration)",
+        "✅ TTL index for Bookings created successfully (7 days expiration)",
       );
     } catch (error) {
       console.error("❌ Error setting up TTL index for Bookings:", error);

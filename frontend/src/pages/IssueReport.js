@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { AlertCircle, Send, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import api from "../utils/axiosConfig";
 
 const IssueReport = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const IssueReport = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/issues/create", formData);
+      await api.post("/issues/create", formData);
       setMessage({
         type: "success",
         content: "Issue reported successfully! We'll look into it shortly.",

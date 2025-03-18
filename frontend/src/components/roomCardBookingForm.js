@@ -1,8 +1,10 @@
 // RoomCardBookingForm.js
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Message from "./Error_successMessage"; // For error/success messages
 import CustomDatepicker from "../utils/datePicker"; // Your custom datepicker component
+import { format } from 'date-fns';
+import api from "../utils/axiosConfig"; // Import the centralized Axios instance
+
 
 // Define booking constants
 // const BOOKING_CONSTANTS = {
@@ -35,12 +37,27 @@ const RoomCardBookingForm = ({
   // List of timeslots for the selected date
   const [displaySlots, setDisplaySlots] = useState([]);
 
+  const formatTime = (timeStr, isEndTime = false) => {
+    let [hours, minutes] = timeStr.split(':').map(Number);
+    
+    if (isEndTime) {
+      minutes += 1;
+      if (minutes >= 60) {
+        minutes = 0;
+        hours += 1;
+      }
+    }
+  
+    return format(new Date(2020, 0, 1, hours, minutes), 'h:mm a');
+  };
+
+
   // Fetch backend availability when form is active
   useEffect(() => {
     if (activeRoom === room._id) {
-      axios
+      api
         .get(
-          `http://localhost:5000/api/room/rooms/${room._id}/monthly-availability`,
+          `/room/rooms/${room._id}/monthly-availability`,
         )
         .then((res) => {
           // Expected response:
@@ -254,8 +271,8 @@ const RoomCardBookingForm = ({
     setFormError("");
     setIsSubmitting(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/book/booking",
+      const response = await api.post(
+        "/book/booking",
         {
           roomId: room._id,
           userId: userInfo._id,
@@ -365,65 +382,65 @@ const RoomCardBookingForm = ({
             {formData.date ? (
               displaySlots.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {displaySlots.map((slot, index) => {
-                    const isSelected =
-                      formData.startTime === slot.startTime &&
-                      formData.endTime === slot.endTime;
+  {displaySlots.map((slot, index) => {
+    const isSelected =
+      formData.startTime === slot.startTime &&
+      formData.endTime === slot.endTime;
 
-                    let slotStatus = "Available";
-                    if (slot.status !== "Available") {
-                      slotStatus = "Booked";
-                    } else if (slot.isPast) {
-                      slotStatus = "Past";
-                    }
+    
 
-                    let slotClasses =
-                      "relative px-4 py-3 border rounded-md flex items-center justify-center transition ";
-                    slotClasses += "dark:border-gray-600 ";
+    // Determine slot status
+    let slotStatus = "Available";
+    if (slot.status !== "Available") {
+      slotStatus = "Booked";
+    } else if (slot.isPast) {
+      slotStatus = "Past";
+    }
 
-                    if (slotStatus === "Available") {
-                      slotClasses +=
-                        "text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer ";
-                    } else {
-                      slotClasses +=
-                        "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed ";
-                    }
+    // Base CSS classes
+    let slotClasses =
+      "relative px-4 py-3 border rounded-md flex items-center justify-center transition dark:border-gray-600 ";
+    
+    // Dynamic class modifications
+    slotClasses += slotStatus === "Available"
+      ? "text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer"
+      : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed";
 
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleSlotSelect(slot)}
-                        className={`${slotClasses} ${
-                          isSelected
-                            ? "bg-blue-700 dark:bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                            : ""
-                        }`}
-                        disabled={slotStatus !== "Available"}
-                        aria-pressed={isSelected}
-                        aria-label={`${slot.startTime} - ${slot.endTime} ${slotStatus}`}
-                      >
-                        <span
-                          className={`${slotStatus !== "Available" ? "line-through" : ""}`}
-                        >
-                          {slot.startTime} - {slot.endTime}
-                        </span>
-                        {(slotStatus === "Booked" || slotStatus === "Past") && (
-                          <div className="absolute bottom-0 right-2">
-                            <span
-                              className={`text-[10px] uppercase font-semibold ${
-                                slotStatus === "Booked"
-                                  ? "text-red-500 dark:text-red-400"
-                                  : "text-gray-500 dark:text-gray-400"
-                              }`}
-                            >
-                              {slotStatus}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+    return (
+      <button
+        key={index}
+        onClick={() => handleSlotSelect(slot)}
+        className={`${slotClasses} ${
+          isSelected
+            ? "bg-blue-700 dark:bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+            : ""
+        }`}
+        disabled={slotStatus !== "Available"}
+        aria-pressed={isSelected}
+        aria-label={`${formatTime(slot.startTime)} - ${formatTime(slot.endTime, true)} ${slotStatus}`}
+      >
+        <span className={`${slotStatus !== "Available" ? "line-through" : ""}`}>
+          {formatTime(slot.startTime)} - {formatTime(slot.endTime, true)}
+        </span>
+        
+        {/* Status indicator */}
+        {(slotStatus === "Booked" || slotStatus === "Past") && (
+          <div className="absolute bottom-0 right-2">
+            <span
+              className={`text-[10px] uppercase font-semibold ${
+                slotStatus === "Booked"
+                  ? "text-red-500 dark:text-red-400"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              {slotStatus}
+            </span>
+          </div>
+        )}
+      </button>
+    );
+  })}
+</div>
               ) : (
                 <p className="text-red-500 dark:text-red-400">
                   No available time slots for this date.

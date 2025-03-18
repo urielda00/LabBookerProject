@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { TbClockX } from "react-icons/tb";
@@ -16,6 +15,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "../utils/axiosConfig";
+
 
 
 const DashBoard = () => {
@@ -70,7 +71,7 @@ const DashBoard = () => {
   const fetchIssues = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/issues/all", {
+      const response = await api.get("/issues/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIssues(response.data);
@@ -94,8 +95,8 @@ const DashBoard = () => {
   const handleStatusUpdate = async (issueId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
-        `http://localhost:5000/api/issues/update-status/${issueId}`,
+      await api.patch(
+        `/issues/update-status/${issueId}`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -129,8 +130,8 @@ const DashBoard = () => {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:5000/api/dashboard/stats",
+      const response = await api.get(
+        "/dashboard/stats",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -174,8 +175,8 @@ const DashBoard = () => {
   const fetchBookingCounts = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:5000/api/book/bookings/count",
+      const response = await api.get(
+        "/book/bookings/count",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
