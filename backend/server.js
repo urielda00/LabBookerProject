@@ -16,7 +16,7 @@ const settingsRoutes = require("./routes/settingsRoutes");
 const roomRoutes = require("./routes/roomsRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
-const configRoutes = require("./routes/configRoutes");
+// const configRoutes = require("./routes/configRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const notificationsRoutes = require("./routes/notificationsRoutes");
 const healthRoutes = require("./routes/healthRoutes");
@@ -228,7 +228,7 @@ try {
     { path: "/api/room", routes: roomRoutes },
     { path: "/api/book", routes: bookingRoutes },
     { path: "/api/upload", routes: uploadRoutes },
-    { path: "/api/config", routes: configRoutes },
+    // { path: "/api/config", routes: configRoutes },
     { path: "/api/dashboard", routes: dashboardRoutes },
     { path: "/api/notifications", routes: notificationsRoutes },
     { path: "/api/health", routes: healthRoutes },
