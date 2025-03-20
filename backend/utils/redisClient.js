@@ -9,7 +9,7 @@ class RedisClient {
   async connect() {
     try {
       this.client = Redis.createClient({
-        url: process.env.REDIS_URL || "redis://redis:6379", // Make sure this points to the Redis service in Docker Compose
+        url: process.env.REDIS_URL || "redis://red-cvdgc6d6l47c73941a3g:6379", // Make sure this points to the Redis service in Docker Compose
       });
       console.log("🔵 Redis URL from ENV:", process.env.REDIS_URL);
 
