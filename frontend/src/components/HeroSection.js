@@ -29,14 +29,15 @@ const HeroSection = () => {
 
   return (
     <div
-      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: `url(${Header})` }}
-    >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" />
+  className="relative min-h-screen w-full flex items-center justify-center bg-cover bg-center pt-16 pb-20" // Added pb-20
+  style={{ backgroundImage: `url(${Header})` }}
+>
+  {/* Dark overlay */}
+  <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" />
 
-      <div className="relative z-10 container mx-auto px-4 md:px-8 lg:px-16 min-h-screen flex flex-col items-center justify-center">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+  <div className="relative z-10 container mx-auto px-4 md:px-8 lg:px-16 h-full flex flex-col items-center justify-center">
+    {/* Content container with bottom margin */}
+    <div className="grid md:grid-cols-2 gap-12 items-center mb-8"> 
           {/* Left Column - Content */}
           <div className="text-white text-center md:text-left">
             <motion.h1
@@ -136,15 +137,16 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* College Logo */}
-        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-          <img
-            src={collegeLogo}
-            alt="Azrieli College Logo"
-            className="w-32 h-32 object-contain opacity-70 hover:opacity-100 transition-opacity"
-          />
-        </div>
+        
       </div>
+      {/* College Logo */}
+        <div className="absolute bottom-0 md:bottom-8 left-1/2 transform -translate-x-1/2"> 
+      <img
+        src={collegeLogo}
+        alt="Azrieli College Logo"
+        className="w-32 h-32 object-contain opacity-70 hover:opacity-100 transition-opacity"
+      />
+    </div>
     </div>
   );
 };
