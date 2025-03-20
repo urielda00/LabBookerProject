@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 // Configure storage for uploaded files
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const destinationPath = path.join(__dirname, '../../frontend/public/uploads');
+        const destinationPath = path.join(__dirname, '../uploads');
         cb(null, destinationPath);    },
     filename: (req, file, cb) => {
         const uniqueSuffix = `${Date.now()}-${uuidv4()}`;

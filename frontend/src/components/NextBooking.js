@@ -303,43 +303,56 @@ const NextBooking = ({
   const ModalContent = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="mx-auto mb-4 h-14 w-14 text-red-500">
+        {/* Icon - Added dark mode text color */}
+        <div className="mx-auto mb-4 h-14 w-14 text-red-500 dark:text-red-400">
           <AlertTriangle className="h-full w-full" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        
+        {/* Header - Added dark mode text colors */}
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
           Confirm Booking Cancellation
         </h3>
-        <div className="text-gray-500">
+        <div className="text-gray-500 dark:text-gray-400">
           Are you sure you want to cancel this booking? This action cannot be
           undone.
         </div>
       </div>
+      
       {booking && (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-100 border-b border-gray-200">
-            <h4 className="text-sm font-medium text-gray-700">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Details Header - Dark mode background and border */}
+          <div className="px-4 py-3 bg-gray-100 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Booking Details
             </h4>
           </div>
+          
+          {/* Details Content - Dark mode text colors */}
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="block text-gray-500">Room</span>
-                <span className="font-medium">{booking.roomId?.name}</span>
+                <span className="block text-gray-500 dark:text-gray-400">Room</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {booking.roomId?.name}
+                </span>
               </div>
               <div>
-                <span className="block text-gray-500">Date</span>
-                <span className="font-medium">{booking.date}</span>
+                <span className="block text-gray-500 dark:text-gray-400">Date</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {booking.date}
+                </span>
               </div>
               <div>
-                <span className="block text-gray-500">Time</span>
-                <span className="font-medium">
+                <span className="block text-gray-500 dark:text-gray-400">Time</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.startTime} - {booking.endTime}
                 </span>
               </div>
               <div>
-                <span className="block text-gray-500">Status</span>
-                <span className="font-medium">{booking.status}</span>
+                <span className="block text-gray-500 dark:text-gray-400">Status</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {booking.status}
+                </span>
               </div>
             </div>
           </div>
