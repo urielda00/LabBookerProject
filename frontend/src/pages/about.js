@@ -83,7 +83,8 @@ const AboutPage = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => (window.location.href = "/labrooms")}
+                // onClick={() => (window.location.href = "/labrooms")}
+                onClick={() => navigate('/labrooms')}
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
               >
                 Start Booking Now
@@ -91,7 +92,8 @@ const AboutPage = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => (window.location.href = "/homepage")}
+                // onClick={() => (window.location.href = "/homepage")}
+                onClick={() => navigate('/homepage')}
                 className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-900 dark:text-gray-100 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
               >
                 Back to Home

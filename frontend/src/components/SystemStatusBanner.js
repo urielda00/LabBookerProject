@@ -10,6 +10,8 @@ import {
   Server,
   HardDrive,
 } from "lucide-react";
+import { Link } from 'react-router-dom';
+
 
 const SERVICE_ICONS = {
   database: Server,
@@ -108,13 +110,16 @@ const SystemStatusBanner = () => {
             <Activity className="w-4 h-4 flex-shrink-0" />
             <span className="whitespace-nowrap">Refresh</span>
           </button>
-          <button
-            className="flex items-center gap-2 text-sm hover:opacity-80 px-2 py-1"
-            onClick={() => window.open("/status-page", "_blank")}
-          >
-            <History className="w-4 h-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">History</span>
-          </button>
+
+          <Link 
+  to="/status-page" 
+  target="_blank"
+  className="flex items-center gap-2 text-sm hover:opacity-80 px-2 py-1"
+>
+  <History className="w-4 h-4 flex-shrink-0" />
+  <span className="whitespace-nowrap">History</span>
+</Link>
+
         </div>
       </div>
 

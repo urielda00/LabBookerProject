@@ -269,7 +269,9 @@ const FAQ = () => {
             <p className="text-lg text-gray-600 dark:text-gray-400">
               Didn’t find your question?{" "}
               <a
-                href="/contact"
+                // href="/contact"
+                onClick={() => navigate('/contact')}
+
                 className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
               >
                 Contact Customer Support
