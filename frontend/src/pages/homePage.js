@@ -268,39 +268,13 @@ const HomePage = () => {
         {/* Room Status Section - Enhanced */}
         <section className="mb-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-            <div
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => setIsRoomsExpanded(!isRoomsExpanded)}
-            >
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-700 dark:hover:text-blue-400 transition-colors duration-300">
-                  Lab Room Status
-                </h2>
-              </div>
-              <button
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                aria-label={
-                  isRoomsExpanded ? "Collapse section" : "Expand section"
-                }
-              >
-                <svg
-                  className={`w-6 h-6 transform transition-transform ${isRoomsExpanded ? "rotate-180" : ""} text-gray-900 dark:text-gray-200`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
+            <div className="flex items-center space-x-3">
+              <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Lab Room Status
+              </h2>
             </div>
           </div>
-
           {isRoomsExpanded && (
             <div className="p-6 pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -316,20 +290,36 @@ const HomePage = () => {
                         </h3>
                         <div className="flex items-center space-x-2">
                           <span
-                            className={`inline-block w-2 h-2 rounded-full ${room.isActive ? "bg-green-500 dark:bg-green-400" : "bg-gray-400 dark:bg-gray-500"}`}
+                            className={`inline-block w-2 h-2 rounded-full ${
+                              room.isActive
+                                ? "bg-red-500 dark:bg-red-400"
+                                : "bg-green-400 dark:bg-green-500"
+                            }`}
                           />
                           <p
-                            className={`text-sm font-medium ${room.isActive ? "text-green-600 dark:text-green-300" : "text-gray-500 dark:text-gray-400"}`}
+                            className={`text-sm font-medium ${
+                              room.isActive
+                                ? "text-gray-600 dark:text-red-300"
+                                : "text-gray-500 dark:text-green-400"
+                            }`}
                           >
                             {room.isActive ? "Occupied" : "Available"}
                           </p>
                         </div>
                       </div>
                       <div
-                        className={`p-2 rounded-lg ${room.isActive ? "bg-green-50 dark:bg-green-900/30" : "bg-gray-50 dark:bg-gray-600"}`}
+                        className={`p-2 rounded-lg ${
+                          room.isActive
+                            ? "bg-red-100 dark:bg-red-500/20"
+                            : "bg-green-100 dark:bg-green-900/20"
+                        }`}
                       >
                         <Activity
-                          className={`w-5 h-5 ${room.isActive ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-300"}`}
+                          className={`w-5 h-5 ${
+                            room.isActive
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-green-400 dark:text-green-300"
+                          }`}
                         />
                       </div>
                     </div>

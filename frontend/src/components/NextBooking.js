@@ -44,13 +44,20 @@ const NextBooking = ({
   }, [booking]);
 
   const formatTime = useCallback((seconds) => {
-    const hrs = Math.floor(seconds / 3600);
+    const days = Math.floor(seconds / (3600 * 24));
+    const hrs = Math.floor((seconds % (3600 * 24)) / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
+  
+    if (days > 0) {
+      return `${days} day${days > 1 ? "s" : ""}${hrs > 0 ? `, ${hrs} hr${hrs > 1 ? "s" : ""}` : ""}`;
+    }
+  
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }, []);
+  
 
   const handleCheckIn = async () => {
     if (!booking) return;
@@ -594,7 +601,7 @@ const NextBooking = ({
                     pathColor:
                       bookingState === "active" ? "#16a34a" : "#2563eb",
                     textColor:
-                      bookingState === "active" ? "#15803d" : "#1e40af",
+                      bookingState === "active" ? "#15803d" : "#1e40ef",
                     trailColor: "#f3f4f6",
                     textSize: "32px",
                   })}

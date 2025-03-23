@@ -8,15 +8,43 @@ services:
     ports:
       - "6379:6379"
 
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
   backend:
     build:
       context: ./backend
+      dockerfile: dockerfile
     container_name: backend
     env_file:
-      - ./backend/.env  # ✅ Ensure this path is correct
+      - ./backend/.env
     environment:
-      - REDIS_URL=redis://redis:6379  # ✅ Explicitly setting the variable
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://root:example@mongo:27017
     depends_on:
       - redis
+      - mongo
     ports:
       - "5000:5000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

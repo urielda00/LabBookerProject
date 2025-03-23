@@ -86,19 +86,6 @@ const signup = async (req, res) => {
     ).toString();
     const verificationExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Create new user
-    const newUser = new User({
-      username: normalizedUsername,
-      name: normalizedName,
-      email: normalizedEmail,
-      verificationCode,
-      verificationExpires,
-      role: "user",
-    });
-
-    await newUser.save();
-    console.log("User created:", newUser._id);
-
     // Store verification code in Redis
     await redisClient.set(
       `signup:${normalizedEmail}`,
@@ -119,6 +106,19 @@ const signup = async (req, res) => {
     if (process.env.NODE_ENV === "development") {
       response.verificationCode = verificationCode;
     }
+      // Create new user
+      const newUser = new User({
+        username: normalizedUsername,
+        name: normalizedName,
+        email: normalizedEmail,
+        verificationCode,
+        verificationExpires,
+        role: "user",
+      });
+  
+      await newUser.save();
+      console.log("User created:", newUser._id);
+  
 
     res.status(201).json(response);
   } catch (error) {
