@@ -1,6 +1,7 @@
 // controllers/bookingController.js
 const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
+const TransferRequest = require("../models/TransferRequest");
 const Room = require("../models/Room");
 const User = require("../models/User");
 const Config = require("../models/Config");
@@ -1798,6 +1799,239 @@ if (roomTypeLimit !== undefined) {
 
     await user.save({ session });
   }
+  
+  // In bookingController.js
+getWeeklyBookings = async (req, res) => {
+  try {
+    const timezone = 'Asia/Jerusalem';
+    const now = moment().tz(timezone);
+    const todayStr = now.format('YYYY-MM-DD');
+    const currentTime = now.format('HH:mm');
+
+    const query = {
+      $and: [
+        {
+          $or: [
+            { date: { $gt: todayStr } },
+            { 
+              date: todayStr,
+              endTime: { $gt: currentTime }
+            }
+          ]
+        },
+        { 
+          date: { $lte: now.clone().endOf('week').format('YYYY-MM-DD') },
+          status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED }
+        }
+      ]
+    };
+
+    if (req.query.roomId) {
+      query.$and.push({ roomId: new mongoose.Types.ObjectId(req.query.roomId) });
+    }
+
+    const bookings = await Booking.find(query)
+  .populate("userId", "username email")
+  .populate("additionalUsers", "username email")
+  .populate("roomId", "name type capacity")
+  .populate({
+    path: "transferRequests",
+    match: { status: "pending" },
+    populate: [
+      { path: 'fromUser', select: 'username email' },
+      { path: 'toUser', select: 'username email' }
+    ]
+  })
+  .sort({ date: 1, startTime: 1 });
+
+    res.status(200).json({
+      success: true,
+      bookings,
+      weekRange: {
+        start: todayStr,
+        end: now.clone().endOf('week').format('YYYY-MM-DD')
+      }
+    });
+  } catch (error) {
+    console.error("getWeeklyBookings - Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch weekly bookings",
+      error: error.message
+    });
+  }
+}
+
+
+// Get transfer requests for a booking
+getTransferRequests = async (req, res) => {
+  try {
+    const requests = await TransferRequest.find({
+      booking: req.params.id,
+      status: "pending"
+    })
+    .populate("fromUser", "username email")  // First populate the requester
+    .populate("toUser", "username email");   // Then the booking owner
+
+    res.status(200).json({ success: true, requests });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+createTransferRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("roomId")
+      .session(session);
+
+    if (!booking) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.userId.toString() === req.user.id) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Cannot request your own booking" });
+    }
+
+    // Check for existing pending request FROM THE CURRENT USER
+    const existingRequest = await TransferRequest.findOne({
+      booking: req.params.id,
+      fromUser: req.user.id,  // Changed to check requests FROM the current user
+      status: "pending"
+    }).session(session);
+
+    if (existingRequest) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "You already have a pending request for this booking" });
+    }
+
+    const request = new TransferRequest({
+      booking: req.params.id,
+      fromUser: req.user.id,  // Corrected: Request comes FROM current user
+      toUser: booking.userId, // Corrected: Request goes TO booking owner
+      message: req.body.message
+    });
+
+    await request.save({ session });
+    
+    // Add the new request to the booking's transferRequests array
+    await Booking.findByIdAndUpdate(
+      req.params.id,
+      { $push: { transferRequests: request._id } },
+      { session }
+    );
+
+    await notificationsController.createNotification(
+      booking.userId,
+      `New transfer request for your ${booking.roomId.name} booking`,
+      "transferRequest",
+      session
+    );
+
+    await session.commitTransaction();
+    res.status(201).json({ success: true, request });
+  } catch (error) {
+    await session.abortTransaction();
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Accept transfer request
+acceptTransferRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const request = await TransferRequest.findById(req.params.id)
+      .populate("fromUser", "username")
+      .populate("toUser", "username")
+      .populate({
+        path: "booking",
+        populate: { path: "roomId", select: "name" }
+      })
+      .session(session);
+
+    if (!request) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Transfer booking to requester (fromUser)
+    const booking = await Booking.findByIdAndUpdate(
+      request.booking._id,
+      { userId: request.fromUser._id },
+      { new: true, session }
+    );
+
+    request.status = "accepted";
+    await request.save({ session });
+
+    // Notify requester (fromUser) that their request was accepted
+    await notificationsController.createNotification(
+      request.fromUser._id,
+      `${request.toUser.username} accepted your transfer request for ${request.booking.roomId.name}`,
+      "transferAccepted",
+      session
+    );
+
+    // Notify previous owner (toUser) about the transfer
+    await notificationsController.createNotification(
+      request.toUser._id,
+      `You've transferred ${request.booking.roomId.name} booking to ${request.fromUser.username}`,
+      "bookingTransferred",
+      session
+    );
+
+    await session.commitTransaction();
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    await session.abortTransaction();
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Decline transfer request
+declineTransferRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const request = await TransferRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: "declined" },
+      { new: true, session }
+    )
+    .populate("fromUser toUser", "username");
+
+    if (!request) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Notify requester (fromUser) about decline
+    await notificationsController.createNotification(
+      request.fromUser._id,
+      `${request.toUser.username} declined your transfer request`,
+      "transferDeclined",
+      session
+    );
+
+    await session.commitTransaction();
+    res.status(200).json({ success: true, request });
+  } catch (error) {
+    await session.abortTransaction();
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
 }
 
 module.exports = new BookingController();
