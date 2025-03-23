@@ -28,6 +28,12 @@ router.get(
 );
 
 router.get("/bookings", bookingController.getBookings);
+router.get('/weekly', bookingController.getWeeklyBookings);
+// routes/bookingRoutes.js
+router.get('/:id/transfer-requests', authMiddleware.requireAuth, bookingController.getTransferRequests);
+router.post('/:id/transfer-request', authMiddleware.requireAuth, bookingController.createTransferRequest);
+router.patch('/transfer-requests/:id/accept', authMiddleware.requireAuth, bookingController.acceptTransferRequest);
+router.patch('/transfer-requests/:id/decline', authMiddleware.requireAuth, bookingController.declineTransferRequest);
 router.get("/booking/:id", bookingController.getBookingById);
 router.post("/booking", bookingController.createBooking);
 router.get(

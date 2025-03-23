@@ -3,7 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { RiUserSettingsLine } from "react-icons/ri";
 import { useNotifications } from "../hooks/useNotifications";
 import api from "../utils/axiosConfig";
-import { Menu, X, Home, BookOpen, LogOut, Bell } from "lucide-react";
+import { Menu, X, Home, BookOpen, LogOut, Bell, Trash2, LayoutDashboard  } from "lucide-react";
+import { MdOutlineMarkChatRead  } from "react-icons/md";
+import { LuDelete } from "react-icons/lu";
+import { BsCheckAll } from "react-icons/bs";
 
 const Navbar = ({
   userInfo,
@@ -112,14 +115,27 @@ const Navbar = ({
   }, []);
 
   const profileMenuItems = useMemo(
-    () => [
-      {
-        label: "Profile & Settings",
-        path: "/accountSettings",
-        icon: <RiUserSettingsLine className="w-5 h-5" />,
-      },
-    ],
-    [],
+    () => {
+      const items = [
+        {
+          label: "Profile & Settings",
+          path: "/accountSettings",
+          icon: <RiUserSettingsLine className="w-5 h-5" />,
+        },
+      ];
+  
+      // Add Dashboard link for admin/manager users
+      if (["admin", "manager"].includes(userInfo?.role)) {
+        items.push({
+          label: "Dashboard",
+          path: "/dashboard",
+          icon: <LayoutDashboard className="w-5 h-5" />,
+        });
+      }
+  
+      return items;
+    },
+    [userInfo] 
   );
 
   const navLinks = useMemo(
@@ -292,33 +308,64 @@ const Navbar = ({
   const NotificationDropdown = useMemo(() => {
     if (!state.notificationDropdownOpen || !userInfo) return null;
     const unreadCount = notifications.filter((notif) => !notif.isRead).length;
+    const TimeDisplay = ({ date }) => {
+      const notificationDate = new Date(date);
+      const now = new Date();
+      
+      const isToday = now.toDateString() === notificationDate.toDateString();
+      const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === notificationDate.toDateString();
+      const diffHours = Math.round((Date.now() - notificationDate) / (1000 * 60 * 60));
+    
+      const timeString = notificationDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateString = notificationDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        ...(diffHours > 24 && { year: new Date().getFullYear() !== notificationDate.getFullYear() ? 'numeric' : undefined })
+      });
+    
+      return (
+        <span className="text-xs text-gray-400">
+          {isToday 
+            ? `${timeString} · Today`
+            : isYesterday
+              ? `${timeString} · Yesterday`
+              : dateString}
+        </span>
+      );
+    };
+    
     return (
       <div
-        id="notification-dropdown"
-        className={`absolute bg-gray-800 rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 ${
-          isMobile
-            ? "w-80 left-1/2 -translate-x-[70%] mt-4"
-            : "w-80 right-0 mt-2"
-        }`}
-        style={{ maxHeight: isMobile ? "80vh" : "auto" }}
-      >
-        <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between bg-gray-800">
+    id="notification-dropdown"
+    className={`absolute bg-gray-800 rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 ${
+      isMobile
+        ? "w-80 left-1/2 -translate-x-[70%] mt-4"
+        : "w-80 right-0 mt-2"
+    }`}
+    style={{ maxHeight: isMobile ? "80vh" : "auto" }}
+  >
+    {/* Header */}
+    <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between bg-gray-800">
           <div className="flex items-center space-x-2">
-            <Bell className="w-5 h-5 text-blue-400" />
+            <Bell className="w-5 h-5 text-blue-400 transition-transform duration-300 hover:scale-110 hover:rotate-12" />
             <span className="text-sm font-semibold text-white">
               Notifications
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-gray-800 text-xs text-gray-300">
+            <span className="px-2 py-0.5 rounded-full bg-gray-700/50 text-xs text-gray-300 backdrop-blur-sm">
               {unreadCount}
             </span>
           </div>
           {notifications.length > 0 && (
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               <button
                 onClick={clearAllNotifications}
-                className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors px-2 py-1 rounded-md hover:bg-blue-500/10"
+                className="flex items-center group text-gray-300 hover:text-white transition-all duration-200 relative"
+                aria-label="Clear all notifications"
               >
-                Clear All
+                <div className="relative p-1 rounded-md hover:bg-gray-700/50">
+                  <Trash2 className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                  
+                </div>
               </button>
               <button
                 onClick={async () => {
@@ -326,53 +373,79 @@ const Navbar = ({
                     await api.put("/notifications/read-all");
                     fetchNotifications();
                   } catch (error) {
-                    console.error(
-                      "Failed to mark all notifications as read:",
-                      error,
-                    );
+                    console.error("Failed to mark all as read:", error);
                   }
                 }}
-                className="text-xs text-green-400 hover:text-green-300 hover:underline transition-colors px-2 py-1 rounded-md hover:bg-green-500/10"
+                className="flex items-center group text-gray-300 hover:text-white transition-all duration-200 relative"
+                aria-label="Mark all as read"
               >
-                Mark All as Read
+                <div className="relative p-1 rounded-md hover:bg-gray-700/50">
+                  <BsCheckAll className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                  
+                </div>
               </button>
             </div>
           )}
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">
-          {notifications.length > 0 ? (
-            notifications.map((notif) => (
-              <div
-                key={notif._id}
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-700 transition-colors ${
-                  notif.isRead ? "bg-gray-700 opacity-70" : "hover:bg-gray-600"
-                }`}
-              >
-                <span className="text-sm mr-4 text-gray-300">
-                  {notif.message}
-                </span>
-                <div className="flex space-x-2">
-                  {!notif.isRead && (
-                    <button
-                      onClick={() => markNotificationAsRead(notif._id)}
-                      className="p-1 text-xs bg-gray-700 rounded hover:bg-green-600 transition-colors"
-                    >
-                      Mark as Read
-                    </button>
-                  )}
-                  <button
-                    onClick={() => deleteNotification(notif._id)}
-                    className="p-1 text-xs bg-gray-700 rounded hover:bg-red-600 transition-colors"
-                  >
-                    Delete
-                  </button>
+    
+        {/* Notifications List */}
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600/50 scrollbar-track-gray-800 scrollbar-thumb-rounded-full">
+      {notifications.length > 0 ? (
+        notifications.map((notif) => (
+          <div
+            key={notif._id}
+            className={`group relative flex items-center px-4 py-3 border-b border-gray-700 ${
+              notif.isRead 
+                ? "bg-gray-700/40" 
+                : "bg-gray-800 hover:bg-gray-700/30"
+            } transition-all duration-200 hover:translate-x-1 hover:shadow-lg`}
+          >
+            {!notif.isRead && (
+              <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            )}
+            <div className="flex-1 pr-2 min-w-0">
+              <div className="flex items-start space-x-2">
+                {!notif.isRead && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm ${
+                    notif.isRead ? 'text-gray-400' : 'text-gray-200'
+                  }`}>{notif.message}</p>
+                  <TimeDisplay date={notif.createdAt} />
                 </div>
               </div>
-            ))
+            </div>
+            {/* Action Buttons - Always Visible */}
+            <div className="flex space-x-2 pl-2">
+              {!notif.isRead && (
+                <button
+                  onClick={() => markNotificationAsRead(notif._id)}
+                  className="p-1.5 text-green-400 hover:bg-gray-600/50 rounded-md transition-transform duration-200 hover:scale-110"
+                  title="Mark as read"
+                  aria-label="Mark as read"
+                >
+                  <MdOutlineMarkChatRead className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={() => deleteNotification(notif._id)}
+                className="p-1.5 text-red-400 hover:bg-gray-600/50 rounded-md transition-transform duration-200 hover:scale-110"
+                title="Delete"
+                aria-label="Delete notification"
+              >
+                <LuDelete className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        ))
           ) : (
             <div className="px-4 py-8 text-center">
-              <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 text-sm">No new notifications</p>
+              <div className="relative inline-block mb-3">
+                <Bell className="w-12 h-12 text-gray-600 mx-auto transition-transform duration-500 hover:rotate-12 hover:text-blue-400" />
+              </div>
+              <p className="text-gray-300 text-sm font-medium mb-1">All caught up!</p>
+              <p className="text-gray-500 text-xs">You have no new notifications</p>
             </div>
           )}
         </div>
@@ -394,13 +467,29 @@ const Navbar = ({
       className={`fixed top-0 left-0 right-0 z-50 text-white transition-colors duration-300 ${navBgClass}`}
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link
-          to="/"
-          className="text-2xl font-bold text-blue-500 tracking-wider relative group hover:text-blue-400 transition-all"
-        >
-          <span className="relative z-10">LabBooker</span>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
-        </Link>
+        {/* Left side with hamburger menu and logo */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() =>
+              setState((prev) => ({
+                ...prev,
+                mobileMenuOpen: !prev.mobileMenuOpen,
+              }))
+            }
+            className="md:hidden text-white hover:text-blue-500 transition-colors hover:scale-110 focus:outline-none"
+          >
+            {state.mobileMenuOpen ? <X /> : <Menu />}
+          </button>
+          <Link
+            to="/"
+            className="text-2xl font-bold text-blue-500 tracking-wider relative group hover:text-blue-400 transition-all"
+          >
+            <span className="relative z-10">LabBooker</span>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+          </Link>
+        </div>
+  
+        {/* Right side navigation elements */}
         <div className="flex items-center space-x-6">
           <div className="hidden md:flex items-center space-x-2">
             {navLinks.map((link, index) => renderNavLink(link, index))}
@@ -461,19 +550,10 @@ const Navbar = ({
               Log In
             </Link>
           )}
-          <button
-            onClick={() =>
-              setState((prev) => ({
-                ...prev,
-                mobileMenuOpen: !prev.mobileMenuOpen,
-              }))
-            }
-            className="md:hidden text-white hover:text-blue-500 transition-colors hover:scale-110 focus:outline-none"
-          >
-            {state.mobileMenuOpen ? <X /> : <Menu />}
-          </button>
         </div>
       </div>
+  
+      {/* Mobile menu */}
       {state.mobileMenuOpen && (
         <div className="md:hidden bg-gray-900 z-40">
           <div className="flex flex-col p-4 space-y-2">

@@ -90,6 +90,10 @@ const bookingSchema = new mongoose.Schema(
       default: null,
       expires: ONE_WEEK_IN_SECONDS,
     },
+    transferRequests: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TransferRequest'
+    }],
     adminOverride: {
       type: Boolean,
       default: false,

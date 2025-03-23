@@ -10,6 +10,8 @@ import {
   Server,
   HardDrive,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 const SERVICE_ICONS = {
   database: Server,
@@ -44,6 +46,7 @@ const SystemStatusBanner = () => {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [debugMode] = useState(localStorage.getItem("debugMode") === "true");
+  const navigate = useNavigate();
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -85,77 +88,99 @@ const SystemStatusBanner = () => {
   const lastUpdated = new Date(status.timestamp).toLocaleTimeString();
 
   return (
-    <div className={`${statusConfig.color} rounded-lg p-4 mb-6 shadow-sm mt-4`}>
+    <div className={`${statusConfig.color} dark:bg-opacity-20 rounded-xl p-5 mb-6 shadow-sm mt-4 border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md`}>
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-full">
-          <statusConfig.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-          <div className="min-w-0 max-w-[calc(100%-theme(space.5))]">
-            <h3 className="font-medium truncate text-sm sm:text-base">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4">
+        <div className="flex items-center gap-3">
+          <statusConfig.icon className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
+          <div className="space-y-1">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-gray-100">
               {statusConfig.label}
             </h3>
-            <p className="text-xs sm:text-sm opacity-80 mt-0.5 truncate">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Last updated: {lastUpdated}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-row flex-wrap gap-3 sm:gap-4 ml-0 sm:ml-2">
+        <div className="flex items-center justify-end gap-2 ml-auto">
           <button
-            className="flex items-center gap-2 text-sm hover:opacity-80 px-2 py-1"
             onClick={fetchStatus}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 rounded-lg shadow-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
           >
             <Activity className="w-4 h-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Refresh</span>
+            <span>Refresh</span>
           </button>
+
           <button
-            className="flex items-center gap-2 text-sm hover:opacity-80 px-2 py-1"
-            onClick={() => window.open("/status-page", "_blank")}
+            onClick={() => navigate('/status-page')}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 rounded-lg shadow-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
           >
             <History className="w-4 h-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">History</span>
+            <span>History</span>
           </button>
         </div>
       </div>
 
       {/* Affected Services */}
       {status.status !== "operational" && (
-        <div className="mt-4 pt-4 border-t border-opacity-20">
-          <h4 className="text-sm font-medium mb-2">Affected Services:</h4>
-          <div className="flex flex-col gap-2">
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+            Affected Services
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Object.entries(status.services || {}).map(([service, details]) => {
               const IconComponent = SERVICE_ICONS[service] || Activity;
+              const isOperational = details?.status === "operational";
+
               return (
                 <div
                   key={service}
-                  className="flex items-start gap-3 text-sm p-2 bg-white rounded-lg shadow-sm"
+                  className="flex items-start gap-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-100 dark:border-gray-700"
                 >
-                  <IconComponent className="w-4 h-4 mt-1 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="capitalize font-medium truncate">
+                  <IconComponent className="w-5 h-5 mt-1 flex-shrink-0 text-gray-600 dark:text-gray-400" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-gray-900 dark:text-gray-200 capitalize">
                         {service}
                       </span>
                       <span
-                        className={`px-2 py-1 rounded text-xs whitespace-nowrap ${
-                          details?.status === "operational"
-                            ? "bg-green-200 text-green-800"
-                            : "bg-red-200 text-red-800"
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          isOperational
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                            : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
                         }`}
                       >
                         {details?.status || "unknown"}
                       </span>
                     </div>
+
                     {details?.latency && (
-                      <div className="text-xs text-gray-600 mt-1 truncate">
-                        Latency: {details.latency}ms
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Latency:</span>
+                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full flex-1">
+                          <div
+                            className={`h-full rounded-full ${
+                              details.latency < 300
+                                ? "bg-green-500"
+                                : details.latency < 500
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                            }`}
+                            style={{ width: `${Math.min(details.latency / 10, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          {details.latency}ms
+                        </span>
                       </div>
                     )}
+
                     {details?.details && (
-                      <div className="text-xs text-gray-600 mt-1 space-y-1">
+                      <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                         {Object.entries(details.details).map(([key, value]) => (
                           <div key={key} className="truncate">
-                            {key}: {value}
+                            <span className="font-medium">{key}:</span> {value}
                           </div>
                         ))}
                       </div>
@@ -170,25 +195,25 @@ const SystemStatusBanner = () => {
 
       {/* History Stats */}
       {history && (
-        <div className="mt-4 pt-4 border-t border-opacity-20">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <div className="text-center sm:text-left">
-              <p className="opacity-75">30-day Uptime</p>
-              <p className="font-medium truncate">
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">30-day Uptime</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-200">
                 {history.uptime30d || "N/A"}
               </p>
             </div>
-            <div className="text-center sm:text-left">
-              <p className="opacity-75">Last Incident</p>
-              <p className="font-medium truncate">
+            <div className="text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Last Incident</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-200">
                 {history.lastIncident
                   ? new Date(history.lastIncident).toLocaleDateString()
                   : "None"}
               </p>
             </div>
-            <div className="text-center sm:text-left">
-              <p className="opacity-75">Incidents (30d)</p>
-              <p className="font-medium truncate">
+            <div className="text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Incidents (30d)</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-200">
                 {history.incidentsLastMonth || 0}
               </p>
             </div>
@@ -198,19 +223,23 @@ const SystemStatusBanner = () => {
 
       {/* Debug Info */}
       {debugMode && (
-        <div className="mt-4 pt-4 border-t border-opacity-20">
-          <h4 className="text-sm font-medium mb-2">Debug Information:</h4>
-          <pre className="text-xs bg-black bg-opacity-10 p-2 rounded overflow-x-auto">
-            {JSON.stringify(
-              {
-                status,
-                history,
-                lastFetched: new Date().toISOString(),
-              },
-              null,
-              2,
-            )}
-          </pre>
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Debug Information
+            </h4>
+            <pre className="text-xs p-4 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-x-auto font-mono">
+              {JSON.stringify(
+                {
+                  status,
+                  history,
+                  lastFetched: new Date().toISOString(),
+                },
+                null,
+                2,
+              )}
+            </pre>
+          </div>
         </div>
       )}
     </div>
