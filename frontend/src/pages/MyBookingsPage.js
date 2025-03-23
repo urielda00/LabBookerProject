@@ -163,7 +163,7 @@ const MyBookingsPage = () => {
           isVisible: true,
           type: "success",
           message:
-            "Booking cancelled successfully. It will be permanently deleted in 3 days.",
+            "Booking cancelled successfully. It will be permanently deleted in 7 days.",
         });
 
         setTimeout(() => {
@@ -574,7 +574,7 @@ const MyBookingsPage = () => {
               <p className="text-center text-blue-800 dark:text-blue-300 text-sm">
                 You can cancel bookings up until their scheduled time. Past
                 bookings cannot be modified. Cancelled bookings will be
-                automatically deleted after 3 days.
+                automatically deleted after 7 days.
               </p>
             </div>
           </div>
