@@ -257,11 +257,11 @@ const HomePage = () => {
                 real-time status updates.
               </p>
             </div>
-            <div className="hidden md:block relative">
+            {/* <div className="hidden md:block relative">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-2xl shadow-lg flex items-center justify-center">
                 <Activity className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-pulse" />
               </div>
-            </div>
+            </div> */}
           </div>
         </section>
 

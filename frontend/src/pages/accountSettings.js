@@ -13,7 +13,7 @@ import { ThemeContext } from "../contexts/ThemeContext";
 const ProfileSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const { toggleTheme, isDark } = useContext(ThemeContext);
-
+  // const roleColor = user?.role === "admin" ? "green" : "blue";
   const [userInfo, setUserInfo] = useState({
     email: "",
     username: "",

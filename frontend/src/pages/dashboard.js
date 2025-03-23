@@ -218,7 +218,7 @@ const DashBoard = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/50 px-4 sm:px-6 py-4 rounded-xl"
+          className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-gray-50 to-gray-100 dark:from-green-900/30 dark:to-green-800/50 px-4 sm:px-6 py-4 rounded-xl"
         >
           <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-0 flex-1 min-w-0">
             <motion.div
@@ -243,7 +243,6 @@ const DashBoard = () => {
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <div className="hidden sm:block h-6 w-px bg-gray-200 dark:bg-gray-600"></div>
             <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 min-w-0 max-w-[200px] sm:max-w-none">
-              <span className="hidden sm:inline mr-1 truncate">Account:</span>
               <span className="font-medium text-green-600 dark:text-green-400 truncate text-xs sm:text-sm">
                 {userInfo.email}
               </span>
