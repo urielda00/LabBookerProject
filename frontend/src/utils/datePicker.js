@@ -130,7 +130,7 @@ const CustomDatepicker = ({
     const dateStr = formatDate(thisDate);
     const todayStr = formatDate(new Date());
     const isToday = dateStr === todayStr;
-    const isDayAvailable = availableDates.includes(dateStr) || isToday;
+    const isDayAvailable = availableDates.includes(dateStr);
     const isSel = selectedDate && formatDate(selectedDate) === dateStr;
 
     dayCells.push(

@@ -8,8 +8,11 @@ const Config = require("../models/Config");
 const nodemailer = require("nodemailer");
 const notificationsController = require("../controllers/notificationsController");
 const moment = require("moment-timezone");
-const { sendAdminApprovalRequest, sendBookingConfirmation, sendPendingConfirmation } = require("../utils/emailService");
-
+const {
+  sendAdminApprovalRequest,
+  sendBookingConfirmation,
+  sendPendingConfirmation,
+} = require("../utils/emailService");
 
 // Constants
 const BOOKING_CONSTANTS = {
@@ -185,39 +188,43 @@ class BookingController {
       }
 
       // Check for existing upcoming bookings
-const timezone = 'Asia/Jerusalem';
-const today = moment().tz(timezone).format('YYYY-MM-DD');
-const currentTime = moment().tz(timezone).format('HH:mm');
+      const timezone = "Asia/Jerusalem";
+      const today = moment().tz(timezone).format("YYYY-MM-DD");
+      const currentTime = moment().tz(timezone).format("HH:mm");
 
-const existingUpcoming = await Booking.findOne({
-  userId: userId,
-  status: { 
-    $nin: [
-      BOOKING_CONSTANTS.STATUSES.CANCELED,
-      BOOKING_CONSTANTS.STATUSES.COMPLETED,
-      BOOKING_CONSTANTS.STATUSES.MISSED
-    ]
-  },
-  $or: [
-    { date: { $gt: today } },
-    { 
-      date: today,
-      endTime: { $gt: currentTime }
-    }
-  ]
-}).session(session);
+      const existingUpcoming = await Booking.findOne({
+        userId: userId,
+        status: {
+          $nin: [
+            BOOKING_CONSTANTS.STATUSES.CANCELED,
+            BOOKING_CONSTANTS.STATUSES.COMPLETED,
+            BOOKING_CONSTANTS.STATUSES.MISSED,
+          ],
+        },
+        $or: [
+          { date: { $gt: today } },
+          {
+            date: today,
+            endTime: { $gt: currentTime },
+          },
+        ],
+      }).session(session);
 
-if (existingUpcoming) {
-  await session.abortTransaction();
-  session.endSession();
-  return res.status(400).json({
-    success: false,
-    message: "You already have an upcoming booking. Please complete it before creating a new one.",
-  });
-}
+      if (existingUpcoming) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message:
+            "You already have an upcoming booking. Please complete it before creating a new one.",
+        });
+      }
 
       // Calculate weekly bookings across all rooms
-      const startOfWeek = moment().tz('Asia/Jerusalem').startOf('week').toDate();
+      const startOfWeek = moment()
+        .tz("Asia/Jerusalem")
+        .startOf("week")
+        .toDate();
       const weeklyBookingsCount = await Booking.countDocuments({
         userId,
         createdAt: { $gte: startOfWeek },
@@ -245,30 +252,30 @@ if (existingUpcoming) {
       }
 
       // Check per-room type weekly limit
-const roomTypeLimits = {
-  [ROOM_TYPES.OPEN]: 3,
-  [ROOM_TYPES.SMALL_SEMINAR]: 2,
-  [ROOM_TYPES.LARGE_SEMINAR]: 1,
-};
+      const roomTypeLimits = {
+        [ROOM_TYPES.OPEN]: 3,
+        [ROOM_TYPES.SMALL_SEMINAR]: 2,
+        [ROOM_TYPES.LARGE_SEMINAR]: 1,
+      };
 
-const roomTypeLimit = roomTypeLimits[room.type];
-if (roomTypeLimit !== undefined) {
-  const roomTypeBookingsCount = await Booking.countDocuments({
-    userId: userId,
-    createdAt: { $gte: startOfWeek },
-    status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
-    roomType: room.type,
-  }).session(session);
+      const roomTypeLimit = roomTypeLimits[room.type];
+      if (roomTypeLimit !== undefined) {
+        const roomTypeBookingsCount = await Booking.countDocuments({
+          userId: userId,
+          createdAt: { $gte: startOfWeek },
+          status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
+          roomType: room.type,
+        }).session(session);
 
-  if (roomTypeBookingsCount >= roomTypeLimit) {
-    await session.abortTransaction();
-    session.endSession();
-    return res.status(400).json({
-      success: false,
-      message: `Weekly limit for ${room.type} rooms reached. Maximum ${roomTypeLimit} bookings allowed per week.`,
-    });
-  }
-}
+        if (roomTypeBookingsCount >= roomTypeLimit) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            success: false,
+            message: `Weekly limit for ${room.type} rooms reached. Maximum ${roomTypeLimit} bookings allowed per week.`,
+          });
+        }
+      }
 
       // Format date for comparison
       const [year, day, month] = date.split("-");
@@ -308,7 +315,7 @@ if (roomTypeLimit !== undefined) {
       }
 
       const thirtyMinutesFromNow = new Date(
-        currentDateTime.getTime() + 30 * 60000,
+        currentDateTime.getTime() + 30 * 60000
       );
       if (bookingDateTime < thirtyMinutesFromNow) {
         await session.abortTransaction();
@@ -320,7 +327,7 @@ if (roomTypeLimit !== undefined) {
       }
 
       const invalidEmails = additionalUsers.filter(
-        (email) => !BookingController.validateEmail(email),
+        (email) => !BookingController.validateEmail(email)
       );
       if (invalidEmails.length > 0) {
         await session.abortTransaction();
@@ -354,7 +361,7 @@ if (roomTypeLimit !== undefined) {
 
       const duration = BookingController.calculateDurationInHours(
         startTime,
-        endTime,
+        endTime
       );
       if (
         duration <= BOOKING_CONSTANTS.MIN_DURATION ||
@@ -407,19 +414,27 @@ if (roomTypeLimit !== undefined) {
         date: date,
         startTime: startTime,
         endTime: endTime,
-        id: booking._id
+        id: booking._id,
       };
-      
+
       const userDetails = {
         name: user.username,
-        email: user.email
+        email: user.email,
       };
-      
+
       if (room.type === ROOM_TYPES.LARGE_SEMINAR) {
-        await sendPendingConfirmation(user.email, user.username, bookingDetails);
+        await sendPendingConfirmation(
+          user.email,
+          user.username,
+          bookingDetails
+        );
         await sendAdminApprovalRequest(bookingDetails, userDetails);
       } else {
-        await sendBookingConfirmation(user.email, user.username, bookingDetails);
+        await sendBookingConfirmation(
+          user.email,
+          user.username,
+          bookingDetails
+        );
       }
 
       try {
@@ -434,12 +449,12 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           user._id,
           message,
-          "bookingCreation",
+          "bookingCreation"
         );
       } catch (notificationError) {
         console.error(
           "Booking creation notification error:",
-          notificationError.message,
+          notificationError.message
         );
       }
 
@@ -614,12 +629,12 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           booking.userId,
           `Your booking for room ${room.name} has been cancelled successfully.`,
-          "bookingDeletion",
+          "bookingDeletion"
         );
       } catch (notificationError) {
         console.error(
           "Booking deletion notification error:",
-          notificationError.message,
+          notificationError.message
         );
       }
 
@@ -734,22 +749,25 @@ if (roomTypeLimit !== undefined) {
 
       const bookingDetails = {
         roomName: room.name,
-        date: booking.date,          
+        date: booking.date,
         startTime: booking.startTime,
-        endTime: booking.endTime,    
-        id: booking._id
+        endTime: booking.endTime,
+        id: booking._id,
       };
-      
+
       if (booking.status === "Confirmed") {
-      
-        await sendBookingConfirmation(user.email, user.username, bookingDetails);
+        await sendBookingConfirmation(
+          user.email,
+          user.username,
+          bookingDetails
+        );
       }
 
       try {
         await notificationsController.createNotification(
           req.user._id,
           `You updated booking status for ${user.username} to ${status}.`,
-          "bookingUpdateAdmin",
+          "bookingUpdateAdmin"
         );
       } catch (notificationError) {
         console.error("Admin notification error:", notificationError.message);
@@ -760,7 +778,7 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           user._id,
           userMsg,
-          "bookingUpdateUser",
+          "bookingUpdateUser"
         );
       } catch (notificationError) {
         console.error("User notification error:", notificationError.message);
@@ -863,7 +881,7 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           req.user._id,
           `Canceled booking for ${user.username} in ${room.name}`,
-          "adminCancellation",
+          "adminCancellation"
         );
       } catch (notificationError) {
         console.error("Admin notification error:", notificationError.message);
@@ -873,7 +891,7 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           user._id,
           `Your booking for ${room.name} was canceled by admin`,
-          "userCancellation",
+          "userCancellation"
         );
       } catch (notificationError) {
         console.error("User notification error:", notificationError.message);
@@ -1100,7 +1118,7 @@ if (roomTypeLimit !== undefined) {
       }
 
       const invalidEmails = additionalUsers.filter(
-        (email) => !BookingController.validateEmail(email),
+        (email) => !BookingController.validateEmail(email)
       );
       if (invalidEmails.length > 0) {
         await session.abortTransaction();
@@ -1124,7 +1142,7 @@ if (roomTypeLimit !== undefined) {
 
         if (additionalUserIds.length !== additionalUsers.length) {
           const missingEmails = additionalUsers.filter(
-            (email) => !users.some((u) => u.email === email),
+            (email) => !users.some((u) => u.email === email)
           );
           await session.abortTransaction();
           session.endSession();
@@ -1138,7 +1156,10 @@ if (roomTypeLimit !== undefined) {
 
       // Admin override: Skip weekly limit check
       if (req.user?.role !== "admin") {
-        const startOfWeek = moment().tz('Asia/Jerusalem').startOf('week').toDate();
+        const startOfWeek = moment()
+          .tz("Asia/Jerusalem")
+          .startOf("week")
+          .toDate();
         const weeklyBookingsCount = await Booking.countDocuments({
           userId: user._id,
           createdAt: { $gte: startOfWeek },
@@ -1157,7 +1178,7 @@ if (roomTypeLimit !== undefined) {
 
       const duration = BookingController.calculateDurationInHours(
         startTime,
-        endTime,
+        endTime
       );
       if (
         duration <= BOOKING_CONSTANTS.MIN_DURATION ||
@@ -1219,7 +1240,7 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           user._id,
           userMessage,
-          "bookingCreatedByAdmin",
+          "bookingCreatedByAdmin"
         );
       } catch (notificationError) {
         console.error("User notification failed:", notificationError.message);
@@ -1229,7 +1250,7 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           req.user._id,
           `Successfully created booking for ${user.username} in ${room.name}`,
-          "adminBookingCreated",
+          "adminBookingCreated"
         );
       } catch (notificationError) {
         console.error("Admin notification failed:", notificationError.message);
@@ -1349,12 +1370,12 @@ if (roomTypeLimit !== undefined) {
           await notificationsController.createNotification(
             booking.userId,
             notificationMessage,
-            `booking${status}`,
+            `booking${status}`
           );
         } catch (notifError) {
           console.error(
             "Failed to create status update notification:",
-            notifError,
+            notifError
           );
         }
       }
@@ -1544,12 +1565,12 @@ if (roomTypeLimit !== undefined) {
         await notificationsController.createNotification(
           booking.userId._id,
           `Successfully checked in to room ${booking.roomId.name}.`,
-          "bookingCheckIn",
+          "bookingCheckIn"
         );
       } catch (notificationError) {
         console.error(
           "Check-in notification error:",
-          notificationError.message,
+          notificationError.message
         );
       }
 
@@ -1605,7 +1626,7 @@ if (roomTypeLimit !== undefined) {
               await notificationsController.createNotification(
                 booking.userId,
                 `Your booking for ${booking.roomId.name} has been automatically marked as ${booking.status}.`,
-                `booking${booking.status}`,
+                `booking${booking.status}`
               );
             } catch (notifError) {
               console.error("Notification error:", notifError);
@@ -1616,7 +1637,7 @@ if (roomTypeLimit !== undefined) {
         } catch (bookingError) {
           console.error(
             `Error processing booking ${booking._id}:`,
-            bookingError,
+            bookingError
           );
         }
       }
@@ -1705,7 +1726,7 @@ if (roomTypeLimit !== undefined) {
         try {
           const bookingEnd = moment.tz(
             `${booking.date}T${booking.endTime}:00`,
-            timezone,
+            timezone
           );
 
           if (now.isAfter(bookingEnd)) {
@@ -1723,7 +1744,7 @@ if (roomTypeLimit !== undefined) {
             await notificationsController.createNotification(
               booking.userId._id,
               `Your booking for ${booking.roomId.name} has been automatically marked as ${newStatus}.`,
-              `booking${newStatus}`,
+              `booking${newStatus}`
             );
 
             updatedCount++;
@@ -1731,7 +1752,7 @@ if (roomTypeLimit !== undefined) {
         } catch (bookingError) {
           console.error(
             `Error processing booking ${booking._id}:`,
-            bookingError,
+            bookingError
           );
         }
       }
@@ -1783,7 +1804,7 @@ if (roomTypeLimit !== undefined) {
       await notificationsController.createNotification(
         user._id,
         `Your account has been temporarily blocked from bookings due to excessive cancellations/misses.`,
-        "accountBlocked",
+        "accountBlocked"
       );
     } else if (
       user.cancellationStats.countLast7Days >=
@@ -1792,246 +1813,254 @@ if (roomTypeLimit !== undefined) {
       user.cancellationStats.warnings += 1;
       await notificationsController.createNotification(
         user._id,
-        `Warning: ${LIMITS.CANCELLATION_BLOCK_THRESHOLD - user.cancellationStats.countLast7Days} more cancellations/misses will result in a block.`,
-        "cancellationWarning",
+        `Warning: ${
+          LIMITS.CANCELLATION_BLOCK_THRESHOLD -
+          user.cancellationStats.countLast7Days
+        } more cancellations/misses will result in a block.`,
+        "cancellationWarning"
       );
     }
 
     await user.save({ session });
   }
-  
+
   // In bookingController.js
-getWeeklyBookings = async (req, res) => {
-  try {
-    const timezone = 'Asia/Jerusalem';
-    const now = moment().tz(timezone);
-    const todayStr = now.format('YYYY-MM-DD');
-    const currentTime = now.format('HH:mm');
+  getWeeklyBookings = async (req, res) => {
+    try {
+      const timezone = "Asia/Jerusalem";
+      const now = moment().tz(timezone);
+      const todayStr = now.format("YYYY-MM-DD");
+      const currentTime = now.format("HH:mm");
 
-    const query = {
-      $and: [
-        {
-          $or: [
-            { date: { $gt: todayStr } },
-            { 
-              date: todayStr,
-              endTime: { $gt: currentTime }
-            }
-          ]
-        },
-        { 
-          date: { $lte: now.clone().endOf('week').format('YYYY-MM-DD') },
-          status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED }
-        }
-      ]
-    };
+      const query = {
+        $and: [
+          {
+            $or: [
+              { date: { $gt: todayStr } },
+              {
+                date: todayStr,
+                endTime: { $gt: currentTime },
+              },
+            ],
+          },
+          {
+            date: { $lte: now.clone().endOf("week").format("YYYY-MM-DD") },
+            status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
+          },
+        ],
+      };
 
-    if (req.query.roomId) {
-      query.$and.push({ roomId: new mongoose.Types.ObjectId(req.query.roomId) });
-    }
-
-    const bookings = await Booking.find(query)
-  .populate("userId", "username email")
-  .populate("additionalUsers", "username email")
-  .populate("roomId", "name type capacity")
-  .populate({
-    path: "transferRequests",
-    match: { status: "pending" },
-    populate: [
-      { path: 'fromUser', select: 'username email' },
-      { path: 'toUser', select: 'username email' }
-    ]
-  })
-  .sort({ date: 1, startTime: 1 });
-
-    res.status(200).json({
-      success: true,
-      bookings,
-      weekRange: {
-        start: todayStr,
-        end: now.clone().endOf('week').format('YYYY-MM-DD')
+      if (req.query.roomId) {
+        query.$and.push({
+          roomId: new mongoose.Types.ObjectId(req.query.roomId),
+        });
       }
-    });
-  } catch (error) {
-    console.error("getWeeklyBookings - Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch weekly bookings",
-      error: error.message
-    });
-  }
-}
 
+      const bookings = await Booking.find(query)
+        .populate("userId", "username email")
+        .populate("additionalUsers", "username email")
+        .populate("roomId", "name type capacity")
+        .populate({
+          path: "transferRequests",
+          match: { status: "pending" },
+          populate: [
+            { path: "fromUser", select: "username email" },
+            { path: "toUser", select: "username email" },
+          ],
+        })
+        .sort({ date: 1, startTime: 1 });
 
-// Get transfer requests for a booking
-getTransferRequests = async (req, res) => {
-  try {
-    const requests = await TransferRequest.find({
-      booking: req.params.id,
-      status: "pending"
-    })
-    .populate("fromUser", "username email")  // First populate the requester
-    .populate("toUser", "username email");   // Then the booking owner
-
-    res.status(200).json({ success: true, requests });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-createTransferRequest = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const booking = await Booking.findById(req.params.id)
-      .populate("roomId")
-      .session(session);
-
-    if (!booking) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: "Booking not found" });
+      res.status(200).json({
+        success: true,
+        bookings,
+        weekRange: {
+          start: todayStr,
+          end: now.clone().endOf("week").format("YYYY-MM-DD"),
+        },
+      });
+    } catch (error) {
+      console.error("getWeeklyBookings - Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch weekly bookings",
+        error: error.message,
+      });
     }
+  };
 
-    if (booking.userId.toString() === req.user.id) {
-      await session.abortTransaction();
-      return res.status(400).json({ message: "Cannot request your own booking" });
-    }
-
-    // Check for existing pending request FROM THE CURRENT USER
-    const existingRequest = await TransferRequest.findOne({
-      booking: req.params.id,
-      fromUser: req.user.id,  // Changed to check requests FROM the current user
-      status: "pending"
-    }).session(session);
-
-    if (existingRequest) {
-      await session.abortTransaction();
-      return res.status(400).json({ message: "You already have a pending request for this booking" });
-    }
-
-    const request = new TransferRequest({
-      booking: req.params.id,
-      fromUser: req.user.id,  // Corrected: Request comes FROM current user
-      toUser: booking.userId, // Corrected: Request goes TO booking owner
-      message: req.body.message
-    });
-
-    await request.save({ session });
-    
-    // Add the new request to the booking's transferRequests array
-    await Booking.findByIdAndUpdate(
-      req.params.id,
-      { $push: { transferRequests: request._id } },
-      { session }
-    );
-
-    await notificationsController.createNotification(
-      booking.userId,
-      `New transfer request for your ${booking.roomId.name} booking`,
-      "transferRequest",
-      session
-    );
-
-    await session.commitTransaction();
-    res.status(201).json({ success: true, request });
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({ success: false, error: error.message });
-  } finally {
-    session.endSession();
-  }
-};
-
-// Accept transfer request
-acceptTransferRequest = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const request = await TransferRequest.findById(req.params.id)
-      .populate("fromUser", "username")
-      .populate("toUser", "username")
-      .populate({
-        path: "booking",
-        populate: { path: "roomId", select: "name" }
+  // Get transfer requests for a booking
+  getTransferRequests = async (req, res) => {
+    try {
+      const requests = await TransferRequest.find({
+        booking: req.params.id,
+        status: "pending",
       })
-      .session(session);
+        .populate("fromUser", "username email") // First populate the requester
+        .populate("toUser", "username email"); // Then the booking owner
 
-    if (!request) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: "Request not found" });
+      res.status(200).json({ success: true, requests });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
     }
+  };
 
-    // Transfer booking to requester (fromUser)
-    const booking = await Booking.findByIdAndUpdate(
-      request.booking._id,
-      { userId: request.fromUser._id },
-      { new: true, session }
-    );
+  createTransferRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const booking = await Booking.findById(req.params.id)
+        .populate("roomId")
+        .session(session);
 
-    request.status = "accepted";
-    await request.save({ session });
+      if (!booking) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Booking not found" });
+      }
 
-    // Notify requester (fromUser) that their request was accepted
-    await notificationsController.createNotification(
-      request.fromUser._id,
-      `${request.toUser.username} accepted your transfer request for ${request.booking.roomId.name}`,
-      "transferAccepted",
-      session
-    );
+      if (booking.userId.toString() === req.user.id) {
+        await session.abortTransaction();
+        return res
+          .status(400)
+          .json({ message: "Cannot request your own booking" });
+      }
 
-    // Notify previous owner (toUser) about the transfer
-    await notificationsController.createNotification(
-      request.toUser._id,
-      `You've transferred ${request.booking.roomId.name} booking to ${request.fromUser.username}`,
-      "bookingTransferred",
-      session
-    );
+      // Check for existing pending request FROM THE CURRENT USER
+      const existingRequest = await TransferRequest.findOne({
+        booking: req.params.id,
+        fromUser: req.user.id, // Changed to check requests FROM the current user
+        status: "pending",
+      }).session(session);
 
-    await session.commitTransaction();
-    res.status(200).json({ success: true, booking });
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({ success: false, error: error.message });
-  } finally {
-    session.endSession();
-  }
-};
+      if (existingRequest) {
+        await session.abortTransaction();
+        return res
+          .status(400)
+          .json({
+            message: "You already have a pending request for this booking",
+          });
+      }
 
-// Decline transfer request
-declineTransferRequest = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const request = await TransferRequest.findByIdAndUpdate(
-      req.params.id,
-      { status: "declined" },
-      { new: true, session }
-    )
-    .populate("fromUser toUser", "username");
+      const request = new TransferRequest({
+        booking: req.params.id,
+        fromUser: req.user.id, // Corrected: Request comes FROM current user
+        toUser: booking.userId, // Corrected: Request goes TO booking owner
+        message: req.body.message,
+      });
 
-    if (!request) {
+      await request.save({ session });
+
+      // Add the new request to the booking's transferRequests array
+      await Booking.findByIdAndUpdate(
+        req.params.id,
+        { $push: { transferRequests: request._id } },
+        { session }
+      );
+
+      await notificationsController.createNotification(
+        booking.userId,
+        `New transfer request for your ${booking.roomId.name} booking`,
+        "transferRequest",
+        session
+      );
+
+      await session.commitTransaction();
+      res.status(201).json({ success: true, request });
+    } catch (error) {
       await session.abortTransaction();
-      return res.status(404).json({ message: "Request not found" });
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      session.endSession();
     }
+  };
 
-    // Notify requester (fromUser) about decline
-    await notificationsController.createNotification(
-      request.fromUser._id,
-      `${request.toUser.username} declined your transfer request`,
-      "transferDeclined",
-      session
-    );
+  // Accept transfer request
+  acceptTransferRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const request = await TransferRequest.findById(req.params.id)
+        .populate("fromUser", "username")
+        .populate("toUser", "username")
+        .populate({
+          path: "booking",
+          populate: { path: "roomId", select: "name" },
+        })
+        .session(session);
 
-    await session.commitTransaction();
-    res.status(200).json({ success: true, request });
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({ success: false, error: error.message });
-  } finally {
-    session.endSession();
-  }
-};
+      if (!request) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Request not found" });
+      }
 
+      // Transfer booking to requester (fromUser)
+      const booking = await Booking.findByIdAndUpdate(
+        request.booking._id,
+        { userId: request.fromUser._id },
+        { new: true, session }
+      );
+
+      request.status = "accepted";
+      await request.save({ session });
+
+      // Notify requester (fromUser) that their request was accepted
+      await notificationsController.createNotification(
+        request.fromUser._id,
+        `${request.toUser.username} accepted your transfer request for ${request.booking.roomId.name}`,
+        "transferAccepted",
+        session
+      );
+
+      // Notify previous owner (toUser) about the transfer
+      await notificationsController.createNotification(
+        request.toUser._id,
+        `You've transferred ${request.booking.roomId.name} booking to ${request.fromUser.username}`,
+        "bookingTransferred",
+        session
+      );
+
+      await session.commitTransaction();
+      res.status(200).json({ success: true, booking });
+    } catch (error) {
+      await session.abortTransaction();
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      session.endSession();
+    }
+  };
+
+  // Decline transfer request
+  declineTransferRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const request = await TransferRequest.findByIdAndUpdate(
+        req.params.id,
+        { status: "declined" },
+        { new: true, session }
+      ).populate("fromUser toUser", "username");
+
+      if (!request) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      // Notify requester (fromUser) about decline
+      await notificationsController.createNotification(
+        request.fromUser._id,
+        `${request.toUser.username} declined your transfer request`,
+        "transferDeclined",
+        session
+      );
+
+      await session.commitTransaction();
+      res.status(200).json({ success: true, request });
+    } catch (error) {
+      await session.abortTransaction();
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      session.endSession();
+    }
+  };
 }
 
 module.exports = new BookingController();

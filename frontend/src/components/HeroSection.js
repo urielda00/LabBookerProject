@@ -46,9 +46,9 @@ const HeroSection = () => {
               transition={{ duration: 0.7 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
             >
-              <span className="bg-gradient-primaryToRight text-transparent bg-clip-text">
+              {/* <span className="bg-gradient-primaryToRight text-transparent bg-clip-text">
                 LabBooker
-              </span>{" "}
+              </span>{" "} */}
               Revolutionizing Study Spaces
             </motion.h1>
 

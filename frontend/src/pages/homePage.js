@@ -268,13 +268,46 @@ const HomePage = () => {
         {/* Room Status Section - Enhanced */}
         <section className="mb-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-            <div className="flex items-center space-x-3">
-              <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Lab Room Status
-              </h2>
+            <div
+              className="flex items-center justify-between sm:cursor-default cursor-pointer"
+              onClick={() => {
+                if (window.innerWidth < 640) {
+                  setIsRoomsExpanded((prev) => !prev);
+                }
+              }}
+            >
+              <div className="flex items-center space-x-3">
+                <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-700 dark:hover:text-blue-400 transition-colors duration-300">
+                  Lab Room Status
+                </h2>
+              </div>
+              {/* Chevron Icon - Hidden on desktop */}
+              <button
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors sm:hidden"
+                aria-label={
+                  isRoomsExpanded ? "Collapse section" : "Expand section"
+                }
+              >
+                <svg
+                  className={`w-6 h-6 transform transition-transform ${
+                    isRoomsExpanded ? "rotate-180" : ""
+                  } text-gray-900 dark:text-gray-200`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
+
           {isRoomsExpanded && (
             <div className="p-6 pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
