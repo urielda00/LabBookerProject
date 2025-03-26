@@ -190,127 +190,130 @@ const [declinedRequests, setDeclinedRequests] = useState({});
 
     return (
       <Dialog open={true} onClose={onClose} className="relative z-50">
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-xl p-6 border dark:border-gray-700 mx-4 sm:mx-0">
-                  <div className="flex justify-between items-center mb-4">
-                      <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                          Transfer Requests ({requests.length})
-                      </Dialog.Title>
-                      <button 
-                          onClick={onClose} 
-                          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1"
-                      >
-                          <X className="w-6 h-6" />
-                      </button>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-xl p-6 border dark:border-gray-700 mx-4 sm:mx-0 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Transfer Requests ({requests.length})
+              </Dialog.Title>
+              <button 
+                onClick={onClose} 
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+    
+            {/* Status Messages */}
+            {responseError && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm sm:text-base">
+                {responseError}
+              </div>
+            )}
+            {responseSuccess && (
+              <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm sm:text-base">
+                {responseSuccess}
+              </div>
+            )}
+    
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] pr-2">
+              {loading ? (
+                <div className="text-center py-4 text-gray-500">Loading requests...</div>
+              ) : requests.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">No pending requests</div>
+              ) : (
+                <div className="space-y-3">
+                  {requests.map((request) => (
+                    <div key={request._id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <span className="font-medium dark:text-gray-100">
+                            {request.fromUser?.username}
+                          </span>
+                        </div>
+                        <span className="text-gray-500 dark:text-gray-400 break-words">
+                          {request.fromUser?.email}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap break-words">
+                        "{request.message}"
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setConfirmAction('decline');
+                          }}
+                          className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 
+                            dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500
+                            w-full sm:w-auto"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setConfirmAction('accept');
+                          }}
+                          className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-md hover:bg-green-700
+                            w-full sm:w-auto"
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+    
+            {/* Confirmation Dialog */}
+            {confirmAction && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4 sm:mx-0">
+                  <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">
+                    {confirmAction === 'accept' 
+                      ? "Confirm Transfer" 
+                      : "Confirm Decline"}
+                  </h3>
+                  <p className="mb-4 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+                    {confirmAction === 'accept' 
+                      ? "By accepting, you'll permanently transfer this booking. This action cannot be undone!"
+                      : "Are you sure you want to decline this transfer request?"}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                    <button
+                      onClick={() => {
+                        setConfirmAction(null);
+                        setSelectedRequest(null);
+                      }}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
+                        dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600
+                        w-full sm:w-auto"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleResponse(confirmAction === 'accept')}
+                      className={`px-4 py-2 text-white rounded-lg w-full sm:w-auto ${
+                        confirmAction === 'accept' 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      Confirm
+                    </button>
                   </div>
-  
-                  {/* Status Messages */}
-                  {responseError && (
-                      <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm sm:text-base">
-                          {responseError}
-                      </div>
-                  )}
-                  {responseSuccess && (
-                      <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm sm:text-base">
-                          {responseSuccess}
-                      </div>
-                  )}
-  
-                  {loading ? (
-                      <div className="text-center py-4 text-gray-500">Loading requests...</div>
-                  ) : requests.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500">No pending requests</div>
-                  ) : (
-                      <div className="space-y-3">
-                          {requests.map((request) => (
-                              <div key={request._id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2 text-sm">
-                                      <div className="flex items-center gap-2">
-                                          <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                          <span className="font-medium dark:text-gray-100">
-                                              {request.fromUser?.username}
-                                          </span>
-                                      </div>
-                                      <span className="text-gray-500 dark:text-gray-400 break-words">
-                                          {request.fromUser?.email}
-                                      </span>
-                                  </div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap break-words">
-                                      "{request.message}"
-                                  </p>
-                                  <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                                      <button
-                                          onClick={() => {
-                                              setSelectedRequest(request);
-                                              setConfirmAction('decline');
-                                          }}
-                                          className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 
-                                              dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500
-                                              w-full sm:w-auto"
-                                      >
-                                          Decline
-                                      </button>
-                                      <button
-                                          onClick={() => {
-                                              setSelectedRequest(request);
-                                              setConfirmAction('accept');
-                                          }}
-                                          className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-md hover:bg-green-700
-                                              w-full sm:w-auto"
-                                      >
-                                          Accept
-                                      </button>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                  )}
-  
-                  {/* Confirmation Dialog */}
-                  {confirmAction && (
-                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-                          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4 sm:mx-0">
-                              <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">
-                                  {confirmAction === 'accept' 
-                                      ? "Confirm Transfer" 
-                                      : "Confirm Decline"}
-                              </h3>
-                              <p className="mb-4 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
-                                  {confirmAction === 'accept' 
-                                      ? "By accepting, you'll permanently transfer this booking. This action cannot be undone!"
-                                      : "Are you sure you want to decline this transfer request?"}
-                              </p>
-                              <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                                  <button
-                                      onClick={() => {
-                                          setConfirmAction(null);
-                                          setSelectedRequest(null);
-                                      }}
-                                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
-                                          dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600
-                                          w-full sm:w-auto"
-                                  >
-                                      Cancel
-                                  </button>
-                                  <button
-                                      onClick={() => handleResponse(confirmAction === 'accept')}
-                                      className={`px-4 py-2 text-white rounded-lg w-full sm:w-auto ${
-                                          confirmAction === 'accept' 
-                                              ? 'bg-green-600 hover:bg-green-700' 
-                                              : 'bg-red-600 hover:bg-red-700'
-                                      }`}
-                                  >
-                                      Confirm
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  )}
-              </Dialog.Panel>
-          </div>
+                </div>
+              </div>
+            )}
+          </Dialog.Panel>
+        </div>
       </Dialog>
-  );
+    );
 };
 
   const handleStartBooking = useCallback(
@@ -540,7 +543,7 @@ const [declinedRequests, setDeclinedRequests] = useState({});
         handleStartBooking={handleStartBooking}
       />
   
-     {/* Schedule Dialog */}
+    {/* Schedule Dialog */}
 <Dialog
   open={showWeeklyBookings}
   onClose={() => setShowWeeklyBookings(false)}
@@ -548,7 +551,7 @@ const [declinedRequests, setDeclinedRequests] = useState({});
 >
   <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
   <div className="fixed inset-0 flex items-center justify-center p-4">
-    <Dialog.Panel className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 border dark:border-gray-600 mx-4 sm:mx-0">
+    <Dialog.Panel className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 border dark:border-gray-600 mx-4 sm:mx-0 flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <Dialog.Title className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100 flex-wrap">
           <CalendarClock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -562,130 +565,133 @@ const [declinedRequests, setDeclinedRequests] = useState({});
         </button>
       </div>
 
-      {loadingBookings ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
-        </div>
-      ) : bookingError ? (
-        <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-200 rounded-lg text-sm sm:text-base">
-          {bookingError}
-        </div>
-      ) : weeklyBookings.length === 0 ? (
-        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-          No bookings scheduled this week
-        </div>
-      ) : (
-        weeklyBookings.map((booking) => {
-          const hasPendingRequest = booking.transferRequests?.some(
-            req => req.fromUser._id === userInfo._id && req.status === 'pending'
-          );
-          const hasDeclined = declinedRequests[booking._id] || false;
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] pr-2">
+        {loadingBookings ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-blue-400"></div>
+          </div>
+        ) : bookingError ? (
+          <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-200 rounded-lg text-sm sm:text-base">
+            {bookingError}
+          </div>
+        ) : weeklyBookings.length === 0 ? (
+          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+            No bookings scheduled this week
+          </div>
+        ) : (
+          weeklyBookings.map((booking) => {
+            const hasPendingRequest = booking.transferRequests?.some(
+              req => req.fromUser._id === userInfo._id && req.status === 'pending'
+            );
+            const hasDeclined = declinedRequests[booking._id] || false;
 
-          return (
-            <div key={booking._id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3 transition-all hover:shadow-md dark:hover:shadow-gray-900/30">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-2">
-                <div className="flex flex-col flex-grow">
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded text-xs sm:text-sm">
-                      {new Date(booking.date).toLocaleDateString()}
-                    </span>
-                    <span className="text-blue-500 dark:text-blue-400 hidden sm:inline">•</span>
-                    <span className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded text-xs sm:text-sm">
-                      {booking.startTime} - {booking.endTime}
-                    </span>
+            return (
+              <div key={booking._id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3 transition-all hover:shadow-md dark:hover:shadow-gray-900/30">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-2">
+                  <div className="flex flex-col flex-grow">
+                    <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded text-xs sm:text-sm">
+                        {new Date(booking.date).toLocaleDateString()}
+                      </span>
+                      <span className="text-blue-500 dark:text-blue-400 hidden sm:inline">•</span>
+                      <span className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded text-xs sm:text-sm">
+                        {booking.startTime} - {booking.endTime}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-sm">
+                      <span className={`inline-block w-2 h-2 rounded-full ${
+                        booking.status === 'Active' ? 'bg-green-500 dark:bg-green-400' :
+                        booking.status === 'Confirmed' ? 'bg-sky-500 dark:bg-sky-400' :
+                        'bg-yellow-500 dark:bg-yellow-400'
+                      }`}></span>
+                      <span className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
+                        booking.status === 'Active' ? 
+                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200' :
+                        booking.status === 'Confirmed' ?
+                          'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200' :
+                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200'
+                      }`}>
+                        {booking.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-2 text-sm">
-                    <span className={`inline-block w-2 h-2 rounded-full ${
-                      booking.status === 'Active' ? 'bg-green-500 dark:bg-green-400' :
-                      booking.status === 'Confirmed' ? 'bg-sky-500 dark:bg-sky-400' :
-                      'bg-yellow-500 dark:bg-yellow-400'
-                    }`}></span>
-                    <span className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
-                      booking.status === 'Active' ? 
-                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200' :
-                      booking.status === 'Confirmed' ?
-                        'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200' :
-                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200'
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                </div>
 
-                {booking.userId._id === userInfo._id ? (
-                  <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-                    {booking.transferRequests?.length > 0 && (
-                      <button
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowRequests(true);
-                        }}
-                        className="text-xs px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors w-full sm:w-auto"
-                      >
-                        View Requests ({booking.transferRequests.length})
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  room.type === "Open" && (
-                    <>
-                      {['Pending', 'Active'].includes(booking.status) ? (
-                        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                          <Lock className="w-4 h-4" />
-                          <span>Transfer unavailable</span>
-                        </div>
-                      ) : hasDeclined ? (
-                        <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs sm:text-sm">
-                          <X className="w-4 h-4" />
-                          <span>Declined</span>
-                        </div>
-                      ) : hasPendingRequest ? (
-                        <button
-                          className="bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed text-xs px-2.5 py-1 rounded-full w-full sm:w-auto"
-                          disabled
-                        >
-                          Request Sent ✓
-                        </button>
-                      ) : (
+                  {booking.userId._id === userInfo._id ? (
+                    <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                      {booking.transferRequests?.length > 0 && (
                         <button
                           onClick={() => {
                             setSelectedBooking(booking);
-                            setShowTransferModal(true);
+                            setShowRequests(true);
                           }}
-                          className="bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-800/50 text-xs px-2.5 py-1 rounded-full transition-all w-full sm:w-auto"
+                          className="text-xs px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors w-full sm:w-auto"
                         >
-                          Request Transfer
+                          View Requests ({booking.transferRequests.length})
                         </button>
                       )}
-                    </>
-                  )
-                )}
-              </div>
-
-              {/* User information section */}
-              <div className="mt-2 space-y-2">
-                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                  <User className="w-4 h-4 text-purple-500 dark:text-purple-400" />
-                  <span className="font-medium dark:text-gray-100 break-words">{booking.userId?.username}</span>
-                  <span className="text-gray-500 dark:text-gray-400 break-all">• {booking.userId?.email}</span>
+                    </div>
+                  ) : (
+                    room.type === "Open" && (
+                      <>
+                        {['Pending', 'Active'].includes(booking.status) ? (
+                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                            <Lock className="w-4 h-4" />
+                            <span>Transfer unavailable</span>
+                          </div>
+                        ) : hasDeclined ? (
+                          <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs sm:text-sm">
+                            <X className="w-4 h-4" />
+                            <span>Declined</span>
+                          </div>
+                        ) : hasPendingRequest ? (
+                          <button
+                            className="bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed text-xs px-2.5 py-1 rounded-full w-full sm:w-auto"
+                            disabled
+                          >
+                            Request Sent ✓
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setShowTransferModal(true);
+                            }}
+                            className="bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-800/50 text-xs px-2.5 py-1 rounded-full transition-all w-full sm:w-auto"
+                          >
+                            Request Transfer
+                          </button>
+                        )}
+                      </>
+                    )
+                  )}
                 </div>
-                {booking.additionalUsers?.length > 0 && (
+
+                {/* User information section */}
+                <div className="mt-2 space-y-2">
                   <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                    <Users className="w-4 h-4 text-purple-500 dark:text-purple-400" />
-                    <span className="font-medium dark:text-gray-100">Participants:</span>
-                    {booking.additionalUsers.map((user) => (
-                      <span key={user._id} className="text-gray-500 dark:text-gray-400 break-words">
-                        {user.username}
-                      </span>
-                    ))}
+                    <User className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                    <span className="font-medium dark:text-gray-100 break-words">{booking.userId?.username}</span>
+                    <span className="text-gray-500 dark:text-gray-400 break-all">• {booking.userId?.email}</span>
                   </div>
-                )}
+                  {booking.additionalUsers?.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                      <Users className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                      <span className="font-medium dark:text-gray-100">Participants:</span>
+                      {booking.additionalUsers.map((user) => (
+                        <span key={user._id} className="text-gray-500 dark:text-gray-400 break-words">
+                          {user.username}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </div>
     </Dialog.Panel>
   </div>
 </Dialog>
