@@ -1837,22 +1837,27 @@ class BookingController {
           {
             $or: [
               { date: { $gt: todayStr } },
-              {
+              { 
                 date: todayStr,
-                endTime: { $gt: currentTime },
-              },
-            ],
+                endTime: { $gt: currentTime }
+              }
+            ]
           },
           {
-            date: { $lte: now.clone().endOf("week").format("YYYY-MM-DD") },
-            status: { $ne: BOOKING_CONSTANTS.STATUSES.CANCELED },
-          },
-        ],
+            status: { 
+              $in: [
+                BOOKING_CONSTANTS.STATUSES.PENDING,
+                BOOKING_CONSTANTS.STATUSES.CONFIRMED,
+                BOOKING_CONSTANTS.STATUSES.ACTIVE
+              ] 
+            }
+          }
+        ]
       };
 
       if (req.query.roomId) {
         query.$and.push({
-          roomId: new mongoose.Types.ObjectId(req.query.roomId),
+          roomId: new mongoose.Types.ObjectId(req.query.roomId)
         });
       }
 
@@ -1865,25 +1870,25 @@ class BookingController {
           match: { status: "pending" },
           populate: [
             { path: "fromUser", select: "username email" },
-            { path: "toUser", select: "username email" },
-          ],
+            { path: "toUser", select: "username email" }
+          ]
         })
         .sort({ date: 1, startTime: 1 });
 
       res.status(200).json({
         success: true,
         bookings,
-        weekRange: {
+        dateRange: {
           start: todayStr,
-          end: now.clone().endOf("week").format("YYYY-MM-DD"),
-        },
+          note: "Showing upcoming bookings (Pending, Confirmed, Active statuses)"
+        }
       });
     } catch (error) {
       console.error("getWeeklyBookings - Error:", error);
       res.status(500).json({
         success: false,
-        message: "Failed to fetch weekly bookings",
-        error: error.message,
+        message: "Failed to fetch bookings",
+        error: error.message
       });
     }
   };
@@ -1917,45 +1922,149 @@ class BookingController {
         return res.status(404).json({ message: "Booking not found" });
       }
 
-      if (booking.userId.toString() === req.user.id) {
+      // Add this check after retrieving the booking
+if (['Pending', 'Active'].includes(booking.status)) {
+  await session.abortTransaction();
+  return res.status(400).json({ 
+    message: "Cannot request transfer for pending or active bookings"
+  });
+}
+
+      // Get requesting user details
+      const user = await User.findById(req.user.id).session(session);
+      if (!user) {
         await session.abortTransaction();
-        return res
-          .status(400)
-          .json({ message: "Cannot request your own booking" });
+        return res.status(404).json({ message: "User not found" });
       }
 
-      // Check for existing pending request FROM THE CURRENT USER
+      // 1. Check if user is blocked
+      if (user.cancellationStats?.blockedUntil && user.cancellationStats.blockedUntil > new Date()) {
+        await session.abortTransaction();
+        return res.status(403).json({
+          message: `Account temporarily blocked until ${user.cancellationStats.blockedUntil.toLocaleDateString()}`
+        });
+      }
+
+      // 2. Check booking validity
+      const timezone = "Asia/Jerusalem";
+      const today = moment().tz(timezone).format("YYYY-MM-DD");
+      const currentTime = moment().tz(timezone).format("HH:mm");
+      
+      if (booking.date < today || 
+          (booking.date === today && booking.endTime <= currentTime)) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: "Cannot transfer expired bookings" });
+      }
+
+      // 3. Check weekly limits
+      const startOfWeek = moment().tz(timezone).startOf("week").toDate();
+      
+      // Existing weekly bookings count
+      const weeklyCount = await Booking.countDocuments({
+        userId: req.user.id,
+        createdAt: { $gte: startOfWeek },
+        status: { $ne: "Canceled" }
+      }).session(session);
+
+      if (weeklyCount >= LIMITS.MAX_WEEKLY_BOOKINGS) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          message: "Weekly booking limit reached"
+        });
+      }
+
+      const existingUpcoming = await Booking.findOne({
+        userId: req.user.id,
+        status: {
+          $nin: [
+            BOOKING_CONSTANTS.STATUSES.CANCELED,
+            BOOKING_CONSTANTS.STATUSES.COMPLETED,
+            BOOKING_CONSTANTS.STATUSES.MISSED,
+          ],
+        },
+        $or: [
+          { date: { $gt: today } },
+          {
+            date: today,
+            endTime: { $gt: currentTime },
+          },
+        ],
+      }).session(session);
+
+      if (existingUpcoming) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message:
+            "You already have an upcoming booking. You cannot request a transfer.",
+        });
+      }
+
+      // 4. Check room-type limits
+      const roomTypeLimits = {
+        [ROOM_TYPES.OPEN]: 3,
+        [ROOM_TYPES.SMALL_SEMINAR]: 2,
+        [ROOM_TYPES.LARGE_SEMINAR]: 1,
+      };
+
+      const roomTypeLimit = roomTypeLimits[booking.roomId.type];
+      if (roomTypeLimit) {
+        const typeCount = await Booking.countDocuments({
+          userId: req.user.id,
+          roomType: booking.roomId.type,
+          createdAt: { $gte: startOfWeek },
+          status: { $ne: "Canceled" }
+        }).session(session);
+
+        if (typeCount >= roomTypeLimit) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            message: `Weekly ${booking.roomId.type} room limit reached`
+          });
+        }
+      }
+
+      // Existing request checks
+      if (booking.userId.toString() === req.user.id) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: "Cannot request your own booking" });
+      }
+
       const existingRequest = await TransferRequest.findOne({
         booking: req.params.id,
-        fromUser: req.user.id, // Changed to check requests FROM the current user
-        status: "pending",
+        fromUser: req.user.id,
+        status: { $in: ["pending", "declined"] }
       }).session(session);
 
       if (existingRequest) {
         await session.abortTransaction();
-        return res
-          .status(400)
-          .json({
-            message: "You already have a pending request for this booking",
-          });
+        return res.status(400).json({
+          message: existingRequest.status === "pending" 
+            ? "Pending request exists" 
+            : "Transfer already declined"
+        });
       }
 
+      // Create the request
       const request = new TransferRequest({
         booking: req.params.id,
-        fromUser: req.user.id, // Corrected: Request comes FROM current user
-        toUser: booking.userId, // Corrected: Request goes TO booking owner
+        fromUser: req.user.id,
+        toUser: booking.userId,
         message: req.body.message,
+        expiresAt: booking.deletedAt || new Date(Date.now() + 604800000)
       });
 
       await request.save({ session });
 
-      // Add the new request to the booking's transferRequests array
+      // Update booking's transfer requests
       await Booking.findByIdAndUpdate(
         req.params.id,
         { $push: { transferRequests: request._id } },
         { session }
       );
 
+      // Notification
       await notificationsController.createNotification(
         booking.userId,
         `New transfer request for your ${booking.roomId.name} booking`,
@@ -1992,6 +2101,22 @@ class BookingController {
         return res.status(404).json({ message: "Request not found" });
       }
 
+      // In createTransferRequest controller
+const existingRequest = await TransferRequest.findOne({
+  booking: req.params.id,
+  fromUser: req.user.id,
+  status: { $in: ["pending", "declined"] }
+});
+
+if (existingRequest) {
+  await session.abortTransaction();
+  return res.status(400).json({ 
+    message: existingRequest.status === "pending" 
+      ? "Pending request exists" 
+      : "Transfer already declined" 
+  });
+}
+
       // Transfer booking to requester (fromUser)
       const booking = await Booking.findByIdAndUpdate(
         request.booking._id,
@@ -2005,7 +2130,7 @@ class BookingController {
       // Notify requester (fromUser) that their request was accepted
       await notificationsController.createNotification(
         request.fromUser._id,
-        `${request.toUser.username} accepted your transfer request for ${request.booking.roomId.name}`,
+        `Transfer accepted! You now own the ${request.booking.roomId.name} booking`,
         "transferAccepted",
         session
       );
@@ -2061,6 +2186,20 @@ class BookingController {
       session.endSession();
     }
   };
+
+  checkDeclinedRequest = async (req, res) => {
+    try {
+      const request = await TransferRequest.findOne({
+        booking: req.params.id,
+        fromUser: req.query.userId,
+        status: 'declined'
+      });
+      res.json({ exists: !!request });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
 }
 
 module.exports = new BookingController();
