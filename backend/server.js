@@ -170,6 +170,32 @@ mongoose
     } catch (error) {
       console.error("❌ Error setting up Notification TTL index:", error);
     }
+
+    try {
+      const TransferRequest = require("./models/TransferRequest");
+      const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60; // 604800 seconds
+
+      // Drop existing index on createdAt if it exists
+      try {
+        await TransferRequest.collection.dropIndex("createdAt_1");
+        console.log("✅ Existing TransferRequest TTL index dropped successfully");
+      } catch (error) {
+        console.log("ℹ️ No existing TransferRequest TTL index to drop");
+      }
+
+      // Create a TTL index on the createdAt field to automatically remove 
+      // transfer requests after 7 days
+      await TransferRequest.collection.createIndex(
+        { createdAt: 1 },
+        { expireAfterSeconds: SEVEN_DAYS_IN_SECONDS }
+      );
+      console.log(
+        "✅ TransferRequest TTL index created successfully (7 days expiration)",
+      );
+    } catch (error) {
+      console.error("❌ Error setting up TTL index for TransferRequest:", error);
+    }
+
     // Setup TTL index for HealthChecks
     try {
       const HealthCheck = require("./models/HealthCheck");

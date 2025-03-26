@@ -37,7 +37,7 @@ const UserManagement = () => {
     async (
       page = pagination.page,
       role = selectedRole,
-      search = searchTerm,
+      search = searchTerm
     ) => {
       try {
         setLoading(true);
@@ -62,7 +62,7 @@ const UserManagement = () => {
         setLoading(false);
       }
     },
-    [pagination.page, pagination.limit, selectedRole, searchTerm],
+    [pagination.page, pagination.limit, selectedRole, searchTerm]
   );
 
   // Initial fetch on mount
@@ -203,7 +203,7 @@ const UserManagement = () => {
                         >
                           {header}
                         </th>
-                      ),
+                      )
                     )}
                   </tr>
                 </thead>
@@ -251,8 +251,8 @@ const UserManagement = () => {
                               user.role === "admin"
                                 ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300"
                                 : user.role === "manager"
-                                  ? "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                ? "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {user.role.toUpperCase()}
@@ -261,17 +261,29 @@ const UserManagement = () => {
 
                         {/* Status Cell */}
                         <td className="px-3 sm:px-5 py-2 sm:py-3">
-                          {user.cancellationStats?.blockedUntil ? (
-                            <span className="text-red-600 dark:text-red-400 flex items-center gap-1 text-xs sm:text-sm">
-                              <Ban size={14} className="shrink-0" />
-                              <span>Blocked</span>
-                            </span>
-                          ) : (
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 text-xs sm:text-sm">
-                              <CheckCircle2 size={14} className="shrink-0" />
-                              <span>Active</span>
-                            </span>
-                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              if (user.cancellationStats?.blockedUntil) {
+                                setShowUnblockModal(true);
+                              } else {
+                                setShowBlockModal(true);
+                              }
+                            }}
+                            className="flex items-center gap-1 text-xs sm:text-sm focus:outline-none"
+                          >
+                            {user.cancellationStats?.blockedUntil ? (
+                              <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
+                                <Ban size={14} className="shrink-0" />
+                                <span>Blocked</span>
+                              </span>
+                            ) : (
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <CheckCircle2 size={14} className="shrink-0" />
+                                <span>Active</span>
+                              </span>
+                            )}
+                          </button>
                         </td>
 
                         {/* Actions Cell */}
@@ -385,7 +397,9 @@ const UserManagement = () => {
           isOpen={showUnblockModal}
           onClose={() => setShowUnblockModal(false)}
           onConfirm={() => handleUnblock(selectedUser?._id)}
-          message={`Are you sure you want to unblock ${selectedUser?.name || selectedUser?.username}?`}
+          message={`Are you sure you want to unblock ${
+            selectedUser?.name || selectedUser?.username
+          }?`}
           confirmText="Unblock"
           cancelText="Cancel"
           className="z-[100]"

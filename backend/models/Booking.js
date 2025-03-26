@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const TransferRequest = require("./TransferRequest");
 const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
 
 const ROOM_TYPES = {
@@ -110,6 +111,17 @@ const bookingSchema = new mongoose.Schema(
   },
 );
 
+bookingSchema.post('remove', async function(doc) {
+  try {
+    await TransferRequest.deleteMany({ booking: doc._id });
+    console.log(`Deleted transfer requests for booking ${doc._id}`);
+  } catch (error) {
+    console.error(`Error deleting transfer requests for booking ${doc._id}:`, error);
+  }
+});
+
+
+
 // Existing pre-save validation hook
 bookingSchema.pre("save", function (next) {
   // Validate start and end times
@@ -146,8 +158,20 @@ bookingSchema.statics.softDelete = async function (bookingId) {
   booking.isDeleted = true;
   booking.deletedAt = currentDate; // Use current date instead of booking date
 
+  await TransferRequest.deleteMany({ booking: bookingId });
+
+
   return booking.save();
 };
+
+bookingSchema.pre('remove', async function(next) {
+  try {
+    await TransferRequest.deleteMany({ booking: this._id });
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Make sure your TTL index is correctly set
 bookingSchema.index(
