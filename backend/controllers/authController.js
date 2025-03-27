@@ -86,41 +86,35 @@ const signup = async (req, res) => {
     ).toString();
     const verificationExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Store verification code in Redis
+    console.log(verificationCode);
+
     await redisClient.set(
       `signup:${normalizedEmail}`,
-      verificationCode,
-      "EX",
-      300,
+      JSON.stringify({
+        username: normalizedUsername,
+        name: normalizedName,
+        email: normalizedEmail,
+        verificationCode,
+        verificationExpires
+      }),
+      "EX", 300 // 5 minutes expiration
     );
 
     // Send verification email
     await sendVerificationEmail(normalizedEmail, verificationCode);
 
     const response = {
-      message: "Signup successful. Please verify your email.",
-      userId: newUser._id,
+      message: "Signup successful. Please check  your email.",
+      userId: normalizedEmail
     };
 
     // Include verification code in development
     if (process.env.NODE_ENV === "development") {
       response.verificationCode = verificationCode;
     }
-      // Create new user
-      const newUser = new User({
-        username: normalizedUsername,
-        name: normalizedName,
-        email: normalizedEmail,
-        verificationCode,
-        verificationExpires,
-        role: "user",
-      });
   
-      await newUser.save();
-      console.log("User created:", newUser._id);
-  
-
     res.status(201).json(response);
+
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({
@@ -341,50 +335,64 @@ const verifySignup = async (req, res) => {
 
   try {
     console.log("Signup verification attempt:", { email, code });
-
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Find user
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Get stored data from Redis
+    const redisData = await redisClient.get(`signup:${normalizedEmail}`);
+    if (!redisData) {
+      return res.status(400).json({ message: "Verification expired or invalid" });
     }
 
-    // Check if verification code has expired
-    if (user.verificationExpires < new Date()) {
-      return res.status(400).json({ message: "Verification code has expired" });
-    }
+    const {
+      username,
+      name,
+      verificationCode: storedCode,
+      verificationExpires
+    } = JSON.parse(redisData);
 
-    // Verify code from Redis
-    const redisCode = await redisClient.get(`signup:${normalizedEmail}`);
-
-    if (code !== user.verificationCode || code !== redisCode) {
+    // Validate code and expiration
+    if (code !== storedCode) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
-    // Clear verification fields
-    user.verificationCode = null;
-    user.verificationExpires = null;
-    user.isVerified = true; // Add this field to your User model if needed
-    await user.save();
+    if (new Date(verificationExpires) < new Date()) {
+      return res.status(400).json({ message: "Verification code expired" });
+    }
 
-    // Clear Redis verification code
+    // Check if user exists (prevent race condition)
+    const existingUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { username }]
+    });
+    if (existingUser) {
+      return res.status(409).json({
+        message: "User already registered during verification process"
+      });
+    }
+
+    // Create user ONLY after successful verification
+    const newUser = await User.create({
+      username,
+      name,
+      email: normalizedEmail,
+      role: "user"
+    });
+
+    // Cleanup Redis data
     await redisClient.del(`signup:${normalizedEmail}`);
 
     // Generate tokens
-    const { accessToken, refreshToken } =
-      await authMiddleware.generateTokens(user);
+    const { accessToken, refreshToken } = await authMiddleware.generateTokens(newUser);
 
-    res.status(200).json({
-      message: "Email verified successfully",
+    res.status(201).json({
+      message: "Account activated successfully",
       user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role
       },
       accessToken,
-      refreshToken,
+      refreshToken
     });
   } catch (error) {
     console.error("Signup verification error:", error);
