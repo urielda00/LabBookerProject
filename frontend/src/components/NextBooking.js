@@ -523,38 +523,58 @@ const [loadingRequests, setLoadingRequests] = useState(false);
               <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3 group">
-  <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
-    {booking
-      ? booking.status === "Pending"
-        ? "Pending Approval"
-        : bookingState === "active"
-        ? "Current Session"
-        : "Upcoming Reservation"
-      : "Booking Overview"}
-  </span>
-  {transferRequests.length > 0 && (
-     <button
-     onClick={(e) => {
-       e.stopPropagation(); // Add this line
-       setShowRequests(true);
-     }}
-     className="relative inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-colors transform hover:scale-105 duration-200 group/notification cursor-pointer shadow-sm hover:shadow-md"
-   >
-      <span className="animate-ping absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
-      <span className="relative">
-        <AlertTriangle className="inline w-4 h-4 mr-1.5" />
-        Requests ({transferRequests.length})
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+    {/* Title Section */}
+    <div className="flex items-center gap-3">
+      <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
+        {booking
+          ? booking.status === "Pending"
+            ? "Pending Approval"
+            : bookingState === "active"
+            ? "Current Session"
+            : "Upcoming Reservation"
+          : "Booking Overview"}
       </span>
-    </button>
-  )}
+      
+      {/* Status Badges */}
+      {booking && booking.status === "Pending" && (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+          <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+          Awaiting
+        </span>
+      )}
+    </div>
 
-{loadingRequests && (
-    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-      <span className="inline-block animate-spin">⟳</span> Loading requests...
-    </span>
-  )}
-  
+    {/* Requests Section */}
+    <div className="flex items-center gap-2">
+      {transferRequests.length > 0 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowRequests(true);
+          }}
+          className="relative flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+        >
+          <span className="animate-ping absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
+          <span className="relative flex items-center gap-x-1.5 truncate">
+            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">
+              Requests ({transferRequests.length})
+            </span>
+          </span>
+        </button>
+      )}
+
+      {loadingRequests && (
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <span className="inline-block animate-spin">⟳</span>
+          <span className="hidden sm:inline">Loading requests...</span>
+          <span className="sm:hidden">Loading...</span>
+        </span>
+      )}
+    </div>
+  </div>
 </h2>
 
 {booking && booking.status === "Pending" && (
