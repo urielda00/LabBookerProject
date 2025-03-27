@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import TransferRequestsModal from "./TransferRequestsModal";
 
 const NextBooking = ({
   showToast,
@@ -33,6 +34,9 @@ const NextBooking = ({
   const [lastCheckInReminder, setLastCheckInReminder] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showRequests, setShowRequests] = useState(false);
+const [transferRequests, setTransferRequests] = useState([]);
+const [loadingRequests, setLoadingRequests] = useState(false);
 
   const intervalRef = useRef(null);
   const bookingRef = useRef(null);
@@ -42,6 +46,25 @@ const NextBooking = ({
   useEffect(() => {
     bookingRef.current = booking;
   }, [booking]);
+
+  const fetchTransferRequests = useCallback(async () => {
+    if (booking?._id) {
+      try {
+        setLoadingRequests(true);
+        const response = await api.get(`/book/${booking._id}/transfer-requests`);
+        setTransferRequests(response.data.requests);
+      } catch (err) {
+        console.error("Failed to fetch transfer requests:", err);
+      } finally {
+        setLoadingRequests(false);
+      }
+    }
+  }, [booking?._id]); // Add dependency on booking._id
+  
+  // Then update your useEffect to use the memoized version
+  useEffect(() => {
+    fetchTransferRequests();
+  }, [fetchTransferRequests]);
 
   const formatTime = useCallback((seconds) => {
     const days = Math.floor(seconds / (3600 * 24));
@@ -510,6 +533,28 @@ const NextBooking = ({
         : "Upcoming Reservation"
       : "Booking Overview"}
   </span>
+  {transferRequests.length > 0 && (
+     <button
+     onClick={(e) => {
+       e.stopPropagation(); // Add this line
+       setShowRequests(true);
+     }}
+     className="relative inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-colors transform hover:scale-105 duration-200 group/notification cursor-pointer shadow-sm hover:shadow-md"
+   >
+      <span className="animate-ping absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
+      <span className="relative">
+        <AlertTriangle className="inline w-4 h-4 mr-1.5" />
+        Requests ({transferRequests.length})
+      </span>
+    </button>
+  )}
+
+{loadingRequests && (
+    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+      <span className="inline-block animate-spin">⟳</span> Loading requests...
+    </span>
+  )}
+  
 </h2>
 
 {booking && booking.status === "Pending" && (
@@ -766,6 +811,17 @@ const NextBooking = ({
           </div>
         )}
       </div>
+
+      {showRequests && (
+  <TransferRequestsModal 
+    booking={booking} 
+    onClose={() => {
+      setShowRequests(false);
+      fetchTransferRequests();
+      setShouldRefetch(true);
+    }}
+  />
+)}
     </div>
   );
 };

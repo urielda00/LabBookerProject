@@ -77,23 +77,47 @@ const MyBookingsPage = () => {
     // Handle all backend-provided statuses first
     switch (status) {
       case "canceled":
-        return { color: "bg-red-100 text-red-800", text: "Canceled" };
+        return { 
+          color: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300", 
+          text: "Canceled" 
+        };
       case "pending":
-        return { color: "bg-yellow-100 text-yellow-800", text: "Pending" };
+        return { 
+          color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300", 
+          text: "Pending" 
+        };
       case "confirmed":
-        return { color: "bg-blue-100 text-blue-800", text: "Confirmed" };
+        return { 
+          color: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300", 
+          text: "Confirmed" 
+        };
       case "active":
-        return { color: "bg-green-100 text-green-800", text: "Active" };
+        return { 
+          color: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300", 
+          text: "Active" 
+        };
       case "completed":
-        return { color: "bg-gray-100 text-gray-800", text: "Completed" };
+        return { 
+          color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300", 
+          text: "Completed" 
+        };
       case "missed":
-        return { color: "bg-orange-100 text-orange-800", text: "Missed" };
+        return { 
+          color: "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300", 
+          text: "Missed" 
+        };
       default:
-        // Fallback for legacy bookings (remove after backend migration)
+        // Fallback for legacy bookings
         if (isBookingPast(booking.date, booking.endTime)) {
-          return { color: "bg-gray-100 text-gray-800", text: "Completed" };
+          return { 
+            color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300", 
+            text: "Completed" 
+          };
         }
-        return { color: "bg-green-100 text-green-800", text: "Confirmed" };
+        return { 
+          color: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300", 
+          text: "Confirmed" 
+        };
     }
   };
 
@@ -370,7 +394,7 @@ const MyBookingsPage = () => {
                 clipRule="evenodd"
               />
             </svg>
-            This booking will be cancelled and permanently deleted after 3 days
+            This booking will be cancelled and permanently deleted after 7 days
           </div>
         </div>
       </div>
