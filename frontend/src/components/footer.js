@@ -195,19 +195,19 @@ function Footer() {
               © {currentYear} LabBooker™. All rights reserved.
             </p>
             <div className="flex items-center space-x-4">
-              <a
-                href="/termsofservice"
-                className="text-gray-400 hover:text-white transition-colors text-sm"
-              >
-                Terms of Service
-              </a>
-              <span className="text-gray-600">•</span>
-              <a
-                href="/privacypolicy"
-                className="text-gray-400 hover:text-white transition-colors text-sm"
-              >
-                Privacy Policy
-              </a>
+            <Link
+        to="/termsofservice"
+        className="text-gray-400 hover:text-white transition-colors text-sm"
+      >
+        Terms of Service
+      </Link>
+      <span className="text-gray-600">•</span>
+      <Link
+        to="/privacypolicy"
+        className="text-gray-400 hover:text-white transition-colors text-sm"
+      >
+        Privacy Policy
+      </Link>
               <span className="text-gray-600">•</span>
               <span className="text-gray-400 text-sm">
                 Developed by Azrieli College
