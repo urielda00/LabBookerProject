@@ -53,7 +53,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
       <li
         className={`px-12 py-2 cursor-pointer transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 ${
           isActive(path)
-            ? "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
             : "text-gray-700 dark:text-gray-300"
         }`}
         onClick={() => navigate(path)}
@@ -86,7 +86,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
 
       <div className="h-full flex flex-col justify-between">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        {/* <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2
             className={`text-xl font-bold text-gray-800 transition-opacity dark:text-gray-200 ${
               isExpanded ? "opacity-100" : "opacity-0"
@@ -94,19 +94,19 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
           >
             LabBooker
           </h2>
-        </div>
+        </div> */}
 
         {/* Navigation Items */}
         <ul className="flex-1 py-4">
           {isAdminOrManager && (
             <li>
-              <div
+              {/* <div
                 className={`flex items-center px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 ${
                   showDashboardSubmenu ? "bg-gray-100 dark:bg-gray-700/30" : ""
                 }`}
                 onClick={handleToggleDashboardSubmenu}
               >
-                <LayoutDashboard className="w-6 h-6 text-green-500 min-w-[24px] dark:text-green-400" />
+                <LayoutDashboard className="w-6 h-6 text-blue-500 min-w-[24px] dark:text-blue-400" />
                 <span
                   className={`ml-3 transition-opacity dark:text-gray-200 ${
                     isExpanded ? "opacity-100" : "opacity-0"
@@ -119,7 +119,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                     showDashboardSubmenu ? "rotate-180" : ""
                   } ${isExpanded ? "opacity-100" : "opacity-0"}`}
                 />
-              </div>
+              </div> */}
 
               {showDashboardSubmenu && isExpanded && (
                 <ul className="bg-gray-50 py-2 dark:bg-gray-700/30">
@@ -161,12 +161,12 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
               key={item.path}
               className={`flex items-center px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 ${
                 isActive(item.path)
-                  ? "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                   : "text-gray-800 dark:text-gray-200"
               }`}
               onClick={() => handleNavigation(item.path)}
             >
-              <item.icon className="w-6 h-6 text-green-500 min-w-[24px] dark:text-green-400" />
+              <item.icon className="w-6 h-6 text-blue-500 min-w-[24px] dark:text-blue-400" />
               <span
                 className={`ml-3 transition-opacity ${
                   isExpanded ? "opacity-100" : "opacity-0"

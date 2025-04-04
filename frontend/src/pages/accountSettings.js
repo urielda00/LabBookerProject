@@ -13,7 +13,7 @@ import { ThemeContext } from "../contexts/ThemeContext";
 const ProfileSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const { toggleTheme, isDark } = useContext(ThemeContext);
-  // const roleColor = user?.role === "admin" ? "green" : "blue";
+  // const roleColor = user?.role === "admin" ? "blue" : "blue";
   const [userInfo, setUserInfo] = useState({
     email: "",
     username: "",
@@ -321,9 +321,9 @@ const ProfileSettings = () => {
                   clearMessages();
                   setActiveTab(id);
                 }}
-                className={`flex items-center justify-center p-3 sm:p-6 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-semibold rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-600 group ${
+                className={`flex items-center justify-center p-3 sm:p-6 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-semibold rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600 group ${
                   activeTab === id
-                    ? "ring-2 ring-green-500 dark:ring-green-600 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                    ? "ring-2 ring-blue-500 dark:ring-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                     : ""
                 }`}
               >
@@ -455,7 +455,7 @@ const ProfileSettings = () => {
                               }));
                             }}
                             disabled={!isEditing}
-                            className={`mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                            className={`mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                               !isEditing ? "bg-gray-50" : ""
                             } dark:bg-gray-700 transition-colors duration-300 dark:text-gray-200`}
                           />
@@ -480,7 +480,7 @@ const ProfileSettings = () => {
                               }));
                             }}
                             disabled={!isEditing}
-                            className={`mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                            className={`mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                               !isEditing ? "bg-gray-50" : ""
                             } dark:bg-gray-700 transition-colors duration-300 dark:text-gray-200`}
                           />
@@ -512,14 +512,14 @@ const ProfileSettings = () => {
                         <>
                           <button
                             onClick={handleEditToggle}
-                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-green-400 border border-gray-300 dark:border-gray-600 transition-colors duration-300"
+                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-colors duration-300"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={handleSaveChanges}
                             disabled={loading}
-                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 transition-colors duration-300"
+                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-colors duration-300"
                           >
                             {loading ? "Saving..." : "Save Changes"}
                           </button>
@@ -527,7 +527,7 @@ const ProfileSettings = () => {
                       ) : (
                         <button
                           onClick={handleEditToggle}
-                          className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 transition-colors duration-300"
+                          className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-colors duration-300"
                         >
                           Edit Profile
                         </button>
@@ -570,7 +570,7 @@ const ProfileSettings = () => {
     rounded-full 
     peer 
     dark:bg-gray-600 
-    peer-checked:bg-green-600 
+    peer-checked:bg-blue-600 
     peer-checked:after:translate-x-full 
     after:content-['']
     after:absolute 
@@ -671,19 +671,19 @@ const ProfileSettings = () => {
                   step={0.1}
                   value={zoom}
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-2/3 dark:accent-green-500"
+                  className="w-2/3 dark:accent-blue-500"
                 />
               </div>
               <div className="mt-4 flex justify-end space-x-3">
                 <button
                   onClick={handleCropCancel}
-                  className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-green-400 border border-gray-300 dark:border-gray-600 transition-all duration-300"
+                  className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCropComplete}
-                  className="px-6 py-3 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 transition-all duration-300"
+                  className="px-6 py-3 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-all duration-300"
                 >
                   Confirm Crop
                 </button>

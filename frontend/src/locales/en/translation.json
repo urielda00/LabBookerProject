@@ -1,0 +1,13 @@
+{
+    "welcome": "Welcome, {{username}} 👋",
+    "description": "Manage your lab bookings and explore available rooms with real-time status updates.",
+    "bookRoom": "Book a Room",
+    "bookRoomDesc": "Reserve available lab spaces in real-time",
+    "myBookings": "My Bookings",
+    "myBookingsDesc": "Manage existing reservations and history",
+    "labRoomStatus": "Lab Room Status",
+    "available": "Available",
+    "occupied": "Occupied",
+    "until": "Until"
+  }
+  

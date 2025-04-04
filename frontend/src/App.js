@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,6 +8,10 @@ import {
 import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import { ThemeProvider } from "./contexts/ThemeContext";
+
+// i18n
+import { useTranslation } from "react-i18next";
+import "./i18n";
 
 // Import all your pages
 import LandingPage from "./pages/landingPage";
@@ -43,14 +47,8 @@ const PageTransition = ({ children }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{
-        type: "tween",
-        duration: 0.3,
-      }}
-      style={{
-        position: "absolute",
-        width: "100%",
-      }}
+      transition={{ type: "tween", duration: 0.3 }}
+      style={{ position: "absolute", width: "100%" }}
     >
       {children}
     </motion.div>
@@ -65,227 +63,82 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
-        <Route
-          path="/"
-          element={
-            <PageTransition>
-              <LandingPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <PageTransition>
-              <LoginPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <PageTransition>
-              <SignUpPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/forgotpassword"
-          element={
-            <PageTransition>
-              <ForgotPassword />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/changepassword"
-          element={
-            <PageTransition>
-              <ChangePasswordPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/resetpassword"
-          element={
-            <PageTransition>
-              <ResetPasswordPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/issuereport"
-          element={
-            <PageTransition>
-              <IssueReport />{" "}
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/privacypolicy"
-          element={
-            <PageTransition>
-              <PrivacyPolicy />{" "}
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/configmanagement"
-          element={
-            <PageTransition>
-              <ConfigManagement />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/termsofservice"
-          element={
-            <PageTransition>
-              <TermsOfService />{" "}
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/issue-report"
-          element={
-            <PageTransition>
-              <AllIssues />{" "}
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/faq"
-          element={
-            <PageTransition>
-              <FAQ />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/about"
-          element={
-            <PageTransition>
-              <ABOUT />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/roomguidelines"
-          element={
-            <PageTransition>
-              <RoomGuidelines />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/contact"
-          element={
-            <PageTransition>
-              <ContactPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/roomOperationpage"
-          element={
-            <PrivateRoute allowedRoles={["admin", "manager"]}>
-              <PageTransition>
-                <RoomOperationpage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
+        <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/signup" element={<PageTransition><SignUpPage /></PageTransition>} />
+        <Route path="/forgotpassword" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/changepassword" element={<PageTransition><ChangePasswordPage /></PageTransition>} />
+        <Route path="/resetpassword" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
+        <Route path="/issuereport" element={<PageTransition><IssueReport /></PageTransition>} />
+        <Route path="/privacypolicy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/configmanagement" element={<PageTransition><ConfigManagement /></PageTransition>} />
+        <Route path="/termsofservice" element={<PageTransition><TermsOfService /></PageTransition>} />
+        <Route path="/issue-report" element={<PageTransition><AllIssues /></PageTransition>} />
+        <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><ABOUT /></PageTransition>} />
+        <Route path="/roomguidelines" element={<PageTransition><RoomGuidelines /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
 
-        <Route
-          path="/bookingOperationpage"
-          element={
-            <PrivateRoute allowedRoles={["admin", "manager"]}>
-              <PageTransition>
-                <BookingOperationpage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/UserManagement"
-          element={
-            <PrivateRoute allowedRoles={["admin", "manager"]}>
-              <PageTransition>
-                <UserManagement />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/status-page"
-          element={
-            <PrivateRoute allowedRoles={["admin", "manager"]}>
-              <PageTransition>
-                <StatusHistoryPage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
+        {/* Admin/Manager Routes */}
+        <Route path="/roomOperationpage" element={
+          <PrivateRoute allowedRoles={["admin", "manager"]}>
+            <PageTransition><RoomOperationpage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/bookingOperationpage" element={
+          <PrivateRoute allowedRoles={["admin", "manager"]}>
+            <PageTransition><BookingOperationpage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/UserManagement" element={
+          <PrivateRoute allowedRoles={["admin", "manager"]}>
+            <PageTransition><UserManagement /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/status-page" element={
+          <PrivateRoute allowedRoles={["admin", "manager"]}>
+            <PageTransition><StatusHistoryPage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/dashboard" element={
+          <PrivateRoute allowedRoles={["admin", "manager"]}>
+            <PageTransition><DashBoard /></PageTransition>
+          </PrivateRoute>
+        } />
 
         {/* Protected Routes */}
-        <Route
-          path="/homepage"
-          element={
-            <PrivateRoute>
-              <PageTransition>
-                <HomePage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/bookings"
-          element={
-            <PrivateRoute>
-              <PageTransition>
-                <MyBookingsPage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/accountsettings"
-          element={
-            <PrivateRoute>
-              <PageTransition>
-                <AccountSettingsPage />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/labrooms"
-          element={
-            <PrivateRoute>
-              <PageTransition>
-                <LabRooms />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute allowedRoles={["admin", "manager"]}>
-              <PageTransition>
-                <DashBoard />
-              </PageTransition>
-            </PrivateRoute>
-          }
-        />
+        <Route path="/homepage" element={
+          <PrivateRoute>
+            <PageTransition><HomePage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/bookings" element={
+          <PrivateRoute>
+            <PageTransition><MyBookingsPage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/accountsettings" element={
+          <PrivateRoute>
+            <PageTransition><AccountSettingsPage /></PageTransition>
+          </PrivateRoute>
+        } />
+        <Route path="/labrooms" element={
+          <PrivateRoute>
+            <PageTransition><LabRooms /></PageTransition>
+          </PrivateRoute>
+        } />
       </Routes>
     </AnimatePresence>
   );
 };
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.dir = i18n.language === "he" ? "rtl" : "ltr";
+  }, [i18n.language]);
+
   return (
     <ThemeProvider>
       <Router>
