@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SidebarLayout } from "../components/SidebarLayout";
-import { AlertCircle, Search, CheckCircle, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AlertCircle, Search, CheckCircle, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../utils/axiosConfig";
 
 const AllIssues = () => {
@@ -11,6 +11,9 @@ const AllIssues = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // State to handle viewing a description in a modal
+  const [selectedIssue, setSelectedIssue] = useState(null);
 
   const STATUS_OPTIONS = [
     { value: "pending", label: "Pending" },
@@ -89,14 +92,14 @@ const AllIssues = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (response.data.issue) {
         setIssues(
           issues.map((issue) =>
-            issue._id === issueId ? response.data.issue : issue,
-          ),
+            issue._id === issueId ? response.data.issue : issue
+          )
         );
         setSuccessMessage("Status updated successfully");
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -123,6 +126,7 @@ const AllIssues = () => {
     }
   };
 
+  // Filtered issues for table
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
       issue.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,6 +138,15 @@ const AllIssues = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Handlers for the description modal
+  const openDescriptionModal = (issue) => {
+    setSelectedIssue(issue);
+  };
+
+  const closeDescriptionModal = () => {
+    setSelectedIssue(null);
+  };
 
   return (
     <SidebarLayout>
@@ -217,20 +230,16 @@ const AllIssues = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      {[
-                        "Type",
-                        "Description",
-                        "Reported By",
-                        "Status",
-                        "Actions",
-                      ].map((header) => (
-                        <th
-                          key={header}
-                          className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          {header}
-                        </th>
-                      ))}
+                      {["Type", "Description", "Reported By", "Status", "Actions"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            {header}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -239,25 +248,35 @@ const AllIssues = () => {
                         key={issue._id}
                         className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
                       >
+                        {/* Issue Type */}
                         <td className="px-4 sm:px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                               issue.issueType === "technical"
                                 ? "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
                                 : issue.issueType === "booking"
-                                  ? "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                ? "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {issue.issueType}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-sm text-gray-900 dark:text-gray-200 max-w-xs sm:max-w-md truncate">
+
+                        {/* Description (clickable) */}
+                        <td
+                          className="px-4 sm:px-6 py-4 text-sm text-gray-900 dark:text-gray-200 max-w-xs sm:max-w-md truncate cursor-pointer"
+                          onClick={() => openDescriptionModal(issue)}
+                        >
                           {issue.description}
                         </td>
+
+                        {/* Reported By */}
                         <td className="px-4 sm:px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                           {issue.email}
                         </td>
+
+                        {/* Status */}
                         <td className="px-4 sm:px-6 py-4">
                           <select
                             value={issue.status}
@@ -275,6 +294,8 @@ const AllIssues = () => {
                             <option value="resolved">Resolved</option>
                           </select>
                         </td>
+
+                        {/* Actions */}
                         <td className="px-4 sm:px-6 py-4">
                           <button
                             onClick={() => handleDelete(issue._id)}
@@ -304,6 +325,48 @@ const AllIssues = () => {
             </div>
           </div>
         </div>
+
+        {/* Modal for showing full description */}
+        <AnimatePresence>
+          {selectedIssue && (
+            <motion.div
+              // Overlay
+              className="fixed inset-0 z-50 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+
+              {/* Modal itself */}
+              <motion.div
+                className="relative bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-xl w-full mx-4"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Close Button */}
+                <button
+                  className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none"
+                  onClick={closeDescriptionModal}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                {/* Modal Title */}
+                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+                  Issue Description
+                </h2>
+
+                {/* Description Content */}
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  {selectedIssue.description}
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </SidebarLayout>
   );

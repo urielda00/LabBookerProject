@@ -15,13 +15,14 @@ import {
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import TransferRequestsModal from "./TransferRequestsModal";
-
+import { useTranslation } from "react-i18next";
 const NextBooking = ({
   showToast,
   setIsModalOpen,
   setModalConfig,
   userInfo,
 }) => {
+  const { t } = useTranslation();
   const [booking, setBooking] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -35,8 +36,8 @@ const NextBooking = ({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [showRequests, setShowRequests] = useState(false);
-const [transferRequests, setTransferRequests] = useState([]);
-const [loadingRequests, setLoadingRequests] = useState(false);
+  const [transferRequests, setTransferRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   const intervalRef = useRef(null);
   const bookingRef = useRef(null);
@@ -51,7 +52,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
     if (booking?._id) {
       try {
         setLoadingRequests(true);
-        const response = await api.get(`/book/${booking._id}/transfer-requests`);
+        const response = await api.get(
+          `/book/${booking._id}/transfer-requests`
+        );
         setTransferRequests(response.data.requests);
       } catch (err) {
         console.error("Failed to fetch transfer requests:", err);
@@ -60,7 +63,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
       }
     }
   }, [booking?._id]); // Add dependency on booking._id
-  
+
   // Then update your useEffect to use the memoized version
   useEffect(() => {
     fetchTransferRequests();
@@ -71,16 +74,17 @@ const [loadingRequests, setLoadingRequests] = useState(false);
     const hrs = Math.floor((seconds % (3600 * 24)) / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-  
+
     if (days > 0) {
-      return `${days} day${days > 1 ? "s" : ""}${hrs > 0 ? `, ${hrs} hr${hrs > 1 ? "s" : ""}` : ""}`;
+      return `${days} day${days > 1 ? "s" : ""}${
+        hrs > 0 ? `, ${hrs} hr${hrs > 1 ? "s" : ""}` : ""
+      }`;
     }
-  
+
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }, []);
-  
 
   const handleCheckIn = async () => {
     if (!booking) return;
@@ -134,7 +138,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
       console.error("Error cancelling booking:", error);
       showToast(
         "error",
-        error.response?.data?.message || "Failed to cancel booking",
+        error.response?.data?.message || "Failed to cancel booking"
       );
     }
   };
@@ -182,10 +186,10 @@ const [loadingRequests, setLoadingRequests] = useState(false);
     if (!booking) return "";
 
     const eventTitle = encodeURIComponent(
-      `Lab Booking: ${booking.roomId.name}`,
+      `Lab Booking: ${booking.roomId.name}`
     );
     const eventDetails = encodeURIComponent(
-      `Your lab booking for room ${booking.roomId.name}`,
+      `Your lab booking for room ${booking.roomId.name}`
     );
     const formatDateForGoogle = (dateStr, timeStr) => {
       const date = new Date(`${dateStr}T${timeStr}:00`);
@@ -276,7 +280,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
         const elapsedWaitTime =
           now.getTime() - new Date(booking.createdAt).getTime();
         setProgress(
-          Math.max(0, Math.min((elapsedWaitTime / totalWaitTime) * 100, 100)),
+          Math.max(0, Math.min((elapsedWaitTime / totalWaitTime) * 100, 100))
         );
       } else {
         setTimeRemaining(Math.floor(timeToEnd / 1000));
@@ -284,7 +288,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
         const totalDuration = bookingEnd.getTime() - bookingStart.getTime();
         const elapsed = now.getTime() - bookingStart.getTime();
         setProgress(
-          Math.max(0, Math.min((elapsed / totalDuration) * 100, 100)),
+          Math.max(0, Math.min((elapsed / totalDuration) * 100, 100))
         );
 
         const minutesLeft = Math.floor(timeToEnd / (1000 * 60));
@@ -337,7 +341,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
         <div className="mx-auto mb-4 h-14 w-14 text-red-500 dark:text-red-400">
           <AlertTriangle className="h-full w-full" />
         </div>
-        
+
         {/* Header - Added dark mode text colors */}
         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
           Confirm Booking Cancellation
@@ -347,7 +351,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
           undone.
         </div>
       </div>
-      
+
       {booking && (
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Details Header - Dark mode background and border */}
@@ -356,30 +360,38 @@ const [loadingRequests, setLoadingRequests] = useState(false);
               Booking Details
             </h4>
           </div>
-          
+
           {/* Details Content - Dark mode text colors */}
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="block text-gray-500 dark:text-gray-400">Room</span>
+                <span className="block text-gray-500 dark:text-gray-400">
+                  Room
+                </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.roomId?.name}
                 </span>
               </div>
               <div>
-                <span className="block text-gray-500 dark:text-gray-400">Date</span>
+                <span className="block text-gray-500 dark:text-gray-400">
+                  Date
+                </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.date}
                 </span>
               </div>
               <div>
-                <span className="block text-gray-500 dark:text-gray-400">Time</span>
+                <span className="block text-gray-500 dark:text-gray-400">
+                  Time
+                </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.startTime} - {booking.endTime}
                 </span>
               </div>
               <div>
-                <span className="block text-gray-500 dark:text-gray-400">Status</span>
+                <span className="block text-gray-500 dark:text-gray-400">
+                  Status
+                </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.status}
                 </span>
@@ -463,7 +475,7 @@ const [loadingRequests, setLoadingRequests] = useState(false);
                 <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors duration-300">
-                Booking Overview
+                {t("nextBooking.overviewTitle")}
               </h2>
             </div>
             <button
@@ -474,7 +486,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
               }}
             >
               <svg
-                className={`w-6 h-6 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                className={`w-6 h-6 transform transition-transform ${
+                  isExpanded ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -492,7 +506,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
 
         {/* Collapsible Content */}
         <div
-          className={`transition-all duration-300 ease-in-out ${isExpanded ? "opacity-100 max-h-[1000px]" : "opacity-0 max-h-0"}`}
+          className={`transition-all duration-300 ease-in-out ${
+            isExpanded ? "opacity-100 max-h-[1000px]" : "opacity-0 max-h-0"
+          }`}
         >
           <div className="p-6">
             <div className="text-center py-8 transform transition-all duration-300 hover:-translate-y-1">
@@ -523,66 +539,68 @@ const [loadingRequests, setLoadingRequests] = useState(false);
               <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group">
-  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-    {/* Title Section */}
-    <div className="flex items-center gap-3">
-      <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
-        {booking
-          ? booking.status === "Pending"
-            ? "Pending Approval"
-            : bookingState === "active"
-            ? "Current Session"
-            : "Upcoming Reservation"
-          : "Booking Overview"}
-      </span>
-      
-      {/* Status Badges */}
-      {booking && booking.status === "Pending" && (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
-          <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-          Awaiting
-        </span>
-      )}
-    </div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  {/* Title Section */}
+                  <div className="flex items-center gap-3">
+                    <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
+                      {booking
+                        ? booking.status === "Pending"
+                          ? "Pending Approval"
+                          : bookingState === "active"
+                          ? t("nextBooking.currentSession")
+                          : "Upcoming Reservation"
+                        : "Booking Overview"}
+                    </span>
 
-    {/* Requests Section */}
-    <div className="flex items-center gap-2">
-      {transferRequests.length > 0 && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowRequests(true);
-          }}
-          className="relative flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
-        >
-          <span className="animate-ping absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
-          <span className="relative flex items-center gap-x-1.5 truncate">
-            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="truncate">
-              Requests ({transferRequests.length})
-            </span>
-          </span>
-        </button>
-      )}
+                    {/* Status Badges */}
+                    {booking && booking.status === "Pending" && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                        Awaiting
+                      </span>
+                    )}
+                  </div>
 
-      {loadingRequests && (
-        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-          <span className="inline-block animate-spin">⟳</span>
-          <span className="hidden sm:inline">Loading requests...</span>
-          <span className="sm:hidden">Loading...</span>
-        </span>
-      )}
-    </div>
-  </div>
-</h2>
+                  {/* Requests Section */}
+                  <div className="flex items-center gap-2">
+                    {transferRequests.length > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRequests(true);
+                        }}
+                        className="relative flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+                      >
+                        <span className="animate-ping absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
+                        <span className="relative flex items-center gap-x-1.5 truncate">
+                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span className="truncate">
+                            Requests ({transferRequests.length})
+                          </span>
+                        </span>
+                      </button>
+                    )}
 
-{booking && booking.status === "Pending" && (
-  <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors">
-    <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-    Awaiting Confirmation
-  </span>
-)}
+                    {loadingRequests && (
+                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <span className="inline-block animate-spin">⟳</span>
+                        <span className="hidden sm:inline">
+                          Loading requests...
+                        </span>
+                        <span className="sm:hidden">Loading...</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </h2>
+
+              {booking && booking.status === "Pending" && (
+                <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors">
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                  Awaiting Confirmation
+                </span>
+              )}
               {booking && bookingState === "active" && booking.checkedIn && (
                 <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors">
                   <Activity className="w-3.5 h-3.5 mr-1.5" />
@@ -599,7 +617,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
             }}
           >
             <svg
-              className={`w-6 h-6 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              className={`w-6 h-6 transform transition-transform ${
+                isExpanded ? "rotate-180" : ""
+              }`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -617,7 +637,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
 
       {/* Content Area */}
       <div
-        className={`transition-all duration-300 ease-in-out ${isExpanded ? "opacity-100 max-h-[1000px]" : "opacity-0 max-h-0"}`}
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? "opacity-100 max-h-[1000px]" : "opacity-0 max-h-0"
+        }`}
       >
         {isLoading ? (
           <div className="p-6">
@@ -651,7 +673,9 @@ const [loadingRequests, setLoadingRequests] = useState(false);
           </div>
         ) : (
           <div
-            className={`p-6 pt-4 ${isTransitioning ? "opacity-0" : "opacity-100"}`}
+            className={`p-6 pt-4 ${
+              isTransitioning ? "opacity-0" : "opacity-100"
+            }`}
           >
             {renderAlerts()}
 
@@ -698,7 +722,6 @@ const [loadingRequests, setLoadingRequests] = useState(false);
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center space-x-3">
-
                   <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors">
                     <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
@@ -750,22 +773,24 @@ const [loadingRequests, setLoadingRequests] = useState(false);
 
             {/* Action Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-            {booking.status === "Pending" && (
-  <div className="col-span-full bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-    <div className="flex items-center space-x-3 text-yellow-700 dark:text-yellow-300">
-      <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-      <p className="text-sm">
-        This booking is pending approval. You'll receive a confirmation email 
-        once it's approved. Cancellation may not be available during this stage.
-      </p>
-    </div>
-  </div>
-)}
+              {booking.status === "Pending" && (
+                <div className="col-span-full bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-center space-x-3 text-yellow-700 dark:text-yellow-300">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                    <p className="text-sm">
+                      This booking is pending approval. You'll receive a
+                      confirmation email once it's approved. Cancellation may
+                      not be available during this stage.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {bookingState === "upcoming" && (
                 <>
-                  {canCancel && booking.userId.email === userInfo.email && booking.status !== "Pending" ? (
+                  {canCancel &&
+                  booking.userId.email === userInfo.email &&
+                  booking.status !== "Pending" ? (
                     <button
                       onClick={() => {
                         setModalConfig({
@@ -833,15 +858,15 @@ const [loadingRequests, setLoadingRequests] = useState(false);
       </div>
 
       {showRequests && (
-  <TransferRequestsModal 
-    booking={booking} 
-    onClose={() => {
-      setShowRequests(false);
-      fetchTransferRequests();
-      setShouldRefetch(true);
-    }}
-  />
-)}
+        <TransferRequestsModal
+          booking={booking}
+          onClose={() => {
+            setShowRequests(false);
+            fetchTransferRequests();
+            setShouldRefetch(true);
+          }}
+        />
+      )}
     </div>
   );
 };

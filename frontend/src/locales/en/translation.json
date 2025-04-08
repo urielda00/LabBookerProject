@@ -1,13 +1,71 @@
 {
+  "homepage": {
     "welcome": "Welcome, {{username}} 👋",
     "description": "Manage your lab bookings and explore available rooms with real-time status updates.",
-    "bookRoom": "Book a Room",
-    "bookRoomDesc": "Reserve available lab spaces in real-time",
-    "myBookings": "My Bookings",
-    "myBookingsDesc": "Manage existing reservations and history",
     "labRoomStatus": "Lab Room Status",
-    "available": "Available",
     "occupied": "Occupied",
-    "until": "Until"
+    "available": "Available",
+    "until": "Until",
+    "bookARoom": "Book a Room",
+    "bookARoomDesc": "Reserve available lab spaces in real-time",
+    "myBookings": "My Bookings",
+    "myBookingsDesc": "Manage existing reservations and history"
+  },
+
+  "nav": {
+    "home": "Home",
+    "labRooms": "Lab Rooms",
+    "collegeWebsite": "College Website",
+    "dashboard": "Dashboard",
+    "profileSettings": "Profile & Settings",
+    "logout": "Logout",
+    "login": "Log In",
+    "notifications": "Notifications",
+    "clearAllNotifications": "Clear all notifications",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "delete": "Delete",
+    "allCaughtUp": "All caught up!",
+    "noNewNotifications": "You have no new notifications",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "nextBooking": {
+    "loadingTitle": "Loading your booking",
+    "loadingMessage": "Please wait while we fetch your details",
+    "noneTitle": "No Upcoming Bookings",
+    "noneMessage": "You don't have any upcoming reservations",
+    "overviewTitle": "Booking Overview",
+    "currentSession": "Current Session",
+    "upcomingReservation": "Upcoming Reservation",
+    "pendingApproval": "Pending Approval",
+    "awaitingConfirmation": "Awaiting Confirmation",
+    "requests": "Requests",
+    "requestsLoading": "Loading requests...",
+    "timeRemaining": "Time Remaining",
+    "timeUntilStart": "Time Until Start",
+    "activeNow": "Active Now",
+    "endsAt": "Ends at",
+    "startsAt": "Starts at",
+    "warning15": "Your booking will end in less than 15 minutes. Please prepare to leave the room.",
+    "warning3": "Your booking ends in less than 3 minutes! Please leave the room immediately.",
+    "pendingMessage": "This booking is pending approval. You'll receive a confirmation email once it's approved. Cancellation may not be available during this stage.",
+    "cancelBooking": "Cancel Booking",
+    "cancelHeading": "Confirm Booking Cancellation",
+    "cancelMessage": "Are you sure you want to cancel this booking? This action cannot be undone.",
+    "cancelBookingSuccess": "Booking cancelled successfully",
+    "cancelBookingFail": "Failed to cancel booking",
+    "labels": {
+      "date": "Date",
+      "room": "Room",
+      "time": "Time",
+      "status": "Status"
+    },
+    "checkInUnavailable": "Check In Unavailable",
+    "confirmArrival": "Confirm Arrival",
+    "successCheckIn": "Successfully checked in to the room",
+    "failCheckIn": "Failed to check in",
+    "downloadIcs": "Download .ICS",
+    "googleCalendar": "Google Calendar"
   }
-  
+}

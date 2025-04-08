@@ -7,8 +7,10 @@ import api from "../utils/axiosConfig";
 import NextBooking from "../components/NextBooking";
 import Toast from "../components/errsucModal";
 import Modal from "../components/cnfrmModal";
+import { useTranslation } from "react-i18next";
 
 const HomePage = () => {
+  const { t } = useTranslation();
   const [userInfo, setUserInfo] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState({
@@ -247,14 +249,13 @@ const HomePage = () => {
                 </span>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Welcome, {userInfo.username}
+                {t("homepage.welcome", { username: userInfo.username })}
                 <span className="text-blue-600 dark:text-blue-400 ml-2">
                   👋
                 </span>
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg max-w-3xl">
-                Manage your lab bookings and explore available rooms with
-                real-time status updates.
+                {t("homepage.description")}
               </p>
             </div>
             {/* <div className="hidden md:block relative">
@@ -397,10 +398,10 @@ const HomePage = () => {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                  Book a Room
+                  {t("homepage.bookARoom")}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Reserve available lab spaces in real-time
+                  {t("homepage.bookARoomDesc")}
                 </p>
               </div>
             </div>
@@ -418,11 +419,10 @@ const HomePage = () => {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                  My Bookings
+                  {t("homepage.myBookings")}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Manage existing reservations and history
-                </p>
+                  {t("homepage.myBookingsDesc")} </p>
               </div>
             </div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-green-50 dark:bg-green-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
