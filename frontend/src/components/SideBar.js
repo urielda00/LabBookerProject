@@ -86,7 +86,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
 
       <div className="h-full flex flex-col justify-between">
         {/* Header */}
-        {/* <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2
             className={`text-xl font-bold text-gray-800 transition-opacity dark:text-gray-200 ${
               isExpanded ? "opacity-100" : "opacity-0"
@@ -94,13 +94,13 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
           >
             LabBooker
           </h2>
-        </div> */}
+        </div>
 
         {/* Navigation Items */}
         <ul className="flex-1 py-4">
           {isAdminOrManager && (
             <li>
-              {/* <div
+              <div
                 className={`flex items-center px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 ${
                   showDashboardSubmenu ? "bg-gray-100 dark:bg-gray-700/30" : ""
                 }`}
@@ -119,7 +119,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                     showDashboardSubmenu ? "rotate-180" : ""
                   } ${isExpanded ? "opacity-100" : "opacity-0"}`}
                 />
-              </div> */}
+              </div>
 
               {showDashboardSubmenu && isExpanded && (
                 <ul className="bg-gray-50 py-2 dark:bg-gray-700/30">
