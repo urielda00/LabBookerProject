@@ -1,13 +1,13 @@
 {
   "homepage": {
-    "welcome": "ברוך הבא, {{username}} 👋",
+    "welcome": "ברוך הבא, {{username}}",
     "description": "נהל את הזמנת המעבדה שלך וגלה חדרים זמינים עם עדכוני מצב בזמן אמת.",
     "labRoomStatus": "סטטוס חדרי מעבדה",
     "occupied": "תפוס",
     "available": "פנוי",
     "until": "עד",
     "bookARoom": "הזמן חדר",
-    "bookARoomDesc": "הזמן מעבדות פנויות בזמן אמת",
+    "bookARoomDesc": "הזמן חדרי למידה בזמן אמת",
     "myBookings": "ההזמנות שלי",
     "myBookingsDesc": "נהל הזמנות קיימות והיסטוריה"
   },
@@ -42,7 +42,7 @@
     "requests": "בקשות",
     "requestsLoading": "טוען בקשות...",
     "timeRemaining": "נותר זמן",
-    "timeUntilStart": "זמן עד תחילת ההזמנה",
+    "timeUntilStart": "זמן עד קבלת החדר",
     "activeNow": "פעיל כעת",
     "endsAt": "מסתיים בשעה",
     "startsAt": "מתחיל בשעה",
@@ -54,6 +54,7 @@
     "cancelMessage": "האם אתה בטוח שברצונך לבטל הזמנה זו? לא ניתן לשחזר לאחר הביטול.",
     "cancelBookingSuccess": "ההזמנה בוטלה בהצלחה",
     "cancelBookingFail": "נכשל בביטול ההזמנה",
+    "cancelUnavailable": "אין לבטל את ההזמנה",
     "labels": {
       "date": "תאריך",
       "room": "חדר",
@@ -66,5 +67,46 @@
     "failCheckIn": "נכשל לאשר הגעה",
     "downloadIcs": "הורד .ICS",
     "googleCalendar": "יומן גוגל"
+  },
+  "footer": {
+    "brandTitle": "LabBooker",
+    "brandSubtitle": "מהפכה בתחום הזמנת וניהול מעבדות במוסדות חינוך ברחבי העולם.",
+
+    "socialLinks": {
+      "instagram": "אינסטגרם",
+      "twitter": "טוויטר",
+      "linkedin": "לינקדאין"
+    },
+
+    "navigation": {
+      "title": "ניווט",
+      "about": "אודות",
+      "faq": "שאלות נפוצות",
+      "contact": "צור קשר",
+      "reportIssue": "דיווח על בעיה"
+    },
+
+    "contact": {
+      "title": "יצירת קשר",
+      "location": "המכללה האקדמית להנדסה עזריאלי, ירושלים",
+      "email": "support@labbooker.com",
+      "phone": "+972 (0)2-123-4567"
+    },
+
+    "newsletter": {
+      "title": "ניוזלטר",
+      "placeholder": "כתובת האימייל שלך",
+      "subscribeButton": "הירשם עכשיו",
+      "helpText": "הירשם לקבלת עדכונים וחדשות"
+    },
+
+    "links": {
+      "termsOfService": "תנאי שימוש",
+      "privacyPolicy": "מדיניות פרטיות"
+    },
+
+    "developedByAzrieli": "פותח על ידי המכללה האקדמית עזריאלי",
+
+    "copyright": "© {{year}} LabBooker™. כל הזכויות שמורות."
   }
 }

@@ -234,11 +234,11 @@ const HomePage = () => {
       <Navbar userInfo={userInfo} setUserInfo={setUserInfo} />
 
       <main className="flex-grow pt-24 pb-16 container mx-auto px-4">
-        {/* Welcome Section - Enhanced */}
+        {/* Welcome Section */}
         <section className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between rtl:space-x-reverse">
             <div className="space-y-3">
-              <div className="flex items-center space-x-3 text-blue-600 dark:text-blue-400">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse text-blue-600 dark:text-blue-400">
                 <Clock className="w-6 h-6" />
                 <span className="text-sm font-medium">
                   {formatTime(currentTime)}
@@ -250,7 +250,7 @@ const HomePage = () => {
               </div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {t("homepage.welcome", { username: userInfo.username })}
-                <span className="text-blue-600 dark:text-blue-400 ml-2">
+                <span className="text-blue-600 dark:text-blue-400 ml-2 rtl:ml-0 rtl:mr-2">
                   👋
                 </span>
               </h1>
@@ -266,21 +266,21 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Room Status Section - Enhanced */}
+        {/* Room Status Section */}
         <section className="mb-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-700">
             <div
-              className="flex items-center justify-between sm:cursor-default cursor-pointer"
+              className="flex items-center justify-between sm:cursor-default cursor-pointer rtl:space-x-reverse"
               onClick={() => {
                 if (window.innerWidth < 640) {
                   setIsRoomsExpanded((prev) => !prev);
                 }
               }}
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
                 <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-700 dark:hover:text-blue-400 transition-colors duration-300">
-                  Lab Room Status
+                  {t("homepage.labRoomStatus")}
                 </h2>
               </div>
               {/* Chevron Icon - Hidden on desktop */}
@@ -317,12 +317,12 @@ const HomePage = () => {
                     key={room.id}
                     className="relative group bg-white dark:bg-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-600 hover:border-blue-100 dark:hover:border-blue-400 mt-2"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between rtl:space-x-reverse">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">
                           {room.name}
                         </h3>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
                           <span
                             className={`inline-block w-2 h-2 rounded-full ${
                               room.isActive
@@ -337,7 +337,7 @@ const HomePage = () => {
                                 : "text-gray-500 dark:text-green-400"
                             }`}
                           >
-                            {room.isActive ? "Occupied" : "Available"}
+                            {room.isActive ? t("homepage.occupied") : t("homepage.available")}
                           </p>
                         </div>
                       </div>
@@ -360,7 +360,7 @@ const HomePage = () => {
 
                     {room.isActive && (
                       <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between text-sm rtl:space-x-reverse">
                           <span className="text-gray-500 dark:text-gray-400">
                             Until
                           </span>
@@ -385,14 +385,14 @@ const HomePage = () => {
           userInfo={userInfo}
         />
 
-        {/* Quick Actions Grid - Enhanced */}
+        {/* Quick Actions Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Book a Room Card */}
           <div
             onClick={() => navigate("/labrooms")}
             className="group bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden"
           >
-            <div className="flex items-start space-x-6 relative z-10">
+            <div className="flex items-start space-x-6 rtl:space-x-reverse relative z-10">
               <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-xl group-hover:bg-blue-200 dark:group-hover:bg-blue-800/50 transition-colors">
                 <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
@@ -405,7 +405,8 @@ const HomePage = () => {
                 </p>
               </div>
             </div>
-            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+            {/* Positioned bubble in LTR at bottom-right, flips in RTL */}
+            <div className="absolute -bottom-8 -right-8 rtl:-left-8 rtl:right-auto w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
           </div>
 
           {/* My Bookings Card */}
@@ -413,7 +414,7 @@ const HomePage = () => {
             onClick={() => navigate("/bookings")}
             className="group bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden"
           >
-            <div className="flex items-start space-x-6 relative z-10">
+            <div className="flex items-start space-x-6 rtl:space-x-reverse relative z-10">
               <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-xl group-hover:bg-green-200 dark:group-hover:bg-green-800/50 transition-colors">
                 <Calendar className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
@@ -422,10 +423,12 @@ const HomePage = () => {
                   {t("homepage.myBookings")}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {t("homepage.myBookingsDesc")} </p>
+                  {t("homepage.myBookingsDesc")}
+                </p>
               </div>
             </div>
-            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-green-50 dark:bg-green-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+            {/* Positioned bubble in LTR at bottom-right, flips in RTL */}
+            <div className="absolute -bottom-8 -right-8 rtl:-left-8 rtl:right-auto w-32 h-32 bg-green-50 dark:bg-green-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
           </div>
         </div>
       </main>
@@ -442,7 +445,7 @@ const HomePage = () => {
       {/* {showMissedBookingPrompt && missedBooking && <MissedBookingPrompt />} */}
 
       {toast.isVisible && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-50 rtl:right-auto rtl:left-4">
           <Toast
             type={toast.type}
             message={toast.message}

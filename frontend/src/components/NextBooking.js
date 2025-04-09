@@ -16,6 +16,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import TransferRequestsModal from "./TransferRequestsModal";
 import { useTranslation } from "react-i18next";
+
 const NextBooking = ({
   showToast,
   setIsModalOpen,
@@ -62,9 +63,8 @@ const NextBooking = ({
         setLoadingRequests(false);
       }
     }
-  }, [booking?._id]); // Add dependency on booking._id
+  }, [booking?._id]);
 
-  // Then update your useEffect to use the memoized version
   useEffect(() => {
     fetchTransferRequests();
   }, [fetchTransferRequests]);
@@ -185,9 +185,7 @@ const NextBooking = ({
   const getGoogleCalendarUrl = useCallback((booking) => {
     if (!booking) return "";
 
-    const eventTitle = encodeURIComponent(
-      `Lab Booking: ${booking.roomId.name}`
-    );
+    const eventTitle = encodeURIComponent(`Lab Booking: ${booking.roomId.name}`);
     const eventDetails = encodeURIComponent(
       `Your lab booking for room ${booking.roomId.name}`
     );
@@ -287,9 +285,7 @@ const NextBooking = ({
         setBookingState("active");
         const totalDuration = bookingEnd.getTime() - bookingStart.getTime();
         const elapsed = now.getTime() - bookingStart.getTime();
-        setProgress(
-          Math.max(0, Math.min((elapsed / totalDuration) * 100, 100))
-        );
+        setProgress(Math.max(0, Math.min((elapsed / totalDuration) * 100, 100)));
 
         const minutesLeft = Math.floor(timeToEnd / (1000 * 60));
         if (!booking.checkedIn) {
@@ -411,7 +407,7 @@ const NextBooking = ({
         <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
           <div className="flex">
             <Clock className="h-5 w-5 text-yellow-400" />
-            <div className="ml-3">
+            <div className="ml-3 rtl:ml-0 rtl:mr-3">
               <p className="text-sm text-yellow-700">
                 Your booking will end in less than 15 minutes. Please prepare to
                 leave the room.
@@ -426,7 +422,7 @@ const NextBooking = ({
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
           <div className="flex">
             <AlertTriangle className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
+            <div className="ml-3 rtl:ml-0 rtl:mr-3">
               <p className="text-sm text-red-700">
                 Your booking ends in less than 3 minutes! Please leave the room
                 immediately.
@@ -451,10 +447,10 @@ const NextBooking = ({
             </div>
           </div>
           <p className="text-gray-800 dark:text-gray-200 text-lg font-medium mb-2">
-            Loading your booking
+            {t("nextBooking.loadingTitle")}
           </p>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Please wait while we fetch your details
+            {t("nextBooking.loadingMessage")}
           </p>
         </div>
       </div>
@@ -470,7 +466,7 @@ const NextBooking = ({
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center justify-between p-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-all duration-300 hover:bg-blue-200 dark:hover:bg-blue-800/50">
                 <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
@@ -514,10 +510,10 @@ const NextBooking = ({
             <div className="text-center py-8 transform transition-all duration-300 hover:-translate-y-1">
               <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4 transition-colors hover:text-blue-500 dark:hover:text-blue-400" />
               <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2 hover:text-blue-700 dark:hover:text-blue-400 transition-colors">
-                No Upcoming Bookings
+                {t("nextBooking.noneTitle")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                You don't have any upcoming reservations
+                {t("nextBooking.noneMessage")}
               </p>
             </div>
           </div>
@@ -534,7 +530,7 @@ const NextBooking = ({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between p-6">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-all duration-300 hover:bg-blue-200 dark:hover:bg-blue-800/50">
               <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
@@ -542,28 +538,28 @@ const NextBooking = ({
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   {/* Title Section */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 rtl:gap-3 rtl:space-x-reverse">
                     <span className="group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
                       {booking
                         ? booking.status === "Pending"
                           ? "Pending Approval"
                           : bookingState === "active"
                           ? t("nextBooking.currentSession")
-                          : "Upcoming Reservation"
+                          : t("nextBooking.upcomingReservation")
                         : "Booking Overview"}
                     </span>
 
                     {/* Status Badges */}
                     {booking && booking.status === "Pending" && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
-                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5 rtl:mr-0 rtl:ml-1.5" />
                         Awaiting
                       </span>
                     )}
                   </div>
 
                   {/* Requests Section */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 rtl:gap-2 rtl:space-x-reverse">
                     {transferRequests.length > 0 && (
                       <button
                         onClick={(e) => {
@@ -573,20 +569,21 @@ const NextBooking = ({
                         className="relative flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/40 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
                       >
                         <span className="animate-ping absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-red-400 dark:bg-red-600 opacity-75"></span>
-                        <span className="relative flex items-center gap-x-1.5 truncate">
+                        <span className="relative flex items-center gap-x-1.5 rtl:gap-x-1.5 rtl:space-x-reverse truncate">
                           <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                           <span className="truncate">
-                            Requests ({transferRequests.length})
+                            {t("nextBooking.requests")} (
+                            {transferRequests.length})
                           </span>
                         </span>
                       </button>
                     )}
 
                     {loadingRequests && (
-                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 rtl:gap-1 rtl:space-x-reverse">
                         <span className="inline-block animate-spin">⟳</span>
                         <span className="hidden sm:inline">
-                          Loading requests...
+                          {t("nextBooking.loadingTitle")}
                         </span>
                         <span className="sm:hidden">Loading...</span>
                       </span>
@@ -597,14 +594,14 @@ const NextBooking = ({
 
               {booking && booking.status === "Pending" && (
                 <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-200 dark:hover:bg-yellow-800/50 transition-colors">
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-                  Awaiting Confirmation
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1.5 rtl:mr-0 rtl:ml-1.5" />
+                  {t("nextBooking.awaitingConfirmation")}
                 </span>
               )}
               {booking && bookingState === "active" && booking.checkedIn && (
                 <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors">
-                  <Activity className="w-3.5 h-3.5 mr-1.5" />
-                  Active Now
+                  <Activity className="w-3.5 h-3.5 mr-1.5 rtl:mr-0 rtl:ml-1.5" />
+                  {t("nextBooking.activeNow")}
                 </span>
               )}
             </div>
@@ -652,10 +649,10 @@ const NextBooking = ({
                 </div>
               </div>
               <p className="text-gray-800 dark:text-gray-200 text-lg font-medium mb-2">
-                Loading your booking
+                {t("nextBooking.loadingTitle")}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Please wait while we fetch your details
+                {t("nextBooking.loadingTitle")}
               </p>
             </div>
           </div>
@@ -664,10 +661,10 @@ const NextBooking = ({
             <div className="text-center py-8">
               <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                No Upcoming Bookings
+                {t("nextBooking.noneTitle")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                You don't have any upcoming reservations
+                {t("nextBooking.noneMessage")}
               </p>
             </div>
           </div>
@@ -696,13 +693,13 @@ const NextBooking = ({
                   })}
                 />
               </div>
-              <div className="flex-1 ml-6">
+              <div className="flex-1 ml-6 rtl:ml-0 rtl:mr-6">
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow duration-300">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       {bookingState === "active"
-                        ? "Time Remaining"
-                        : "Time Until Start"}
+                        ? t("nextBooking.timeRemaining")
+                        : t("nextBooking.timeUntilStart")}
                     </span>
                     <span
                       className={`text-xl font-semibold ${
@@ -721,13 +718,13 @@ const NextBooking = ({
             {/* Detail Cards with Hover Effects */}
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
                   <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors">
                     <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Date
+                      {t("nextBooking.labels.date")}
                     </p>
                     <p className="font-semibold text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors">
                       {booking.date}
@@ -737,13 +734,13 @@ const NextBooking = ({
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
                   <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors">
                     <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Room
+                      {t("nextBooking.labels.room")}
                     </p>
                     <p className="font-semibold text-gray-800 dark:text-gray-200 hover:text-green-700 dark:hover:text-green-400 transition-colors">
                       {booking.roomId.name}
@@ -753,13 +750,15 @@ const NextBooking = ({
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-100 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/30 hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
                   <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors">
                     <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {bookingState === "active" ? "Ends at" : "Starts at"}
+                      {bookingState === "active"
+                        ? t("nextBooking.endsAt")
+                        : t("nextBooking.startsAt")}
                     </p>
                     <p className="font-semibold text-gray-800 dark:text-gray-200 hover:text-purple-700 dark:hover:text-purple-400 transition-colors">
                       {bookingState === "active"
@@ -775,12 +774,10 @@ const NextBooking = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {booking.status === "Pending" && (
                 <div className="col-span-full bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                  <div className="flex items-center space-x-3 text-yellow-700 dark:text-yellow-300">
+                  <div className="flex items-center space-x-3 rtl:space-x-reverse text-yellow-700 dark:text-yellow-300">
                     <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-sm">
-                      This booking is pending approval. You'll receive a
-                      confirmation email once it's approved. Cancellation may
-                      not be available during this stage.
+                      {t("nextBooking.pendingMessage")}
                     </p>
                   </div>
                 </div>
@@ -802,34 +799,34 @@ const NextBooking = ({
                         });
                         setIsModalOpen(true);
                       }}
-                      className="flex items-center justify-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-lg transition-all duration-300 border border-red-200 dark:border-red-800 hover:shadow-sm hover:-translate-y-0.5"
+                      className="flex items-center justify-center space-x-2 rtl:space-x-reverse p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-lg transition-all duration-300 border border-red-200 dark:border-red-800 hover:shadow-sm hover:-translate-y-0.5"
                     >
                       <X className="w-5 h-5" />
-                      <span>Cancel Booking</span>
+                      <span>{t("nextBooking.cancelBooking")}</span>
                     </button>
                   ) : (
-                    <div className="flex items-center justify-center space-x-2 p-3 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse p-3 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-200 dark:border-gray-600">
                       <Lock className="w-5 h-5" />
-                      <span>Cancel Unavailable</span>
+                      <span>{t("nextBooking.cancelUnavailable")}</span>
                     </div>
                   )}
 
                   <button
                     onClick={handleDownloadICS}
-                    className="flex items-center justify-center space-x-2 p-3 bg-white dark:bg-gray-700 border border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5"
+                    className="flex items-center justify-center space-x-2 rtl:space-x-reverse p-3 bg-white dark:bg-gray-700 border border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5"
                   >
                     <Download className="w-5 h-5" />
-                    <span>Download .ICS</span>
+                    <span>{t("nextBooking.downloadIcs")}</span>
                   </button>
 
                   <a
                     href={getGoogleCalendarUrl(booking)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center space-x-2 p-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-lg transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5"
+                    className="flex items-center justify-center space-x-2 rtl:space-x-reverse p-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-lg transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5"
                   >
                     <CalendarIcon className="w-5 h-5" />
-                    <span>Google Calendar</span>
+                    <span>{t("nextBooking.googleCalendar")}</span>
                   </a>
                 </>
               )}
@@ -838,7 +835,7 @@ const NextBooking = ({
                 <button
                   onClick={handleCheckIn}
                   disabled={userInfo.email !== booking.userId.email}
-                  className={`col-span-full flex items-center justify-center space-x-2 p-3 rounded-lg transition-all duration-300 ${
+                  className={`col-span-full flex items-center justify-center space-x-2 rtl:space-x-reverse p-3 rounded-lg transition-all duration-300 ${
                     userInfo.email !== booking.userId.email
                       ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
                       : "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white hover:shadow-sm hover:-translate-y-0.5"
@@ -847,11 +844,11 @@ const NextBooking = ({
                   <CheckCircle className="w-5 h-5" />
                   <span>
                     {userInfo.email !== booking.userId.email
-                      ? "Check In Unavailable"
-                      : "Confirm Arrival"}
+                      ? t("nextBooking.checkInUnavailable")
+                      : t("nextBooking.confirmArrival")}
                   </span>
                 </button>
-              )}
+              )}  
             </div>
           </div>
         )}

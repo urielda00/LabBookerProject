@@ -1,49 +1,59 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Instagram, Twitter, Linkedin, MapPin, Mail, Phone } from "lucide-react";
+import {
+  Instagram,
+  Twitter,
+  Linkedin,
+  MapPin,
+  Mail,
+  Phone,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const currentYear = new Date().getFullYear();
 
 function Footer() {
+  const { t } = useTranslation();
+
   const socialLinks = [
     {
       icon: <Instagram className="w-5 h-5" />,
       href: "https://instagram.com/labbooker",
-      name: "Instagram"
+      name: "Instagram",
     },
     {
       icon: <Twitter className="w-5 h-5" />,
       href: "https://twitter.com/labbooker",
-      name: "Twitter"
+      name: "Twitter",
     },
     {
       icon: <Linkedin className="w-5 h-5" />,
       href: "https://linkedin.com/company/labbooker",
-      name: "LinkedIn"
+      name: "LinkedIn",
     },
   ];
 
   const footerLinks = [
-    { label: "About", path: "/about" },
-    { label: "FAQs", path: "/faq" },
-    { label: "Contact", path: "/contact" },
+    { label: t("footer.navigation.about"), path: "/about" },
+    { label: t("footer.navigation.faq"), path: "/faq" },
+    { label: t("footer.navigation.contact"), path: "/contact" },
     // { label: "Privacy Policy", path: "/privacypolicy" },
     // { label: "Terms of Service", path: "/termsofservice" },
-    { label: "Report Issue", path: "/issuereport" },
+    { label: t("footer.navigation.reportIssue"), path: "/issuereport" },
   ];
 
   const contactInfo = [
     {
       icon: <MapPin className="w-5 h-5" />,
-      text: "Azrieli College of Engineering, Jerusalem"
+      text: "Azrieli College of Engineering, Jerusalem",
     },
     {
       icon: <Mail className="w-5 h-5" />,
-      text: "support@labbooker.com"
+      text: "support@labbooker.com",
     },
     {
       icon: <Phone className="w-5 h-5" />,
-      text: "+972 (0)2-123-4567"
+      text: "+972 (0)2-123-4567",
     },
   ];
 
@@ -51,17 +61,16 @@ function Footer() {
     <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-300 pt-16 pb-8">
       <div className="container mx-auto px-4 xl:px-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-          
           {/* Brand Section */}
           <div className="space-y-6">
             <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-blue-500">
               LabBooker
             </h3>
             <p className="text-sm leading-relaxed text-gray-400">
-              Revolutionizing lab room bookings and management for educational institutions worldwide.
+              {t("footer.brandSubtitle")}
             </p>
-            
-            <div className="flex space-x-4">
+
+            <div className="flex space-x-4 rtl:space-x-reverse">
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
@@ -77,13 +86,15 @@ function Footer() {
                   aria-label={social.name}
                 >
                   {social.icon}
-                  <span className="
-                    absolute -top-8 left-1/2 -translate-x-1/2
-                    bg-gray-800 text-white px-2 py-1 rounded-md
-                    text-xs font-medium
-                    opacity-0 group-hover:opacity-100 transition-opacity
-                    shadow-lg
-                  ">
+                  <span
+                    className="
+                      absolute -top-8 left-1/2 -translate-x-1/2
+                      bg-gray-800 text-white px-2 py-1 rounded-md
+                      text-xs font-medium
+                      opacity-0 group-hover:opacity-100 transition-opacity
+                      shadow-lg
+                    "
+                  >
                     {social.name}
                   </span>
                 </a>
@@ -94,7 +105,7 @@ function Footer() {
           {/* Quick Links */}
           <div className="space-y-6">
             <h4 className="text-lg font-semibold text-white uppercase tracking-wide">
-              Navigation
+              {t("footer.navigation.title")}
             </h4>
             <ul className="space-y-3">
               {footerLinks.map((link) => (
@@ -107,9 +118,9 @@ function Footer() {
                       transition-all duration-300
                     "
                   >
-                    <span className="w-2 h-px bg-blue-500 opacity-0 group-hover:opacity-100 mr-2 transition-opacity"></span>
+                    <span className="w-2 h-px bg-blue-500 opacity-0 group-hover:opacity-100 mr-2 rtl:mr-0 rtl:ml-2 transition-opacity" />
                     {link.label}
-                    <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="ml-auto rtl:ml-0 rtl:mr-auto opacity-0 group-hover:opacity-100 transition-opacity">
                       ↗
                     </span>
                   </Link>
@@ -121,20 +132,18 @@ function Footer() {
           {/* Contact Info */}
           <div className="space-y-6">
             <h4 className="text-lg font-semibold text-white uppercase tracking-wide">
-              Contact
+              {t("footer.navigation.contact")}
             </h4>
             <ul className="space-y-4">
               {contactInfo.map((contact, index) => (
                 <li
                   key={index}
-                  className="flex items-start space-x-3 text-gray-400"
+                  className="flex items-start space-x-3 rtl:space-x-reverse text-gray-400"
                 >
                   <span className="shrink-0 mt-1 text-blue-500">
                     {contact.icon}
                   </span>
-                  <span className="text-sm leading-relaxed">
-                    {contact.text}
-                  </span>
+                  <span className="text-sm leading-relaxed">{contact.text}</span>
                 </li>
               ))}
             </ul>
@@ -143,12 +152,12 @@ function Footer() {
           {/* Newsletter */}
           <div className="space-y-6">
             <h4 className="text-lg font-semibold text-white uppercase tracking-wide">
-              Newsletter
+              {t("footer.newsletter.title")}
             </h4>
             <form className="flex flex-col space-y-4">
               <input
                 type="email"
-                placeholder="Your email address"
+                placeholder= {t("footer.newsletter.placeholder")}
                 className="
                   w-full px-4 py-3
                   bg-gray-700 border border-gray-600
@@ -171,10 +180,10 @@ function Footer() {
                   flex items-center justify-center
                 "
               >
-                Subscribe Now
+                {t("footer.newsletter.subscribeButton")}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 ml-2"
+                  className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -183,7 +192,7 @@ function Footer() {
               </button>
             </form>
             <p className="text-xs text-gray-500 leading-relaxed">
-            Subscribe to get the latest updates and news
+              {t("footer.newsletter.helpText")}
             </p>
           </div>
         </div>
@@ -194,20 +203,20 @@ function Footer() {
             <p className="text-sm text-gray-500 text-center">
               © {currentYear} LabBooker™. All rights reserved.
             </p>
-            <div className="flex items-center space-x-4">
-            <Link
-        to="/termsofservice"
-        className="text-gray-400 hover:text-white transition-colors text-sm"
-      >
-        Terms of Service
-      </Link>
-      <span className="text-gray-600">•</span>
-      <Link
-        to="/privacypolicy"
-        className="text-gray-400 hover:text-white transition-colors text-sm"
-      >
-        Privacy Policy
-      </Link>
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <Link
+                to="/termsofservice"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                {t("footer.links.termsOfService")}
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link
+                to="/privacypolicy"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                {t("footer.links.privacyPolicy")}
+              </Link>
               <span className="text-gray-600">•</span>
               <span className="text-gray-400 text-sm">
                 Developed by Azrieli College

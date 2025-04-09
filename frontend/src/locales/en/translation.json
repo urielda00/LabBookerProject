@@ -1,6 +1,6 @@
 {
   "homepage": {
-    "welcome": "Welcome, {{username}} 👋",
+    "welcome": "Welcome, {{username}}",
     "description": "Manage your lab bookings and explore available rooms with real-time status updates.",
     "labRoomStatus": "Lab Room Status",
     "occupied": "Occupied",
@@ -55,6 +55,7 @@
     "cancelMessage": "Are you sure you want to cancel this booking? This action cannot be undone.",
     "cancelBookingSuccess": "Booking cancelled successfully",
     "cancelBookingFail": "Failed to cancel booking",
+    "cancelUnavailable": "Cancel Unavailable",
     "labels": {
       "date": "Date",
       "room": "Room",
@@ -67,5 +68,46 @@
     "failCheckIn": "Failed to check in",
     "downloadIcs": "Download .ICS",
     "googleCalendar": "Google Calendar"
+  },
+  "footer": {
+    "brandTitle": "LabBooker",
+    "brandSubtitle": "Revolutionizing lab room bookings and management for educational institutions worldwide.",
+
+    "socialLinks": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn"
+    },
+
+    "navigation": {
+      "title": "Navigation",
+      "about": "About",
+      "faq": "FAQs",
+      "contact": "Contact",
+      "reportIssue": "Report Issue"
+    },
+
+    "contact": {
+      "title": "Contact",
+      "location": "Azrieli College of Engineering, Jerusalem",
+      "email": "support@labbooker.com",
+      "phone": "+972 (0)2-123-4567"
+    },
+
+    "newsletter": {
+      "title": "Newsletter",
+      "placeholder": "Your email address",
+      "subscribeButton": "Subscribe Now",
+      "helpText": "Subscribe to get the latest updates and news"
+    },
+
+    "links": {
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    },
+
+    "developedByAzrieli": "Developed by Azrieli College",
+
+    "copyright": "© {{year}} LabBooker™. All rights reserved."
   }
 }

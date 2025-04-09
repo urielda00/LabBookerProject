@@ -19,7 +19,7 @@ import { BsCheckAll } from "react-icons/bs";
 
 // 1) Import translation hook & LanguageSwitcher
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "./LanguageSwitcher "; 
+import LanguageSwitcher from "./LanguageSwitcher ";
 
 const Navbar = ({
   userInfo,
@@ -506,7 +506,12 @@ const Navbar = ({
   ]);
 
   return (
+    /**
+     *  We force LTR here by adding dir="ltr".
+     *  This ensures the navbar layout stays LTR even if the rest of the site is dir="rtl".
+     */
     <nav
+      dir="ltr"
       className={`fixed top-0 left-0 right-0 z-50 text-white transition-colors duration-300 ${navBgClass}`}
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -599,8 +604,7 @@ const Navbar = ({
               to="/login"
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all hover:shadow-lg hover:-translate-y-1"
             >
-              {t("nav.login")} 
-              {/* or hardcode "Log In" if you haven't added this key */}
+              {t("nav.login")}
             </Link>
           )}
         </div>
