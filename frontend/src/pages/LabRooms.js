@@ -5,8 +5,9 @@ import Footer from "../components/footer";
 import RoomsSection from "../components/roomsSection";
 import { BookOpen } from "lucide-react";
 import api from "../utils/axiosConfig";
-
+import { useTranslation } from "react-i18next";
 const LabRooms = () => {
+  const { t } = useTranslation();
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
 
@@ -68,11 +69,11 @@ const LabRooms = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
-                <BookOpen className="mr-3 text-blue-500 dark:text-blue-400" />
-                Lab Rooms
+                <BookOpen className="mr-3 rtl:ml-3 text-blue-500 dark:text-blue-400" />
+                {t("labRooms.title")}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg mt-2">
-                Browse and book available laboratory spaces
+                {t("labRooms.subtitle")}
               </p>
             </div>
           </div>

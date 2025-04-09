@@ -219,7 +219,7 @@ function Footer() {
               </Link>
               <span className="text-gray-600">•</span>
               <span className="text-gray-400 text-sm">
-                Developed by Azrieli College
+                {t("footer.developedByAzrieli")}
               </span>
             </div>
           </div>

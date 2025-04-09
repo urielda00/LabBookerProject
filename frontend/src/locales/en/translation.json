@@ -109,5 +109,34 @@
     "developedByAzrieli": "Developed by Azrieli College",
 
     "copyright": "© {{year}} LabBooker™. All rights reserved."
+  },
+  "labRooms": {
+    "title": "Lab Rooms",
+    "subtitle": "Browse and book available laboratory spaces"
+  },
+  "roomCard": {
+    "details": "Details",
+    "book": "Book",
+    "cancel": "Cancel",
+
+    "failedLoadBookings": "Failed to load bookings",
+    "noBookingsScheduled": "No bookings scheduled this week",
+
+    "viewSchedule": "View Schedule",
+    "scheduleTitle": "{{roomName}} Schedule",
+
+    "viewRequests": "View Requests",
+    "declined": "Declined",
+    "requestSent": "Request Sent ✓",
+    "requestTransfer": "Request Transfer",
+    "transferUnavailable": "Transfer unavailable",
+
+    "participants": "Participants:",
+
+    "status": {
+      "Active": "Active",
+      "Confirmed": "Confirmed",
+      "Pending": "Pending"
+    }
   }
 }

@@ -108,5 +108,34 @@
     "developedByAzrieli": "פותח על ידי המכללה האקדמית עזריאלי",
 
     "copyright": "© {{year}} LabBooker™. כל הזכויות שמורות."
+  },
+  "labRooms": {
+    "title": "מעבדות",
+    "subtitle": "עיין והזמן מעבדות זמינות"
+  },
+  "roomCard": {
+    "details": "פרטים",
+    "book": "הזמן",
+    "cancel": "בטל",
+
+    "failedLoadBookings": "טעינת ההזמנות נכשלה",
+    "noBookingsScheduled": "אין הזמנות השבוע",
+
+    "viewSchedule": "צפה בלו\"ז",
+    "scheduleTitle": "לו\"ז עבור {{roomName}}",
+
+    "viewRequests": "צפה בבקשות",
+    "declined": "נדחה",
+    "requestSent": "בקשה נשלחה ✓",
+    "requestTransfer": "בקשת העברה",
+    "transferUnavailable": "לא ניתן לבצע העברה",
+
+    "participants": "משתתפים:",
+
+    "status": {
+      "Active": "פעיל",
+      "Confirmed": "מאושר",
+      "Pending": "ממתין"
+    }
   }
 }
