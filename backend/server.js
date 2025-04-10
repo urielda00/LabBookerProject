@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { i18nMiddleware } = require('./utils/i18n');
 require("dotenv").config();
 
 //Moe added this
@@ -50,6 +51,8 @@ function debugRouteRegistration(app, path, routes) {
 
 const app = express();
 
+app.use(i18nMiddleware);                // the ready‑made handler
+
 // Extensive Logging Middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -75,7 +78,7 @@ app.use(
     origin: ["http://localhost:3000", "http://127.0.0.1:3000", "https://labbooker-frontend.onrender.com"],
 
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
     exposedHeaders: ["X-System-Health", "X-Response-Time"],
     credentials: true,
   }),

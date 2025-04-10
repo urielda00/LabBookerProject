@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "dayjs": "^1.11.13",
+    "i18next": "^24.2.3",
+    "i18next-browser-languagedetector": "^8.0.4",
+    "react-i18next": "^15.4.1",
     "redis": "^4.7.0"
   }
 }
