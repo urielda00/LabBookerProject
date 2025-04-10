@@ -1,6 +1,7 @@
 // src/utils/axiosConfig.js
 
 import axios from "axios";
+import i18n from '../i18n';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -8,14 +9,17 @@ const api = axios.create({
   timeout: 30000,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+api.interceptors.request.use(cfg => {
+  const token = localStorage.getItem('token');
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+
+  cfg.headers['Accept-Language'] = i18n.language;   // 👈 new line
+  return cfg;
+});
+
+i18n.on('languageChanged', lng => {
+  api.defaults.headers.common['Accept-Language'] = lng;
+});
 
 // Updated Response Interceptor
 api.interceptors.response.use(

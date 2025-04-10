@@ -1,0 +1,28 @@
+{
+  "booking": {
+    "errors": {
+      "missingFields"  : "Missing required booking fields",
+      "userNotFound"   : "User not found",
+      "blocked"        : "Account temporarily blocked from new bookings until {{date}}",
+      "hasUpcoming"    : "You already have an upcoming booking. Please complete it before creating a new one.",
+      "weeklyLimit"    : "Weekly booking limit reached. Maximum 4 bookings per week allowed.",
+      "roomNotFound"   : "Room not found",
+      "timeFormat"     : "Invalid time format. Please use HH:mm format",
+      "pastDate"       : "Cannot book for past date and time",
+      "outOfHours"     : "Bookings are only available between 9 AM and 6 PM",
+      "minAdvance"     : "Bookings must be made at least 30 minutes in advance",
+      "invalidEmail"   : "Invalid email format",
+      "duration"       : "Invalid booking duration. Must be between {{min}} and {{max}} hours",
+      "slotTaken"      : "Time slot is already booked"
+    },
+    "success": {
+      "created"        : "Booking created successfully",
+      "pendingApproval": "Booking created and pending admin approval"
+    },
+    "notify": {
+      "createdOpen"    : "Your booking for room {{room}} has been created and confirmed successfully.",
+      "createdLarge"   : "Your booking for room {{room}} has been created and is pending admin approval.",
+      "createdGeneric" : "Your booking for room {{room}} has been created successfully."
+    }
+  }
+}
