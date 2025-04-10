@@ -122,7 +122,7 @@
     "noBookingsScheduled": "אין הזמנות השבוע",
 
     "viewSchedule": "צפה בלו\"ז",
-    "scheduleTitle": "לו\"ז עבור {{roomName}}",
+    "scheduleTitle": "לו\"ז עבור",
 
     "viewRequests": "צפה בבקשות",
     "declined": "נדחה",
@@ -251,6 +251,69 @@
         "name": "חדר 103 - מעבדת פיזיקה",
         "shortName": "חדר 103"
       }
+    }
+  },
+  "sidebar": {
+    "labBooker": "LabBooker",
+    "dashboard": "לוח מחוונים",
+    "overview": "סקירה כללית",
+    "manageUsers": "ניהול משתמשים",
+    "manageRooms": "ניהול חדרים",
+    "manageBookings": "ניהול הזמנות",
+    "profile": "פרופיל",
+    "home": "דף הבית",
+    "logout": "התנתק"
+  },
+  "dir": "rtl",
+  "profileSettings": {
+    "header": "הגדרות פרופיל",
+    "tabs": {
+      "profile": "פרופיל",
+      "appearance": "מראה",
+      "notifications": "התראות"
+    },
+    "profilePictureHeader": "תמונת פרופיל",
+    "profilePictureAlt": "תמונת פרופיל",
+    "profilePictureHint": "לחץ על הסמל כדי לבחור תמונת פרופיל חדשה",
+    "removeButton": "הסר",
+    "basicInformationHeader": "מידע בסיסי",
+    "username": "שם משתמש",
+    "usernameInfo": "לא ניתן לשנות את שם המשתמש",
+    "name": "שם",
+    "email": "אימייל",
+    "errors": {
+      "loadProfileError": "כשל בטעינת הפרופיל",
+      "invalidImageType": "אנא העלה קובץ תמונה תקין (JPEG, PNG)",
+      "invalidImageSize": "גודל התמונה צריך להיות קטן מ-5MB",
+      "cropImageError": "כשל בחיתוך התמונה",
+      "invalidEmail": "אנא הזן כתובת אימייל תקינה",
+      "emailInUse": "האימייל כבר בשימוש",
+      "initiateEmailChange": "כשל בהתחלת שינוי האימייל",
+      "cancelEmailChange": "כשל בביטול בקשת שינוי האימייל",
+      "invalidVerificationCode": "קוד אימות שגוי",
+      "invalidNameLength": "השם צריך להיות בין 2 ל-50 תווים",
+      "noChanges": "אין שינויים לשמירה",
+      "updateProfile": "כשל בעדכון הפרופיל"
+    },
+    "success": {
+      "emailChangeCancelled": "בקשת שינוי האימייל בוטלה.",
+      "emailUpdated": "האימייל עודכן בהצלחה",
+      "profileUpdated": "הפרופיל עודכן בהצלחה"
+    },
+    "saving": "שומר...",
+    "cancel": "ביטול",
+    "saveChanges": "שמור שינויים",
+    "editProfile": "ערוך פרופיל",
+    "appearanceHeader": "הגדרות מראה",
+    "darkMode": "מצב כהה",
+    "darkModeDescription": "החלף בין נושא בהיר לכהה",
+    "notificationsHeader": "העדפות התראות",
+    "notificationsComingSoonTitle": "בקרוב",
+    "notificationsComingSoonDescription": "הגדרות התראות יהיו זמינות בעדכון עתידי.",
+    "cropperTitle": "חתוך את התמונה שלך",
+    "cropper": {
+      "cancel": "ביטול",
+      "confirm": "אשר חיתוך"
     }
   }
 }

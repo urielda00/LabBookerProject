@@ -123,7 +123,7 @@
     "noBookingsScheduled": "No bookings scheduled this week",
 
     "viewSchedule": "View Schedule",
-    "scheduleTitle": "{{roomName}} Schedule",
+    "scheduleTitle": "Schedule",
 
     "viewRequests": "View Requests",
     "declined": "Declined",
@@ -252,6 +252,68 @@
         "name": "Room 103 - Physics Lab",
         "shortName": "Room 103"
       }
+    }
+  },
+  "sidebar": {
+    "labBooker": "LabBooker",
+    "dashboard": "Dashboard",
+    "overview": "Overview",
+    "manageUsers": "Manage Users",
+    "manageRooms": "Manage Rooms",
+    "manageBookings": "Manage Bookings",
+    "profile": "Profile",
+    "home": "Home",
+    "logout": "Log Out"
+  },
+  "profileSettings": {
+    "header": "Profile Settings",
+    "tabs": {
+      "profile": "Profile",
+      "appearance": "Appearance",
+      "notifications": "Notifications"
+    },
+    "profilePictureHeader": "Profile Picture",
+    "profilePictureAlt": "Profile picture",
+    "profilePictureHint": "Click the icon to choose a new profile picture",
+    "removeButton": "Remove",
+    "basicInformationHeader": "Basic Information",
+    "username": "Username",
+    "usernameInfo": "Username cannot be changed",
+    "name": "Name",
+    "email": "Email",
+    "errors": {
+      "loadProfileError": "Failed to load profile",
+      "invalidImageType": "Please upload a valid image file (JPEG, PNG)",
+      "invalidImageSize": "Image size should be less than 5MB",
+      "cropImageError": "Failed to crop image",
+      "invalidEmail": "Please enter a valid email address",
+      "emailInUse": "Email is already in use",
+      "initiateEmailChange": "Failed to initiate email change",
+      "cancelEmailChange": "Failed to cancel email change request",
+      "invalidVerificationCode": "Invalid verification code",
+      "invalidNameLength": "Name must be between 2 and 50 characters",
+      "noChanges": "No changes to save",
+      "updateProfile": "Failed to update profile"
+    },
+    "success": {
+      "emailChangeCancelled": "Email change request cancelled.",
+      "emailUpdated": "Email updated successfully",
+      "profileUpdated": "Profile updated successfully"
+    },
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "editProfile": "Edit Profile",
+    "appearanceHeader": "Appearance Settings",
+    "darkMode": "Dark Mode",
+    "darkModeDescription": "Toggle between light and dark themes",
+    "notificationsHeader": "Notification Preferences",
+    "notificationsComingSoonTitle": "Coming Soon",
+    "notificationsComingSoonDescription": "Notification settings will be available in a future update.",
+    "cropperTitle": "Crop your photo",
+    "cropper": {
+      "cancel": "Cancel",
+      "confirm": "Confirm Crop"
     }
   }
 }
