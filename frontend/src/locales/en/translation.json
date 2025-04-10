@@ -138,5 +138,120 @@
       "Confirmed": "Confirmed",
       "Pending": "Pending"
     }
+  },
+  "roomBooking": {
+    "bookingTitle": "Booking:",
+    "colleagueEmail": "Colleague",
+    "email": " Email",
+    "emailPlaceholder": "e.g., colleague@example.com",
+    "selectDate": "Select Date",
+    "chooseDatePlaceholder": "Choose a date",
+    "selectTimeSlot": "Select Time Slot",
+    "noTimeSlots": "No available time slots for this date.",
+    "selectDateFirst": "Please select a date first.",
+    "proceedButton": "Proceed with Booking",
+    "bookingInProgress": "Booking...",
+    "statusBooked": "Booked",
+    "statusPast": "Past",
+    "statusAvailable": "Available",
+    "close": "Close",
+    "timeRange": "{startTime} - {endTime}"
+  },
+  "errors": {
+    "invalidEmail": "Invalid email format for Colleague {number}.",
+    "missingEmail": "Please enter email for Colleague {number}.",
+    "chooseDate": "Please choose an available date.",
+    "selectTimeSlot": "Please select a time slot.",
+    "pastBooking": "Cannot book for past date and time.",
+    "businessHours": "Bookings are only available between {startHour}:00 and {endHour}:00.",
+    "advanceBooking": "Bookings must be made at least {minutes} minutes in advance.",
+    "generalError": "An error occurred while processing your booking.",
+    "fetchError": "Unable to fetch room availability. Please try again later."
+  },
+  "success": {
+    "bookingConfirmed": "Booking confirmed successfully!",
+    "bookingProcessed": "Your booking has been processed successfully."
+  },
+  "datepicker": {
+    "placeholder": "Select a date",
+    "monthNames": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "weekDays": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat"
+    },
+    "buttons": {
+      "today": "Today",
+      "cancel": "Cancel",
+      "apply": "Apply"
+    },
+    "accessibility": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "openCalendar": "Open calendar",
+      "closeCalendar": "Close calendar",
+      "selectDate": "Select date",
+      "selectedDate": "Selected date: {date}",
+      "unavailableDate": "This date is not available"
+    }
+  },
+  "rooms": {
+    "types": {
+      "computerLab": {
+        "name": "Computer Lab",
+        "description": "General purpose computer laboratory"
+      },
+      "chemistryLab": {
+        "name": "Chemistry Lab",
+        "description": "Chemistry research and experiments lab"
+      },
+      "physicsLab": {
+        "name": "Physics Lab",
+        "description": "Physics research and experiments lab"
+      },
+      "electronicsLab": {
+        "name": "Electronics Lab",
+        "description": "Electronics and circuits lab"
+      },
+      "largeSeminar": {
+        "name": "Large Seminar Room",
+        "description": "Large conference and seminar space"
+      },
+      "smallSeminar": {
+        "name": "Small Seminar Room",
+        "description": "Small meeting and seminar space"
+      }
+    },
+    "names": {
+      "room101": {
+        "name": "Room 101 - Computer Lab",
+        "shortName": "Room 101"
+      },
+      "room102": {
+        "name": "Room 102 - Chemistry Lab",
+        "shortName": "Room 102"
+      },
+      "room103": {
+        "name": "Room 103 - Physics Lab",
+        "shortName": "Room 103"
+      }
+    }
   }
 }

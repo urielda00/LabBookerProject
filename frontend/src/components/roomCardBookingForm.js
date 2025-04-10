@@ -4,7 +4,7 @@ import Message from "./Error_successMessage"; // For error/success messages
 import CustomDatepicker from "../utils/datePicker"; // Your custom datepicker component
 import { format } from 'date-fns';
 import api from "../utils/axiosConfig"; // Import the centralized Axios instance
-
+import { useTranslation } from "react-i18next"; // For translations
 
 // Define booking constants
 // const BOOKING_CONSTANTS = {
@@ -31,7 +31,7 @@ const RoomCardBookingForm = ({
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { t } = useTranslation(); // For translations
   // State for backend availability (timeslot data)
   const [availability, setAvailability] = useState(null);
   // List of timeslots for the selected date
@@ -331,7 +331,7 @@ const RoomCardBookingForm = ({
         {/* Header */}
         <div className="flex justify-between items-center border-b dark:border-gray-700 pb-3 sm:pb-4 mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Booking: {room.name}
+            {t("roomBooking.bookingTitle")}  {room.name}
           </h2>
           <button
             className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-2xl sm:text-3xl transition-colors"
@@ -349,7 +349,7 @@ const RoomCardBookingForm = ({
               {formData.colleagues.map((colleague, index) => (
                 <div key={`colleague_${index}`} className="flex flex-col">
                   <label className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-1">
-                    Colleague {index + 1} Email
+                    {t("roomBooking.colleagueEmail")} {index + 1} {t("roomBooking.email")}
                   </label>
                   <input
                     type="email"
@@ -368,12 +368,12 @@ const RoomCardBookingForm = ({
           {/* Custom Datepicker */}
           <div>
             <label className="block text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-2 font-medium">
-              Select Date
+              {t("roomBooking.selectDate")}
             </label>
             <CustomDatepicker
               onDateChange={handleDateSelected}
               availableDates={availableDates}
-              placeholder="Choose a date"
+              placeholder={t("roomBooking.chooseDatePlaceholder")}
               className="text-sm sm:text-base"
             />
           </div>
@@ -381,7 +381,7 @@ const RoomCardBookingForm = ({
           {/* Time Slot Selector */}
           <div>
             <label className="block text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-2 font-medium">
-              Select Time Slot
+              {t("roomBooking.selectTimeSlot")}
             </label>
             {formData.date ? (
               displaySlots.length > 0 ? (
@@ -447,12 +447,12 @@ const RoomCardBookingForm = ({
               </div>
             ) : (
               <p className="text-red-500 dark:text-red-400 text-sm sm:text-base">
-                No available time slots for this date.
+                {t("roomBooking.noTimeSlots")}
               </p>
             )
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-              Please select a date first.
+              {t("roomBooking.selectDateFirst")}
             </p>
           )}
         </div>
@@ -488,7 +488,7 @@ const RoomCardBookingForm = ({
               : ""
           }`}
         >
-          {isSubmitting ? "Booking..." : "Proceed with Booking"}
+          {isSubmitting ? t("roomBooking.bookingInProgress") : t("roomBooking.proceedButton")}
         </button>
       </div>
     </div>

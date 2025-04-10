@@ -171,7 +171,7 @@ const RoomCard = ({
             ref={measurementMoreRef}
             className="inline-flex items-center px-2 py-1 text-xs box-border bg-blue-100 text-blue-700 shadow-sm whitespace-nowrap"
           >
-            +{room.amenities.length} {t("roomCard.more")}
+            +{room.amenities.length}
           </span>
         )}
       </div>
@@ -249,7 +249,7 @@ const RoomCard = ({
                   transition-colors relative group flex-shrink-0
                 "
               >
-                +{extraCount} {t("roomCard.more")}
+                +{extraCount}
                 <div
                   className="
                     absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2

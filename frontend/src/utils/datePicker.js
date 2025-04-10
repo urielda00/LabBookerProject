@@ -1,6 +1,6 @@
 // ../utils/CustomDatepicker.js
 import React, { useState, useEffect, useRef } from "react";
-
+import { useTranslation } from "react-i18next";
 const themes = {
   blue: {
     primary: "blue",
@@ -36,7 +36,7 @@ const CustomDatepicker = ({
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const popupRef = useRef(null);
-
+  const { t } = useTranslation();
   const currentTheme = themes[theme] || themes.blue;
 
   // Helper functions
@@ -68,13 +68,13 @@ const CustomDatepicker = ({
   // Handlers for month navigation
   const handlePrevMonth = () => {
     setCurrentDate(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
     );
   };
 
   const handleNextMonth = () => {
     setCurrentDate(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
     );
   };
 
@@ -84,7 +84,7 @@ const CustomDatepicker = ({
     const newDate = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
-      day,
+      day
     );
     setSelectedDate(newDate);
   };
@@ -125,7 +125,7 @@ const CustomDatepicker = ({
     const thisDate = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
-      day,
+      day
     );
     const dateStr = formatDate(thisDate);
     const todayStr = formatDate(new Date());
@@ -147,7 +147,7 @@ const CustomDatepicker = ({
           }`}
       >
         {day}
-      </div>,
+      </div>
     );
   }
 
@@ -242,13 +242,21 @@ const CustomDatepicker = ({
                 onClick={handleToday}
                 className={`text-sm font-medium ${currentTheme.text} hover:underline dark:hover:text-${currentTheme.primary}-300`}
               >
-                Today
+                {t("datepicker.buttons.today")}
               </button>
             </div>
 
             {/* Weekday Labels */}
-            <div className="grid grid-cols-7 gap-2 mt-4 mb-2 px-5">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div className="grid grid-cols-7 gap-2 p-4">
+              {[
+                t("datepicker.weekDays.sunday"),
+                t("datepicker.weekDays.monday"),
+                t("datepicker.weekDays.tuesday"),
+                t("datepicker.weekDays.wednesday"),
+                t("datepicker.weekDays.thursday"),
+                t("datepicker.weekDays.friday"),
+                t("datepicker.weekDays.saturday"),
+              ].map((day) => (
                 <div
                   key={day}
                   className="text-center text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -269,13 +277,13 @@ const CustomDatepicker = ({
                 onClick={handleCancelDate}
                 className={`px-5 py-2 text-base font-medium ${currentTheme.text} ${currentTheme.border} rounded-lg ${currentTheme.hoverBg}`}
               >
-                Cancel
+                {t("datepicker.buttons.cancel")}
               </button>
               <button
                 onClick={handleApply}
                 className={`ml-2 px-5 py-2 text-base font-medium ${currentTheme.selected} text-white rounded-lg ${currentTheme.hoverDark}`}
               >
-                Apply
+                {t("datepicker.buttons.apply")}
               </button>
             </div>
           </div>

@@ -137,5 +137,120 @@
       "Confirmed": "מאושר",
       "Pending": "ממתין"
     }
+  },
+  "roomBooking": {
+    "bookingTitle": "הזמנה: ",
+    "colleagueEmail": "עמית",
+    "emailPlaceholder": "לדוגמה: colleague@example.com",
+    "email": " אימייל",
+    "selectDate": "בחר תאריך",
+    "chooseDatePlaceholder": "בחר תאריך",
+    "selectTimeSlot": "בחר משבצת זמן",
+    "noTimeSlots": "אין משבצות זמן זמינות לתאריך זה.",
+    "selectDateFirst": "נא לבחור תאריך תחילה.",
+    "proceedButton": "המשך להזמנה",
+    "bookingInProgress": "מזמין...",
+    "statusBooked": "תפוס",
+    "statusPast": "עבר",
+    "statusAvailable": "זמין",
+    "close": "סגור",
+    "timeRange": "{startTime} - {endTime}"
+  },
+  "errors": {
+    "invalidEmail": "פורמט אימייל לא תקין עבור עמית {number}.",
+    "missingEmail": "נא להזין אימייל עבור עמית {number}.",
+    "chooseDate": "נא לבחור תאריך זמין.",
+    "selectTimeSlot": "נא לבחור משבצת זמן.",
+    "pastBooking": "לא ניתן להזמין לתאריך ושעה שעברו.",
+    "businessHours": "הזמנות אפשריות בין השעות {startHour}:00 ל-{endHour}:00.",
+    "advanceBooking": "יש לבצע הזמנות לפחות {minutes} דקות מראש.",
+    "generalError": "אירעה שגיאה בעת עיבוד ההזמנה שלך.",
+    "fetchError": "לא ניתן לטעון את זמינות החדר. נא לנסות שוב מאוחר יותר."
+  },
+  "success": {
+    "bookingConfirmed": "ההזמנה אושרה בהצלחה!",
+    "bookingProcessed": "ההזמנה שלך עובדה בהצלחה."
+  },
+  "datepicker": {
+    "placeholder": "בחר תאריך",
+    "monthNames": {
+      "january": "ינואר",
+      "february": "פברואר",
+      "march": "מרץ",
+      "april": "אפריל",
+      "may": "מאי",
+      "june": "יוני",
+      "july": "יולי",
+      "august": "אוגוסט",
+      "september": "ספטמבר",
+      "october": "אוקטובר",
+      "november": "נובמבר",
+      "december": "דצמבר"
+    },
+    "weekDays": {
+      "sunday": "א'",
+      "monday": "ב'",
+      "tuesday": "ג'",
+      "wednesday": "ד'",
+      "thursday": "ה'",
+      "friday": "ו'",
+      "saturday": "ש'"
+    },
+    "buttons": {
+      "today": "היום",
+      "cancel": "ביטול",
+      "apply": "אישור"
+    },
+    "accessibility": {
+      "previousMonth": "חודש קודם",
+      "nextMonth": "חודש הבא",
+      "openCalendar": "פתח לוח שנה",
+      "closeCalendar": "סגור לוח שנה",
+      "selectDate": "בחר תאריך",
+      "selectedDate": "תאריך נבחר: {date}",
+      "unavailableDate": "תאריך זה אינו זמין"
+    }
+  },
+  "rooms": {
+    "types": {
+      "computerLab": {
+        "name": "מעבדת מחשבים",
+        "description": "מעבדת מחשבים לשימוש כללי"
+      },
+      "chemistryLab": {
+        "name": "מעבדת כימיה",
+        "description": "מעבדה למחקר וניסויים בכימיה"
+      },
+      "physicsLab": {
+        "name": "מעבדת פיזיקה",
+        "description": "מעבדה למחקר וניסויים בפיזיקה"
+      },
+      "electronicsLab": {
+        "name": "מעבדת אלקטרוניקה",
+        "description": "מעבדת אלקטרוניקה ומעגלים"
+      },
+      "largeSeminar": {
+        "name": "חדר סמינרים גדול",
+        "description": "חלל לכנסים וסמינרים גדולים"
+      },
+      "smallSeminar": {
+        "name": "חדר סמינרים קטן",
+        "description": "חלל לפגישות וסמינרים קטנים"
+      }
+    },
+    "names": {
+      "room101": {
+        "name": "חדר 101 - מעבדת מחשבים",
+        "shortName": "חדר 101"
+      },
+      "room102": {
+        "name": "חדר 102 - מעבדת כימיה",
+        "shortName": "חדר 102"
+      },
+      "room103": {
+        "name": "חדר 103 - מעבדת פיזיקה",
+        "shortName": "חדר 103"
+      }
+    }
   }
 }
