@@ -1,130 +1,118 @@
-const Notification = require("../models/Notification");
+// controllers/notificationsController.js
+const mongoose      = require('mongoose');
+const Notification   = require('../models/Notification');
+const { isValidObjectId } = mongoose;
 
+/* -------------------------------------------------------------- */
+/* Helper — use from any other controller                          */
+/* -------------------------------------------------------------- */
+const createNotification = async (userId, key, params = {}, type = '') => {
+  return Notification.create({ user: userId, key, params, type, isRead: false });
+};
+
+/* -------------------------------------------------------------- */
+/* Controller                                                      */
+/* -------------------------------------------------------------- */
 const notificationsController = {
-  /**
-   * Helper: Create a new notification for a user.
-   * This can be called from any other controller.
-   */
-  createNotification: async (userId, message, type) => {
+  /* keep helper available as notificationsController.createNotification */
+  createNotification,
+
+  /* GET /notifications */
+  async getNotifications(req, res) {
     try {
-      const notification = new Notification({
-        user: userId,
-        message,
-        type,
-        isRead: false,
-      });
-      await notification.save();
-      return notification;
-    } catch (error) {
-      throw new Error("Failed to create notification: " + error.message);
+      const notes = await Notification.find({ user: req.user._id })
+                                      .sort({ createdAt: -1 });
+
+      const out = notes.map(n => ({
+        id        : n._id,
+        type      : n.type,
+        createdAt : n.createdAt,
+        readAt    : n.readAt,
+        isRead    : n.isRead,
+        message   : req.t(n.key, n.params)      // translate here
+      }));
+
+      return res.status(200).json(out);
+    } catch (err) {
+      console.error('Get notifications error:', err);
+      return res.status(500).json({ message: 'Failed to get notifications' });
     }
   },
 
-  /**
-   * GET /notifications
-   * Get all unread notifications for the currently authenticated user.
-   */
-  // controllers/notificationsController.js
-  // controllers/notificationsController.js
-  getNotifications: async (req, res) => {
-    try {
-      const userId = req.user._id;
-      // Return all notifications (both read and unread)
-      const notifications = await Notification.find({ user: userId }).sort({
-        createdAt: -1,
-      });
-      return res.status(200).json(notifications);
-    } catch (error) {
-      console.error("Get notifications error:", error);
-      return res.status(500).json({ message: "Failed to get notifications" });
+  /* PUT /notifications/:id/read */
+  async markAsRead(req, res) {
+    const id = req.params.id;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid notification id' });
     }
-  },
 
-  /**
-   * PUT /notifications/:id/read
-   * Mark a single notification as read.
-   */
-  markAsRead: async (req, res) => {
     try {
-      const notificationId = req.params.id;
-      // Update isRead and set readAt timestamp
-      const notification = await Notification.findOneAndUpdate(
-        { _id: notificationId, user: req.user._id },
+      const n = await Notification.findOneAndUpdate(
+        { _id: id, user: req.user._id },
         { isRead: true, readAt: new Date() },
-        { new: true },
+        { new: true }
       );
-      if (!notification) {
-        return res.status(404).json({ message: "Notification not found" });
-      }
-      return res.status(200).json(notification);
-    } catch (error) {
-      console.error("Mark as read error:", error);
-      return res
-        .status(500)
-        .json({ message: "Failed to mark notification as read" });
+      if (!n) return res.status(404).json({ message: 'Notification not found' });
+
+      return res.status(200).json({
+        id        : n._id,
+        type      : n.type,
+        createdAt : n.createdAt,
+        readAt    : n.readAt,
+        isRead    : n.isRead,
+        message   : req.t(n.key, n.params)
+      });
+    } catch (err) {
+      console.error('Mark as read error:', err);
+      return res.status(500).json({ message: 'Failed to mark as read' });
     }
   },
 
-  /**
-   * PUT /notifications/read-all
-   * Mark all notifications for the user as read.
-   */
-  markAllAsRead: async (req, res) => {
+  /* PUT /notifications/read-all */
+  async markAllAsRead(req, res) {
     try {
-      const userId = req.user._id;
-      // Set isRead and readAt for all unread notifications
       await Notification.updateMany(
-        { user: userId, isRead: false },
-        { isRead: true, readAt: new Date() },
+        { user: req.user._id, isRead: false },
+        { isRead: true, readAt: new Date() }
       );
-      return res
-        .status(200)
-        .json({ message: "All notifications marked as read" });
-    } catch (error) {
-      console.error("Mark all as read error:", error);
-      return res
-        .status(500)
-        .json({ message: "Failed to mark all notifications as read" });
+      return res.status(200).json({ message: 'All notifications marked as read' });
+    } catch (err) {
+      console.error('Mark all as read error:', err);
+      return res.status(500).json({ message: 'Failed to mark all as read' });
     }
   },
 
-  /**
-   * DELETE /notifications/:id
-   * Delete a single notification immediately.
-   */
-  deleteNotification: async (req, res) => {
+  /* DELETE /notifications/:id */
+  async deleteNotification(req, res) {
+    const id = req.params.id;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid notification id' });
+    }
+
     try {
-      const notificationId = req.params.id;
-      const notification = await Notification.findOneAndDelete({
-        _id: notificationId,
-        user: req.user._id,
+      const n = await Notification.findOneAndDelete({
+        _id : id,
+        user: req.user._id
       });
-      if (!notification) {
-        return res.status(404).json({ message: "Notification not found" });
-      }
-      return res.status(200).json({ message: "Notification deleted." });
-    } catch (error) {
-      console.error("Delete notification error:", error);
-      return res.status(500).json({ message: "Failed to delete notification" });
+      if (!n) return res.status(404).json({ message: 'Notification not found' });
+
+      return res.status(200).json({ message: 'Notification deleted.' });
+    } catch (err) {
+      console.error('Delete notification error:', err);
+      return res.status(500).json({ message: 'Failed to delete notification' });
     }
   },
 
-  /**
-   * DELETE /notifications/clear-all
-   * Delete all notifications for the authenticated user.
-   */
-  deleteAllNotifications: async (req, res) => {
+  /* DELETE /notifications/clear-all */
+  async deleteAllNotifications(req, res) {
     try {
-      const userId = req.user._id;
-      await Notification.deleteMany({ user: userId });
-      return res.status(200).json({ message: "All notifications deleted." });
-    } catch (error) {
-      console.error("Delete all notifications error:", error);
-      return res
-        .status(500)
-        .json({ message: "Failed to delete notifications" });
+      await Notification.deleteMany({ user: req.user._id });
+      return res.status(200).json({ message: 'All notifications deleted.' });
+    } catch (err) {
+      console.error('Delete all notifications error:', err);
+      return res.status(500).json({ message: 'Failed to delete notifications' });
     }
-  },
+  }
 };
 
 module.exports = notificationsController;

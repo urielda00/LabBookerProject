@@ -261,9 +261,11 @@ class UserController {
           try {
             await notificationsController.createNotification(
               user._id,
-              "Your profile has been updated successfully.",
-              "profileUpdate",
+              "user.notify.profileUpdated",   // i18n key
+              {},                             // no params needed
+              "profileUpdate"
             );
+            
           } catch (notificationError) {
             console.error(
               "Notification creation error:",
@@ -425,9 +427,11 @@ class UserController {
       try {
         await notificationsController.createNotification(
           user._id,
-          "Your email has been updated successfully.",
-          "emailChange",
+          "user.notify.emailChanged",
+          {},
+          "emailChange"
         );
+        
       } catch (notificationError) {
         console.error(
           "Notification creation error:",
@@ -467,9 +471,11 @@ class UserController {
       try {
         await notificationsController.createNotification(
           user._id,
-          "Your email change request has been cancelled.",
-          "emailChangeCancel",
+          "user.notify.emailChangeCancelled",
+          {},
+          "emailChangeCancel"
         );
+        
       } catch (notificationError) {
         console.error(
           "Notification cancellation error:",
@@ -559,9 +565,11 @@ class UserController {
       // Create notification
       await notificationsController.createNotification(
         user._id,
-        `Your account role has been updated to ${role}`,
-        "roleUpdate",
+        "user.notify.roleUpdated",
+        { role },
+        "roleUpdate"
       );
+      
 
       return res.status(200).json(user);
     } catch (error) {
@@ -595,9 +603,11 @@ class UserController {
       // Create notification
       await notificationsController.createNotification(
         user._id,
-        `Your account has been blocked until ${blockUntil.toLocaleDateString()}`,
-        "accountBlocked",
+        "user.notify.accountBlocked",
+        { date: blockUntil.toLocaleDateString() },
+        "accountBlocked"
       );
+      
 
       return res.status(200).json({
         message: "User blocked successfully",
@@ -628,9 +638,11 @@ class UserController {
       // Create notification
       await notificationsController.createNotification(
         user._id,
-        "Your account has been unblocked",
-        "accountUnblocked",
+        "user.notify.accountUnblocked",
+        {},
+        "accountUnblocked"
       );
+      
 
       return res.status(200).json({ message: "User unblocked successfully" });
     } catch (error) {

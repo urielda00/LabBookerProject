@@ -64,7 +64,7 @@ export const useNotifications = () => {
 
       setNotifications((prev) =>
         prev.map((notif) =>
-          notif._id === id
+          notif.id === id
             ? { ...notif, isRead: true, readAt: new Date() }
             : notif,
         ),
@@ -82,7 +82,7 @@ export const useNotifications = () => {
       await api.delete(`/notifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications((prev) => prev.filter((notif) => notif._id !== id));
+      setNotifications((prev) => prev.filter((notif) => notif.id !== id));
     } catch (error) {
       console.error("Failed to delete notification:", error);
     }

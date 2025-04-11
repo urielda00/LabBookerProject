@@ -13,6 +13,7 @@ i18next
       // ../locales relative to THIS file
       loadPath : path.join(__dirname, '..', 'locales/{{lng}}/translation.json')
     },
+    interpolation : { escapeValue : false },
     debug: false           // set true once, restart, and watch the console
   });
 

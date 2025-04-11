@@ -427,7 +427,7 @@ const Navbar = ({
           {notifications.length > 0 ? (
             notifications.map((notif) => (
               <div
-                key={notif._id}
+                key={notif.id}
                 className={`group relative flex items-center px-4 py-3 border-b border-gray-700 ${
                   notif.isRead
                     ? "bg-gray-700/40"
@@ -458,7 +458,7 @@ const Navbar = ({
                 <div className="flex space-x-2 pl-2">
                   {!notif.isRead && (
                     <button
-                      onClick={() => markNotificationAsRead(notif._id)}
+                      onClick={() => markNotificationAsRead(notif.id)}
                       className="p-1.5 text-green-400 hover:bg-gray-600/50 rounded-md transition-transform duration-200 hover:scale-110"
                       title={t("nav.markAsRead")}
                       aria-label={t("nav.markAsRead")}
@@ -467,7 +467,7 @@ const Navbar = ({
                     </button>
                   )}
                   <button
-                    onClick={() => deleteNotification(notif._id)}
+                    onClick={() => deleteNotification(notif.id)}
                     className="p-1.5 text-red-400 hover:bg-gray-600/50 rounded-md transition-transform duration-200 hover:scale-110"
                     title={t("nav.delete")}
                     aria-label={t("nav.delete")}

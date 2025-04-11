@@ -8,6 +8,7 @@ const Config = require("../models/Config");
 const nodemailer = require("nodemailer");
 const notificationsController = require("../controllers/notificationsController");
 const moment = require("moment-timezone");
+const R = require("../utils/response");
 const {
   sendAdminApprovalRequest,
   sendBookingConfirmation,
@@ -81,18 +82,12 @@ class BookingController {
         .populate("userId", "username email")
         .populate("additionalUsers", "username email");
       if (!booking) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Booking not found" });
+        return R.send(req, res, 404, "booking.errors.notFound");
       }
-      res.status(200).json({ success: true, booking });
+      return R.send(req, res, 200, "booking.success.single", {}, { booking });
     } catch (error) {
       console.error("getBookingById - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchFailed");
     }
   };
 
@@ -123,25 +118,28 @@ class BookingController {
         .sort({ createdAt: -1 });
       const total = await Booking.countDocuments(query);
 
-      res.status(200).json({
-        success: true,
-        bookings,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalBookings: total,
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.list",
+        {},
+        {
+          bookings,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalBookings: total,
+          },
         },
-      });
+      );
     } catch (error) {
       console.error("getBookings - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch bookings",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchFailed");
     }
   };
 
+  // controllers/bookingController.js  – inside class BookingController
   createBooking = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -158,20 +156,14 @@ class BookingController {
       if (!roomId || !userId || !date || !startTime || !endTime) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Missing required booking fields",
-        });
+        return R.send(req, res, 400, "booking.errors.missingFields");
       }
 
       const user = await User.findById(userId).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
+        return R.send(req, res, 404, "booking.errors.userNotFound");
       }
 
       // Check if user is blocked
@@ -181,9 +173,8 @@ class BookingController {
       ) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(403).json({
-          success: false,
-          message: `Account temporarily blocked from new bookings until ${user.cancellationStats.blockedUntil.toLocaleDateString()}`,
+        return R.send(req, res, 403, "booking.errors.blocked", {
+          date: user.cancellationStats.blockedUntil.toLocaleDateString(),
         });
       }
 
@@ -213,11 +204,7 @@ class BookingController {
       if (existingUpcoming) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message:
-            "You already have an upcoming booking. Please complete it before creating a new one.",
-        });
+        return R.send(req, res, 400, "booking.errors.hasUpcoming");
       }
 
       // Calculate weekly bookings across all rooms
@@ -234,21 +221,14 @@ class BookingController {
       if (weeklyBookingsCount >= LIMITS.MAX_WEEKLY_BOOKINGS) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message:
-            "Weekly booking limit reached. Maximum 4 bookings per week allowed.",
-        });
+        return R.send(req, res, 400, "booking.errors.weeklyLimit");
       }
 
       const room = await Room.findById(roomId).session(session);
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Room not found",
-        });
+        return R.send(req, res, 404, "booking.errors.roomNotFound");
       }
 
       // Check per-room type weekly limit
@@ -270,9 +250,8 @@ class BookingController {
         if (roomTypeBookingsCount >= roomTypeLimit) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({
-            success: false,
-            message: `Weekly limit for ${room.type} rooms reached. Maximum ${roomTypeLimit} bookings allowed per week.`,
+          return R.send(req, res, 400, "booking.errors.roomTypeLimit", {
+            type: req.t(`roomTypes.${room.type}`),
           });
         }
       }
@@ -284,10 +263,7 @@ class BookingController {
       if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid time format. Please use HH:mm format",
-        });
+        return R.send(req, res, 400, "booking.errors.timeFormat");
       }
 
       const [startHour, startMinute] = startTime.split(":").map(Number);
@@ -299,44 +275,38 @@ class BookingController {
       if (bookingDateTime < currentDateTime) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Cannot book for past date and time",
-        });
+        return R.send(req, res, 400, "booking.errors.pastDate");
       }
 
       if (startHour < 8 || endHour > 22) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Bookings are only available between 9 AM and 6 PM",
-        });
+        return R.send(req, res, 400, "booking.errors.outOfHours");
       }
 
       const thirtyMinutesFromNow = new Date(
-        currentDateTime.getTime() + 30 * 60000
+        currentDateTime.getTime() + 30 * 60000,
       );
       if (bookingDateTime < thirtyMinutesFromNow) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Bookings must be made at least 30 minutes in advance",
-        });
+        return R.send(req, res, 400, "booking.errors.minAdvance");
       }
 
       const invalidEmails = additionalUsers.filter(
-        (email) => !BookingController.validateEmail(email)
+        (email) => !BookingController.validateEmail(email),
       );
       if (invalidEmails.length > 0) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid email format",
-          invalidEmails,
-        });
+        return R.send(
+          req,
+          res,
+          400,
+          "booking.errors.invalidEmail",
+          {},
+          { invalidEmails },
+        );
       }
 
       let additionalUserIds = [];
@@ -352,16 +322,23 @@ class BookingController {
         if (additionalUserIds.length !== additionalUsers.length) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({
-            success: false,
-            message: "One or more additional users were not found",
-          });
+          return R.send(
+            req,
+            res,
+            400,
+            "booking.errors.notFoundAdditionalEmail",
+            {
+              missingEmails: additionalUsers.filter(
+                (e) => !users.some((u) => u.email === e),
+              ),
+            },
+          );
         }
       }
 
       const duration = BookingController.calculateDurationInHours(
         startTime,
-        endTime
+        endTime,
       );
       if (
         duration <= BOOKING_CONSTANTS.MIN_DURATION ||
@@ -369,9 +346,9 @@ class BookingController {
       ) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: `Invalid booking duration. Must be between ${BOOKING_CONSTANTS.MIN_DURATION} and ${BOOKING_CONSTANTS.MAX_DURATION} hours`,
+        return R.send(req, res, 400, "booking.errors.duration", {
+          min: BOOKING_CONSTANTS.MIN_DURATION,
+          max: BOOKING_CONSTANTS.MAX_DURATION,
         });
       }
 
@@ -385,10 +362,7 @@ class BookingController {
       if (conflictingBooking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Time slot is already booked",
-        });
+        return R.send(req, res, 400, "booking.errors.slotTaken");
       }
 
       const bookingStatus =
@@ -426,35 +400,36 @@ class BookingController {
         await sendPendingConfirmation(
           user.email,
           user.username,
-          bookingDetails
+          bookingDetails,
         );
         await sendAdminApprovalRequest(bookingDetails, userDetails);
       } else {
         await sendBookingConfirmation(
           user.email,
           user.username,
-          bookingDetails
+          bookingDetails,
         );
       }
 
       try {
-        let message;
-        if (room.type === "Open" || room.type === "Small Seminar") {
-          message = `Your booking for room ${room.name} has been created and confirmed successfully.`;
-        } else if (room.type === "Large Seminar") {
-          message = `Your booking for room ${room.name} has been created and is pending admin approval.`;
-        } else {
-          message = `Your booking for room ${room.name} has been created successfully.`;
-        }
+        const notifyKey =
+          room.type === ROOM_TYPES.LARGE_SEMINAR
+            ? "booking.notify.createdLarge"
+            : room.type === ROOM_TYPES.OPEN ||
+                room.type === ROOM_TYPES.SMALL_SEMINAR
+              ? "booking.notify.createdOpen"
+              : "booking.notify.createdGeneric";
+
         await notificationsController.createNotification(
-          user._id,
-          message,
-          "bookingCreation"
+          user._id, // user
+          notifyKey, // key
+          { room: room.name }, // params
+          "bookingCreation", // type
         );
       } catch (notificationError) {
         console.error(
           "Booking creation notification error:",
-          notificationError.message
+          notificationError.message,
         );
       }
 
@@ -466,25 +441,25 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      res.status(201).json({
-        success: true,
-        message:
-          bookingStatus === BOOKING_CONSTANTS.STATUSES.PENDING
-            ? "Booking created and pending admin approval"
-            : "Booking created successfully",
-        booking: populatedBooking,
-        weeklyBookingsRemaining:
-          LIMITS.MAX_WEEKLY_BOOKINGS - (weeklyBookingsCount + 1),
-      });
+      return R.send(
+        req,
+        res,
+        201,
+        bookingStatus === BOOKING_CONSTANTS.STATUSES.PENDING
+          ? "booking.success.pendingApproval"
+          : "booking.success.created",
+        {},
+        {
+          booking: populatedBooking,
+          weeklyBookingsRemaining:
+            LIMITS.MAX_WEEKLY_BOOKINGS - (weeklyBookingsCount + 1),
+        },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       console.error("createBooking - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to create booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.createFailed");
     }
   };
 
@@ -494,28 +469,26 @@ class BookingController {
       const { roomName } = req.params;
       const room = await Room.findOne({ name: roomName }).select("_id");
       if (!room) {
-        return res.status(404).json({
-          success: false,
-          message: `No room found with name: ${roomName}`,
+        return R.send(req, res, 404, "booking.errors.roomNotFoundByName", {
+          room: roomName,
         });
       }
-      const allBookings = await Booking.find({ roomId: room._id })
+      const bookings = await Booking.find({ roomId: room._id })
         .populate("roomId", "name type capacity description")
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .sort({ date: -1, startTime: -1 });
-      res.status(200).json({
-        success: true,
-        bookings: allBookings,
-        count: allBookings.length,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.list",
+        {},
+        { bookings, count: bookings.length },
+      );
     } catch (error) {
       console.error("getAllBookingsByRoomName - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch bookings for this room",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchFailed");
     }
   };
 
@@ -538,22 +511,24 @@ class BookingController {
       const total = await Booking.countDocuments({
         $or: [{ userId }, { additionalUsers: userId }],
       });
-      res.status(200).json({
-        success: true,
-        bookings,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalBookings: total,
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.list",
+        {},
+        {
+          bookings,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalBookings: total,
+          },
         },
-      });
+      );
     } catch (error) {
       console.error("getMyBooking - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch your bookings",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchFailed");
     }
   };
 
@@ -566,30 +541,21 @@ class BookingController {
       if (!booking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Booking not found",
-        });
+        return R.send(req, res, 404, "booking.errors.notFound");
       }
 
       const room = await Room.findById(booking.roomId).session(session);
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Room not found",
-        });
+        return R.send(req, res, 404, "booking.errors.roomNotFound");
       }
 
       const user = await User.findById(booking.userId).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
+        return R.send(req, res, 404, "booking.errors.userNotFound");
       }
 
       if (req.user) {
@@ -599,20 +565,14 @@ class BookingController {
         ) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(403).json({
-            success: false,
-            message: "Not authorized to delete this booking",
-          });
+          return R.send(req, res, 403, "booking.errors.notAuthorized");
         }
       }
 
       if (booking.status.toLowerCase() === "active") {
         await session.abortTransaction();
         session.endSession();
-        return res.status(403).json({
-          success: false,
-          message: "Active bookings cannot be canceled",
-        });
+        return R.send(req, res, 403, "booking.errors.activeCannotCancel");
       }
 
       if (booking.status !== "Canceled") {
@@ -627,15 +587,13 @@ class BookingController {
 
       try {
         await notificationsController.createNotification(
-          booking.userId,
-          `Your booking for room ${room.name} has been cancelled successfully.`,
-          "bookingDeletion"
+          booking.userId, // recipient
+          "booking.notify.deleted", // i18next key
+          { room: room.name }, // interpolation params
+          "bookingDeletion", // notification type
         );
-      } catch (notificationError) {
-        console.error(
-          "Booking deletion notification error:",
-          notificationError.message
-        );
+      } catch (err) {
+        console.error("Booking deletion notification error:", err.message);
       }
 
       const updatedBooking = await Booking.findById(booking._id)
@@ -646,12 +604,14 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      res.status(200).json({
-        success: true,
-        message:
-          "Booking cancelled successfully and will be permanently deleted in 3 days",
-        booking: updatedBooking,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.deleted",
+        {},
+        { booking: updatedBooking },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -661,11 +621,7 @@ class BookingController {
         bookingId: req.params.id,
         user: req.user,
       });
-      res.status(500).json({
-        success: false,
-        message: "Failed to delete booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.deleteFailed");
     }
   };
 
@@ -682,9 +638,7 @@ class BookingController {
       if (!validStatuses.includes(status)) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid status",
+        return R.send(req, res, 400, "booking.errors.invalidStatus", {
           validStatuses,
         });
       }
@@ -692,19 +646,15 @@ class BookingController {
       if (!username) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Missing query param ?username=",
-        });
+        return R.send(req, res, 400, "booking.errors.missingUsernameParam");
       }
 
       const user = await User.findOne({ username }).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: `No user found with username: ${username}`,
+        return R.send(req, res, 404, "booking.errors.userNotFoundByUsername", {
+          username,
         });
       }
 
@@ -716,20 +666,19 @@ class BookingController {
       if (!booking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Booking not found or unauthorized for this username",
-        });
+        return R.send(
+          req,
+          res,
+          404,
+          "booking.errors.bookingNotFoundOrUnauthorized",
+        );
       }
 
       const room = await Room.findById(booking.roomId).session(session);
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Room not found",
-        });
+        return R.send(req, res, 404, "booking.errors.roomNotFound");
       }
 
       // Admin override: Skip cancellation stats update
@@ -759,48 +708,55 @@ class BookingController {
         await sendBookingConfirmation(
           user.email,
           user.username,
-          bookingDetails
+          bookingDetails,
         );
       }
 
       try {
         await notificationsController.createNotification(
-          req.user._id,
-          `You updated booking status for ${user.username} to ${status}.`,
-          "bookingUpdateAdmin"
+          req.user._id, // admin
+          "booking.notify.statusUpdatedAdmin", // 🔑 i18next key
+          {
+            user: user.username,
+            status: status,
+          },
+          "bookingUpdateAdmin", // 📂 semantic type
         );
-      } catch (notificationError) {
-        console.error("Admin notification error:", notificationError.message);
+      } catch (err) {
+        console.error("Admin notification error:", err.message);
       }
 
       try {
-        let userMsg = `Your booking for ${room.name} was updated to ${status} by admin.`;
         await notificationsController.createNotification(
-          user._id,
-          userMsg,
-          "bookingUpdateUser"
+          user._id, // owner
+          "booking.notify.statusUpdatedUser", // 🔑 i18next key
+          {
+            room: room.name,
+            status: status,
+            admin: req.user.username,
+          },
+          "bookingUpdateUser", // 📂 semantic type
         );
-      } catch (notificationError) {
-        console.error("User notification error:", notificationError.message);
+      } catch (err) {
+        console.error("User notification error:", err.message);
       }
 
       await session.commitTransaction();
       session.endSession();
 
-      res.status(200).json({
-        success: true,
-        message: "Booking status updated successfully",
-        booking,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.statusUpdated",
+        { status, username },
+        { booking },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       console.error("updateBookingStatusByUsername - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to update booking status",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.statusUpdateFailed");
     }
   };
 
@@ -815,19 +771,15 @@ class BookingController {
       if (!username) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Missing query param ?username=",
-        });
+        return R.send(req, res, 400, "booking.errors.missingUsernameParam");
       }
 
       const user = await User.findOne({ username }).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: `No user found with username: ${username}`,
+        return R.send(req, res, 404, "booking.errors.userNotFoundByUsername", {
+          username,
         });
       }
 
@@ -839,20 +791,14 @@ class BookingController {
       if (!booking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Booking not found for this user",
-        });
+        return R.send(req, res, 404, "booking.errors.bookingNotFoundForUser");
       }
 
       const room = await Room.findById(booking.roomId).session(session);
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Room not found",
-        });
+        return R.send(req, res, 404, "booking.errors.roomNotFound");
       }
 
       // Admin override: Skip active booking check and cancellation stats
@@ -860,10 +806,7 @@ class BookingController {
         if (booking.status.toLowerCase() === "active") {
           await session.abortTransaction();
           session.endSession();
-          return res.status(403).json({
-            success: false,
-            message: "Active bookings cannot be canceled",
-          });
+          return R.send(req, res, 403, "booking.errors.activeCancel");
         }
 
         if (booking.status !== "Canceled") {
@@ -879,9 +822,13 @@ class BookingController {
 
       try {
         await notificationsController.createNotification(
-          req.user._id,
-          `Canceled booking for ${user.username} in ${room.name}`,
-          "adminCancellation"
+          req.user._id, // admin
+          "booking.notify.adminCanceled", // 🔑 i18next key
+          {
+            user: user.username,
+            room: room.name,
+          },
+          "adminCancellation", // 📂 type
         );
       } catch (notificationError) {
         console.error("Admin notification error:", notificationError.message);
@@ -889,9 +836,13 @@ class BookingController {
 
       try {
         await notificationsController.createNotification(
-          user._id,
-          `Your booking for ${room.name} was canceled by admin`,
-          "userCancellation"
+          user._id, // affected user
+          "booking.notify.userCanceledByAdmin", // 🔑 i18next key
+          {
+            room: room.name,
+            admin: req.user.username,
+          },
+          "userCancellation", // 📂 type
         );
       } catch (notificationError) {
         console.error("User notification error:", notificationError.message);
@@ -905,20 +856,19 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      res.status(200).json({
-        success: true,
-        message: "Admin cancellation successful",
-        booking: updatedBooking,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.adminCancellation",
+        { username },
+        { booking: updatedBooking },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       console.error("deleteBookingByUsername - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to cancel booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.adminCancelFailed");
     }
   };
 
@@ -947,17 +897,17 @@ class BookingController {
           status: BOOKING_CONSTANTS.STATUSES.MISSED,
         }),
       ]);
-      res.status(200).json({
-        success: true,
-        counts: { total, pending, confirmed, canceled, missed },
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.countsFetched",
+        {},
+        { counts: { total, pending, confirmed, canceled, missed } },
+      );
     } catch (error) {
       console.error("getBookingCounts - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch booking counts",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchCountsFailed");
     }
   };
 
@@ -967,9 +917,8 @@ class BookingController {
       const { username } = req.params;
       const user = await User.findOne({ username }).select("_id");
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: `No user found with username: ${username}`,
+        return R.send(req, res, 404, "booking.errors.userNotFoundByUsername", {
+          username,
         });
       }
       const now = new Date();
@@ -998,14 +947,17 @@ class BookingController {
         }
         return false;
       });
-      res.status(200).json({ success: true, bookings: finalUpcoming });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.upcomingFetched",
+        {},
+        { bookings: finalUpcoming },
+      );
     } catch (error) {
       console.error("getUserUpcomingBookingsByUsername - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch upcoming bookings by username",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchUpcomingFailed");
     }
   };
 
@@ -1025,20 +977,15 @@ class BookingController {
       if (!username || !roomName || !date || !startTime || !endTime) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message:
-            "Missing required fields (username, roomName, date, startTime, endTime).",
-        });
+        return R.send(req, res, 400, "booking.errors.missingFieldsNames");
       }
 
       const user = await User.findOne({ username }).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: `No user found with username: ${username}`,
+        return R.send(req, res, 404, "booking.errors.userNotFoundByUsername", {
+          username,
         });
       }
 
@@ -1050,9 +997,8 @@ class BookingController {
         ) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(403).json({
-            success: false,
-            message: `User account blocked until ${user.cancellationStats.blockedUntil.toLocaleDateString()}`,
+          return R.send(req, res, 403, "booking.errors.blocked", {
+            date: user.cancellationStats.blockedUntil.toLocaleDateString(),
           });
         }
       }
@@ -1061,9 +1007,8 @@ class BookingController {
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: `No room found with name: ${roomName}`,
+        return R.send(req, res, 404, "booking.errors.roomNotFoundByName", {
+          room: roomName,
         });
       }
 
@@ -1072,10 +1017,7 @@ class BookingController {
       if (!dateRegex.test(date)) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid date format. Please use YYYY-MM-DD format",
-        });
+        return R.send(req, res, 400, "booking.errors.invalidDateFormat");
       }
 
       // Validate time format
@@ -1083,10 +1025,7 @@ class BookingController {
       if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid time format. Please use HH:mm format",
-        });
+        return R.send(req, res, 400, "booking.errors.timeFormat");
       }
 
       const bookingDate = new Date(date);
@@ -1101,33 +1040,23 @@ class BookingController {
       if (bookingEnd < now) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Cannot create booking for past time slots",
-        });
+        return R.send(req, res, 400, "booking.errors.pastDate");
       }
 
       const earliestAllowed = new Date(now.getTime() + 30 * 60000);
       if (bookingStart < earliestAllowed) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Bookings must be made at least 30 minutes in advance",
-        });
+        return R.send(req, res, 400, "booking.errors.minAdvance");
       }
 
       const invalidEmails = additionalUsers.filter(
-        (email) => !BookingController.validateEmail(email)
+        (email) => !BookingController.validateEmail(email),
       );
       if (invalidEmails.length > 0) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid email format in additional users",
-          invalidEmails,
-        });
+        return R.send(req, res, 400, "booking.errors.invalidAdditionalEmail");
       }
 
       let additionalUserIds = [];
@@ -1142,15 +1071,16 @@ class BookingController {
 
         if (additionalUserIds.length !== additionalUsers.length) {
           const missingEmails = additionalUsers.filter(
-            (email) => !users.some((u) => u.email === email)
+            (email) => !users.some((u) => u.email === email),
           );
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({
-            success: false,
-            message: "Some additional users not found",
-            missingEmails,
-          });
+          return R.send(
+            req,
+            res,
+            400,
+            "booking.errors.notFoundAdditionalEmail",
+          );
         }
       }
 
@@ -1169,16 +1099,13 @@ class BookingController {
         if (weeklyBookingsCount >= LIMITS.MAX_WEEKLY_BOOKINGS) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({
-            success: false,
-            message: "User has reached the weekly booking limit (4 bookings)",
-          });
+          return R.send(req, res, 400, "booking.errors.weeklyLimitByName");
         }
       }
 
       const duration = BookingController.calculateDurationInHours(
         startTime,
-        endTime
+        endTime,
       );
       if (
         duration <= BOOKING_CONSTANTS.MIN_DURATION ||
@@ -1186,9 +1113,10 @@ class BookingController {
       ) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message: `Invalid booking duration (${duration}h). Must be between ${BOOKING_CONSTANTS.MIN_DURATION} and ${BOOKING_CONSTANTS.MAX_DURATION} hours`,
+
+        return R.send(req, res, 400, "booking.errors.duration", {
+          min: BOOKING_CONSTANTS.MIN_DURATION,
+          max: BOOKING_CONSTANTS.MAX_DURATION,
         });
       }
 
@@ -1202,15 +1130,20 @@ class BookingController {
       if (conflictingBooking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(409).json({
-          success: false,
-          message: "Time slot conflicts with existing booking",
-          conflictingBooking: {
-            id: conflictingBooking._id,
-            startTime: conflictingBooking.startTime,
-            endTime: conflictingBooking.endTime,
+        return R.send(
+          req,
+          res,
+          409,
+          "booking.errors.slotConflict",
+          {},
+          {
+            conflictingBooking: {
+              id: conflictingBooking._id,
+              startTime: conflictingBooking.startTime,
+              endTime: conflictingBooking.endTime,
+            },
           },
-        });
+        );
       }
 
       const bookingStatus =
@@ -1221,6 +1154,7 @@ class BookingController {
       const booking = new Booking({
         roomId: room._id,
         userId: user._id,
+        roomType: room.type,
         date,
         startTime,
         endTime,
@@ -1231,30 +1165,36 @@ class BookingController {
 
       await booking.save({ session });
 
-      try {
-        const userMessage =
-          bookingStatus === BOOKING_CONSTANTS.STATUSES.PENDING
-            ? `Admin ${req.user?.username} created a pending booking for you in ${room.name}`
-            : `Admin ${req.user?.username} created a confirmed booking for you in ${room.name}`;
+      /* ---------- user receives a notification ---------- */
+      // 📩 Notify the user about their booking created by the admin
+      await notificationsController.createNotification(
+        user._id, // recipient (the user)
 
-        await notificationsController.createNotification(
-          user._id,
-          userMessage,
-          "bookingCreatedByAdmin"
-        );
-      } catch (notificationError) {
-        console.error("User notification failed:", notificationError.message);
-      }
+        // 🔑 i18next key (dynamic based on status)
+        bookingStatus === BOOKING_CONSTANTS.STATUSES.PENDING
+          ? "booking.notify.createdByAdminPending"
+          : "booking.notify.createdByAdminConfirmed",
 
-      try {
-        await notificationsController.createNotification(
-          req.user._id,
-          `Successfully created booking for ${user.username} in ${room.name}`,
-          "adminBookingCreated"
-        );
-      } catch (notificationError) {
-        console.error("Admin notification failed:", notificationError.message);
-      }
+        // 🧩 translation parameters
+        {
+          room: room.name,
+          admin: req.user?.username || "System",
+        },
+
+        // 📂 category/type
+        "bookingCreatedByAdmin",
+      );
+
+      // 📩 Notify the admin that they created a booking
+      await notificationsController.createNotification(
+        req.user._id, // recipient (admin)
+        "booking.notify.adminCreatedBooking", // 🔑 i18next key
+        {
+          user: user.username,
+          room: room.name,
+        },
+        "adminBookingCreated", // 📂 type
+      );
 
       const populatedBooking = await Booking.findById(booking._id)
         .populate("roomId", "name type capacity description")
@@ -1265,11 +1205,16 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      res.status(201).json({
-        success: true,
-        message: `Admin booking created successfully (${bookingStatus.toLowerCase()})`,
-        booking: populatedBooking,
-      });
+      return R.send(
+        req,
+        res,
+        201,
+        bookingStatus === BOOKING_CONSTANTS.STATUSES.PENDING
+          ? "booking.success.createdPendingByAdmin"
+          : "booking.success.createdConfirmedByAdmin",
+        {},
+        { booking: populatedBooking },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -1278,11 +1223,7 @@ class BookingController {
         stack: error.stack,
         inputData: req.body,
       });
-      res.status(500).json({
-        success: false,
-        message: "Failed to create booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.createFailed");
     }
   };
 
@@ -1292,9 +1233,8 @@ class BookingController {
       const { username } = req.params;
       const user = await User.findOne({ username }).select("_id");
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: `No user found with username: ${username}`,
+        return R.send(req, res, 404, "booking.errors.userNotFoundByUsername", {
+          username,
         });
       }
       const allBookings = await Booking.find({
@@ -1304,14 +1244,17 @@ class BookingController {
         .populate("userId", "username email")
         .populate("additionalUsers", "username email")
         .sort({ date: -1, startTime: -1 });
-      res.status(200).json({ success: true, bookings: allBookings });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.allUserBookings",
+        {},
+        { bookings: allBookings },
+      );
     } catch (error) {
       console.error("getAllBookingsByUsername - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch all bookings by username",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchAllUserFailed");
     }
   };
 
@@ -1328,20 +1271,14 @@ class BookingController {
       if (!booking) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Booking not found",
-        });
+        return R.send(req, res, 404, "booking.errors.notFound");
       }
 
       const room = await Room.findById(booking.roomId).session(session);
       if (!room) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(404).json({
-          success: false,
-          message: "Room not found",
-        });
+        return R.send(req, res, 404, "booking.errors.roomNotFound");
       }
 
       if (["Canceled", "Missed"].includes(status)) {
@@ -1356,26 +1293,35 @@ class BookingController {
       booking.status = status;
       await booking.save({ session });
 
-      let notificationMessage;
-      if (status === "Missed") {
-        notificationMessage = `Your booking for room ${room.name} has been marked as missed.`;
-      } else if (status === "Completed") {
-        notificationMessage = `Your booking for room ${room.name} has been completed.`;
-      } else if (status === "Canceled") {
-        notificationMessage = `Your booking for room ${room.name} has been canceled.`;
+      let notificationKey;
+      const notifyParams = { room: room.name };
+
+      switch (status) {
+        case "Missed":
+          notificationKey = "booking.notify.missed";
+          break;
+        case "Completed":
+          notificationKey = "booking.notify.completed";
+          break;
+        case "Canceled":
+          notificationKey = "booking.notify.canceled";
+          break;
+        default:
+          notificationKey = "booking.notify.statusUpdate";
       }
 
-      if (notificationMessage) {
+      if (notificationKey) {
         try {
           await notificationsController.createNotification(
-            booking.userId,
-            notificationMessage,
-            `booking${status}`
+            booking.userId, // user to notify
+            notificationKey, // i18next key
+            notifyParams, // translation params
+            `booking${status}`, // type, e.g. bookingMissed, bookingCompleted
           );
         } catch (notifError) {
           console.error(
             "Failed to create status update notification:",
-            notifError
+            notifError,
           );
         }
       }
@@ -1383,20 +1329,19 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      return res.status(200).json({
-        success: true,
-        message: `Booking status updated to ${status}`,
-        booking,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.statusUpdated",
+        { status },
+        { booking },
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       console.error("updateBookingStatus - Error:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update booking status",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.statusUpdateFailed");
     }
   };
 
@@ -1421,75 +1366,21 @@ class BookingController {
         .populate("roomId", "name type capacity description")
         .populate("userId", "username email");
 
-      return res.status(200).json({
-        success: true,
-        booking: nextBooking, // Will be null if no upcoming bookings
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        nextBooking
+          ? "booking.success.nextUpcomingFound"
+          : "booking.success.noUpcoming",
+        {},
+        { booking: nextBooking },
+      );
     } catch (error) {
       console.error("getNextUpcomingBooking - Error:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to fetch next upcoming booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.fetchNextUpcomingFailed");
     }
   };
-
-  // lateCheckIn = async (req, res) => {
-  //   try {
-  //     const bookingId = req.params.id;
-  //     const { wasPresent } = req.body;
-
-  //     const booking = await Booking.findById(bookingId)
-  //       .populate('roomId', 'name')
-  //       .populate('userId', 'username email');
-
-  //     if (!booking) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Booking not found"
-  //       });
-  //     }
-
-  //     // Update booking status based on presence
-  //     booking.status = wasPresent ? 'Completed' : 'Missed';
-  //     if (wasPresent) {
-  //       booking.checkedIn = true;
-  //       booking.checkedInAt = new Date(`${booking.date}T${booking.startTime}`);
-  //     }
-
-  //     await booking.save();
-
-  //     // Create notification with appropriate message
-  //     const notificationMessage = wasPresent
-  //       ? `Booking for room ${booking.roomId.name} has been marked as completed.`
-  //       : `Booking for room ${booking.roomId.name} has been marked as missed.`;
-
-  //     try {
-  //       await notificationsController.createNotification(
-  //         booking.userId._id,
-  //         notificationMessage,
-  //         wasPresent ? "bookingCompleted" : "bookingMissed"
-  //       );
-  //     } catch (notificationError) {
-  //       console.error("Notification error:", notificationError.message);
-  //     }
-
-  //     return res.status(200).json({
-  //       success: true,
-  //       message: wasPresent ? "Booking marked as completed" : "Booking marked as missed",
-  //       booking
-  //     });
-
-  //   } catch (error) {
-  //     console.error("lateCheckIn - Error:", error);
-  //     return res.status(500).json({
-  //       success: false,
-  //       message: "Failed to process late check-in",
-  //       error: error.message
-  //     });
-  //   }
-  // };
 
   checkInToBooking = async (req, res) => {
     try {
@@ -1502,10 +1393,7 @@ class BookingController {
         .populate("userId", "username email");
 
       if (!booking) {
-        return res.status(404).json({
-          success: false,
-          message: "Booking not found",
-        });
+        return R.send(req, res, 404, "booking.errors.notFound");
       }
 
       // Verify user is authorized
@@ -1514,10 +1402,7 @@ class BookingController {
         booking.additionalUsers.includes(userId);
 
       if (!isAuthorized) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to check in to this booking",
-        });
+        return R.send(req, res, 403, "booking.errors.unauthorizedCheckIn");
       }
 
       // Check if booking is active
@@ -1525,33 +1410,8 @@ class BookingController {
       const bookingStart = new Date(`${booking.date}T${booking.startTime}:00`);
       const bookingEnd = new Date(`${booking.date}T${booking.endTime}:00`);
 
-      // If trying to check in more than 15 minutes after start time
-      // if (now > new Date(bookingStart.getTime() + 15 * 60000)) {
-      //   booking.status = BOOKING_CONSTANTS.STATUSES.MISSED;
-      //   await booking.save();
-
-      //   // Create missed booking notification
-      //   try {
-      //     await notificationsController.createNotification(
-      //       booking.userId._id,
-      //       `You missed your booking for room ${booking.roomId.name}. The booking has been marked as missed.`,
-      //       "bookingMissed"
-      //     );
-      //   } catch (notificationError) {
-      //     console.error("Missed booking notification error:", notificationError.message);
-      //   }
-
-      //   return res.status(400).json({
-      //     success: false,
-      //     message: "Booking has been marked as missed due to late check-in"
-      //   });
-      // }
-
       if (now > bookingEnd) {
-        return res.status(400).json({
-          success: false,
-          message: "Booking has already ended",
-        });
+        return R.send(req, res, 400, "booking.errors.bookingEnded");
       }
 
       // Update booking status
@@ -1564,28 +1424,28 @@ class BookingController {
       try {
         await notificationsController.createNotification(
           booking.userId._id,
-          `Successfully checked in to room ${booking.roomId.name}.`,
-          "bookingCheckIn"
+          "booking.notify.checkedIn", // 🗝 i18next key
+          { room: booking.roomId.name }, // 🧩 i18next params
+          "bookingCheckIn", // 📦 type
         );
       } catch (notificationError) {
         console.error(
           "Check-in notification error:",
-          notificationError.message
+          notificationError.message,
         );
       }
 
-      res.status(200).json({
-        success: true,
-        message: "Successfully checked in to booking",
-        booking,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.checkedIn",
+        {},
+        { booking },
+      );
     } catch (error) {
       console.error("checkInToBooking - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to check in to booking",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.checkInFailed");
     }
   };
 
@@ -1625,8 +1485,12 @@ class BookingController {
             try {
               await notificationsController.createNotification(
                 booking.userId,
-                `Your booking for ${booking.roomId.name} has been automatically marked as ${booking.status}.`,
-                `booking${booking.status}`
+                "booking.notify.statusAutoUpdate", // 🗝 key
+                {
+                  room: booking.roomId.name,
+                  status: booking.status,
+                },
+                `booking${booking.status}`, // 📦 type
               );
             } catch (notifError) {
               console.error("Notification error:", notifError);
@@ -1637,7 +1501,7 @@ class BookingController {
         } catch (bookingError) {
           console.error(
             `Error processing booking ${booking._id}:`,
-            bookingError
+            bookingError,
           );
         }
       }
@@ -1645,55 +1509,21 @@ class BookingController {
       await session.commitTransaction();
       session.endSession();
 
-      return res.status(200).json({
-        success: true,
-        message: `${updatedCount} booking(s) updated`,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.pastUpdated",
+        { count: updatedCount },
+        {},
+      );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       console.error("updatePastBookings - Error:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update past bookings",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "booking.errors.pastUpdateFailed");
     }
   };
-
-  // getMissedBooking = async (req, res) => {
-  //   try {
-  //     const userId = req.user.id;
-  //     const now = new Date();
-
-  //     // Find the most recent booking that should be marked as missed
-  //     const missedBooking = await Booking.findOne({
-  //       $or: [
-  //         { userId },
-  //       ],
-  //       userId: userId,
-  //       date: { $lte: now.toISOString().split('T')[0] },
-  //       status: { $nin: ['Completed', 'Canceled', 'Missed'] },
-  //       checkedIn: false,
-  //       endTime: { $lt: now.toLocaleTimeString('en-US', { hour12: false }) }
-  //     })
-  //     .populate('roomId', 'name')
-  //     .sort({ date: -1, endTime: -1 })
-  //     .limit(1);
-
-  //     return res.status(200).json({
-  //       success: true,
-  //       booking: missedBooking
-  //     });
-  //   } catch (error) {
-  //     console.error("getMissedBooking - Error:", error);
-  //     return res.status(500).json({
-  //       success: false,
-  //       message: "Failed to fetch missed booking",
-  //       error: error.message
-  //     });
-  //   }
-  // };
 
   updatePastBookingsCron = async () => {
     const session = await mongoose.startSession();
@@ -1726,7 +1556,7 @@ class BookingController {
         try {
           const bookingEnd = moment.tz(
             `${booking.date}T${booking.endTime}:00`,
-            timezone
+            timezone,
           );
 
           if (now.isAfter(bookingEnd)) {
@@ -1743,8 +1573,12 @@ class BookingController {
 
             await notificationsController.createNotification(
               booking.userId._id,
-              `Your booking for ${booking.roomId.name} has been automatically marked as ${newStatus}.`,
-              `booking${newStatus}`
+              "booking.notify.statusAutoUpdate", // 🗝 key
+              {
+                room: booking.roomId.name,
+                status: newStatus,
+              },
+              `booking${newStatus}`, // 📦 type (e.g. bookingMissed, bookingCompleted)
             );
 
             updatedCount++;
@@ -1752,7 +1586,7 @@ class BookingController {
         } catch (bookingError) {
           console.error(
             `Error processing booking ${booking._id}:`,
-            bookingError
+            bookingError,
           );
         }
       }
@@ -1802,22 +1636,25 @@ class BookingController {
         .add(LIMITS.BLOCK_DURATION_DAYS, "days")
         .toDate();
       await notificationsController.createNotification(
-        user._id,
-        `Your account has been temporarily blocked from bookings due to excessive cancellations/misses.`,
-        "accountBlocked"
+        user._id, // recipient
+        "booking.notify.blocked", // key
+        {}, // no params
+        "accountBlocked", // type
       );
     } else if (
       user.cancellationStats.countLast7Days >=
       LIMITS.CANCELLATION_WARN_THRESHOLD
     ) {
       user.cancellationStats.warnings += 1;
+      const remaining =
+        LIMITS.CANCELLATION_BLOCK_THRESHOLD -
+        user.cancellationStats.countLast7Days;
+
       await notificationsController.createNotification(
         user._id,
-        `Warning: ${
-          LIMITS.CANCELLATION_BLOCK_THRESHOLD -
-          user.cancellationStats.countLast7Days
-        } more cancellations/misses will result in a block.`,
-        "cancellationWarning"
+        "booking.notify.cancellationWarning", // key
+        { remaining }, // params
+        "cancellationWarning", // type
       );
     }
 
@@ -1837,27 +1674,27 @@ class BookingController {
           {
             $or: [
               { date: { $gt: todayStr } },
-              { 
+              {
                 date: todayStr,
-                endTime: { $gt: currentTime }
-              }
-            ]
+                endTime: { $gt: currentTime },
+              },
+            ],
           },
           {
-            status: { 
+            status: {
               $in: [
                 BOOKING_CONSTANTS.STATUSES.PENDING,
                 BOOKING_CONSTANTS.STATUSES.CONFIRMED,
-                BOOKING_CONSTANTS.STATUSES.ACTIVE
-              ] 
-            }
-          }
-        ]
+                BOOKING_CONSTANTS.STATUSES.ACTIVE,
+              ],
+            },
+          },
+        ],
       };
 
       if (req.query.roomId) {
         query.$and.push({
-          roomId: new mongoose.Types.ObjectId(req.query.roomId)
+          roomId: new mongoose.Types.ObjectId(req.query.roomId),
         });
       }
 
@@ -1870,26 +1707,27 @@ class BookingController {
           match: { status: "pending" },
           populate: [
             { path: "fromUser", select: "username email" },
-            { path: "toUser", select: "username email" }
-          ]
+            { path: "toUser", select: "username email" },
+          ],
         })
         .sort({ date: 1, startTime: 1 });
 
-      res.status(200).json({
-        success: true,
-        bookings,
-        dateRange: {
-          start: todayStr,
-          note: "Showing upcoming bookings (Pending, Confirmed, Active statuses)"
-        }
-      });
+      const dateRange = {
+        start: todayStr,
+        note: "Showing upcoming bookings (Pending, Confirmed, Active statuses)",
+      };
+
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.weeklyFetched",
+        {},
+        { bookings, dateRange },
+      );
     } catch (error) {
       console.error("getWeeklyBookings - Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch bookings",
-        error: error.message
-      });
+      return R.send(req, res, 500, "booking.errors.fetchWeeklyFailed");
     }
   };
 
@@ -1903,9 +1741,21 @@ class BookingController {
         .populate("fromUser", "username email") // First populate the requester
         .populate("toUser", "username email"); // Then the booking owner
 
-      res.status(200).json({ success: true, requests });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.transferRequestsFetched",
+        {},
+        { requests },
+      );
     } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+      return R.send(
+        req,
+        res,
+        500,
+        "booking.errors.fetchTransferRequestsFailed",
+      );
     }
   };
 
@@ -1919,29 +1769,30 @@ class BookingController {
 
       if (!booking) {
         await session.abortTransaction();
-        return res.status(404).json({ message: "Booking not found" });
+        return R.send(req, res, 404, "booking.errors.notFound");
       }
 
       // Add this check after retrieving the booking
-if (['Pending', 'Active'].includes(booking.status)) {
-  await session.abortTransaction();
-  return res.status(400).json({ 
-    message: "Cannot request transfer for pending or active bookings"
-  });
-}
+      if (["Pending", "Active"].includes(booking.status)) {
+        await session.abortTransaction();
+        return R.send(req, res, 400, "booking.errors.transferInvalidStatus");
+      }
 
       // Get requesting user details
       const user = await User.findById(req.user.id).session(session);
       if (!user) {
         await session.abortTransaction();
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "booking.errors.userNotFound");
       }
 
       // 1. Check if user is blocked
-      if (user.cancellationStats?.blockedUntil && user.cancellationStats.blockedUntil > new Date()) {
+      if (
+        user.cancellationStats?.blockedUntil &&
+        user.cancellationStats.blockedUntil > new Date()
+      ) {
         await session.abortTransaction();
-        return res.status(403).json({
-          message: `Account temporarily blocked until ${user.cancellationStats.blockedUntil.toLocaleDateString()}`
+        return R.send(req, res, 403, "booking.errors.blocked", {
+          date: user.cancellationStats.blockedUntil.toLocaleDateString(),
         });
       }
 
@@ -1949,28 +1800,28 @@ if (['Pending', 'Active'].includes(booking.status)) {
       const timezone = "Asia/Jerusalem";
       const today = moment().tz(timezone).format("YYYY-MM-DD");
       const currentTime = moment().tz(timezone).format("HH:mm");
-      
-      if (booking.date < today || 
-          (booking.date === today && booking.endTime <= currentTime)) {
+
+      if (
+        booking.date < today ||
+        (booking.date === today && booking.endTime <= currentTime)
+      ) {
         await session.abortTransaction();
-        return res.status(400).json({ message: "Cannot transfer expired bookings" });
+        return R.send(req, res, 400, "booking.errors.transferExpired");
       }
 
       // 3. Check weekly limits
       const startOfWeek = moment().tz(timezone).startOf("week").toDate();
-      
+
       // Existing weekly bookings count
       const weeklyCount = await Booking.countDocuments({
         userId: req.user.id,
         createdAt: { $gte: startOfWeek },
-        status: { $ne: "Canceled" }
+        status: { $ne: "Canceled" },
       }).session(session);
 
       if (weeklyCount >= LIMITS.MAX_WEEKLY_BOOKINGS) {
         await session.abortTransaction();
-        return res.status(400).json({
-          message: "Weekly booking limit reached"
-        });
+        return R.send(req, res, 400, "booking.errors.weeklyLimit");
       }
 
       const existingUpcoming = await Booking.findOne({
@@ -1994,11 +1845,7 @@ if (['Pending', 'Active'].includes(booking.status)) {
       if (existingUpcoming) {
         await session.abortTransaction();
         session.endSession();
-        return res.status(400).json({
-          success: false,
-          message:
-            "You already have an upcoming booking. You cannot request a transfer.",
-        });
+        return R.send(req, res, 400, "booking.errors.noTransferOwnBooking");
       }
 
       // 4. Check room-type limits
@@ -2014,13 +1861,13 @@ if (['Pending', 'Active'].includes(booking.status)) {
           userId: req.user.id,
           roomType: booking.roomId.type,
           createdAt: { $gte: startOfWeek },
-          status: { $ne: "Canceled" }
+          status: { $ne: "Canceled" },
         }).session(session);
 
         if (typeCount >= roomTypeLimit) {
           await session.abortTransaction();
-          return res.status(400).json({
-            message: `Weekly ${booking.roomId.type} room limit reached`
+          return R.send(req, res, 400, "booking.errors.roomTypeLimit", {
+            type: req.t(`roomTypes.${booking.roomId.type}`),
           });
         }
       }
@@ -2028,22 +1875,22 @@ if (['Pending', 'Active'].includes(booking.status)) {
       // Existing request checks
       if (booking.userId.toString() === req.user.id) {
         await session.abortTransaction();
-        return res.status(400).json({ message: "Cannot request your own booking" });
+        return R.send(req, res, 400, "booking.errors.transferOwnBooking");
       }
 
       const existingRequest = await TransferRequest.findOne({
         booking: req.params.id,
         fromUser: req.user.id,
-        status: { $in: ["pending", "declined"] }
+        status: { $in: ["pending", "declined"] },
       }).session(session);
 
       if (existingRequest) {
+        const messageKey =
+          existingRequest.status === "pending"
+            ? "booking.errors.transferPendingExists"
+            : "booking.errors.transferAlreadyDeclined";
         await session.abortTransaction();
-        return res.status(400).json({
-          message: existingRequest.status === "pending" 
-            ? "Pending request exists" 
-            : "Transfer already declined"
-        });
+        return R.send(req, res, 400, messageKey);
       }
 
       // Create the request
@@ -2052,7 +1899,7 @@ if (['Pending', 'Active'].includes(booking.status)) {
         fromUser: req.user.id,
         toUser: booking.userId,
         message: req.body.message,
-        expiresAt: booking.deletedAt || new Date(Date.now() + 604800000)
+        expiresAt: booking.deletedAt || new Date(Date.now() + 604800000),
       });
 
       await request.save({ session });
@@ -2061,22 +1908,29 @@ if (['Pending', 'Active'].includes(booking.status)) {
       await Booking.findByIdAndUpdate(
         req.params.id,
         { $push: { transferRequests: request._id } },
-        { session }
+        { session },
       );
 
       // Notification
       await notificationsController.createNotification(
-        booking.userId,
-        `New transfer request for your ${booking.roomId.name} booking`,
-        "transferRequest",
-        session
+        booking.userId, // recipient
+        "booking.notify.transferRequestReceived", // i18next key
+        { room: booking.roomId.name }, // parameters for interpolation
+        "transferRequest", // notification type
       );
 
       await session.commitTransaction();
-      res.status(201).json({ success: true, request });
+      return R.send(
+        req,
+        res,
+        201,
+        "booking.success.transferCreated",
+        {},
+        { request },
+      );
     } catch (error) {
       await session.abortTransaction();
-      res.status(500).json({ success: false, error: error.message });
+      return R.send(req, res, 500, "booking.errors.transferCreateFailed");
     } finally {
       session.endSession();
     }
@@ -2098,56 +1952,65 @@ if (['Pending', 'Active'].includes(booking.status)) {
 
       if (!request) {
         await session.abortTransaction();
-        return res.status(404).json({ message: "Request not found" });
+        return R.send(req, res, 404, "booking.errors.transferNotFound");
       }
 
       // In createTransferRequest controller
-const existingRequest = await TransferRequest.findOne({
-  booking: req.params.id,
-  fromUser: req.user.id,
-  status: { $in: ["pending", "declined"] }
-});
+      const existingRequest = await TransferRequest.findOne({
+        booking: req.params.id,
+        fromUser: req.user.id,
+        status: { $in: ["pending", "declined"] },
+      });
 
-if (existingRequest) {
-  await session.abortTransaction();
-  return res.status(400).json({ 
-    message: existingRequest.status === "pending" 
-      ? "Pending request exists" 
-      : "Transfer already declined" 
-  });
-}
+      if (existingRequest) {
+        const messageKey =
+          existingRequest.status === "pending"
+            ? "booking.errors.transferPendingExists"
+            : "booking.errors.transferAlreadyDeclined";
+        await session.abortTransaction();
+        return R.send(req, res, 400, messageKey);
+      }
 
       // Transfer booking to requester (fromUser)
       const booking = await Booking.findByIdAndUpdate(
         request.booking._id,
         { userId: request.fromUser._id },
-        { new: true, session }
+        { new: true, session },
       );
 
       request.status = "accepted";
       await request.save({ session });
 
-      // Notify requester (fromUser) that their request was accepted
       await notificationsController.createNotification(
         request.fromUser._id,
-        `Transfer accepted! You now own the ${request.booking.roomId.name} booking`,
-        "transferAccepted",
-        session
+        "booking.notify.transferAccepted", // key
+        { room: request.booking.roomId.name }, // params
+        "transferAccepted", // type
       );
 
-      // Notify previous owner (toUser) about the transfer
+      // ↓ Notification for the user who received the booking
       await notificationsController.createNotification(
         request.toUser._id,
-        `You've transferred ${request.booking.roomId.name} booking to ${request.fromUser.username}`,
-        "bookingTransferred",
-        session
+        "booking.notify.transferCompleted", // key
+        {
+          room: request.booking.roomId.name,
+          user: request.fromUser.username,
+        },
+        "bookingTransferred", // type
       );
 
       await session.commitTransaction();
-      res.status(200).json({ success: true, booking });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.transferAccepted",
+        {},
+        { booking },
+      );
     } catch (error) {
       await session.abortTransaction();
-      res.status(500).json({ success: false, error: error.message });
+      return R.send(req, res, 500, "booking.errors.transferAcceptFailed");
     } finally {
       session.endSession();
     }
@@ -2161,27 +2024,34 @@ if (existingRequest) {
       const request = await TransferRequest.findByIdAndUpdate(
         req.params.id,
         { status: "declined" },
-        { new: true, session }
+        { new: true, session },
       ).populate("fromUser toUser", "username");
 
       if (!request) {
         await session.abortTransaction();
-        return res.status(404).json({ message: "Request not found" });
+        return R.send(req, res, 404, "booking.errors.transferNotFound");
       }
 
-      // Notify requester (fromUser) about decline
       await notificationsController.createNotification(
         request.fromUser._id,
-        `${request.toUser.username} declined your transfer request`,
-        "transferDeclined",
-        session
+        "booking.notify.transferDeclined", // i18next key
+        { user: request.toUser.username }, // interpolation parameters
+        "transferDeclined", // semantic type
+        session, // optional session if supported
       );
 
       await session.commitTransaction();
-      res.status(200).json({ success: true, request });
+      return R.send(
+        req,
+        res,
+        200,
+        "booking.success.transferDeclined",
+        {},
+        { request },
+      );
     } catch (error) {
       await session.abortTransaction();
-      res.status(500).json({ success: false, error: error.message });
+      return R.send(req, res, 500, "booking.errors.transferDeclineFailed");
     } finally {
       session.endSession();
     }
@@ -2192,14 +2062,13 @@ if (existingRequest) {
       const request = await TransferRequest.findOne({
         booking: req.params.id,
         fromUser: req.query.userId,
-        status: 'declined'
+        status: "declined",
       });
-      res.json({ exists: !!request });
+      return R.send(req, res, 200, "", {}, { exists: !!request });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      return R.send(req, res, 500, "booking.errors.transferCheckFailed");
     }
   };
-
 }
 
 module.exports = new BookingController();
