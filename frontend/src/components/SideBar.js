@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   User,
@@ -19,6 +20,7 @@ const DASHBOARD_PATHS = [
 ];
 
 export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
+  const { t } = useTranslation();
   const user = JSON.parse(localStorage.getItem("user"));
   const isAdminOrManager = ["admin", "manager"].includes(user?.role);
   const [showDashboardSubmenu, setShowDashboardSubmenu] = useState(false);
@@ -112,7 +114,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                     isExpanded ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  Dashboard
+                  {t("sidebar.dashboard")}
                 </span>
                 <ChevronDown
                   className={`ml-auto w-4 h-4 transition-transform dark:text-gray-200 ${
@@ -125,22 +127,22 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                 <ul className="bg-gray-50 py-2 dark:bg-gray-700/30">
                   <ProtectedMenuItem
                     path="/dashboard"
-                    label="Overview"
+                    label={t("sidebar.overview")}
                     allowedRoles={["admin", "manager"]}
                   />
                   <ProtectedMenuItem
                     path="/usermanagement"
-                    label="Manage Users"
+                    label={t("sidebar.manageUsers")}
                     allowedRoles={["admin"]}
                   />
                   <ProtectedMenuItem
                     path="/roomOperationpage"
-                    label="Manage Rooms"
+                    label={t("sidebar.manageRooms")}
                     allowedRoles={["admin", "manager"]}
                   />
                   <ProtectedMenuItem
                     path="/bookingOperationpage"
-                    label="Manage Bookings"
+                    label={t("sidebar.manageBookings")}
                     allowedRoles={["admin", "manager"]}
                   />
                   {/* <ProtectedMenuItem
@@ -154,8 +156,8 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
           )}
 
           {[
-            { icon: User, label: "Profile", path: "/accountSettings" },
-            { icon: Home, label: "Home", path: "/homepage" },
+            { icon: User, label: t("sidebar.profile"), path: "/accountSettings" },
+            { icon: Home, label: t("sidebar.home"), path: "/homepage" },
           ].map((item) => (
             <li
               key={item.path}
@@ -194,7 +196,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
                 isExpanded ? "opacity-100" : "opacity-0"
               }`}
             >
-              Log Out
+              {t("sidebar.logout")}
             </span>
           </div>
         </div>

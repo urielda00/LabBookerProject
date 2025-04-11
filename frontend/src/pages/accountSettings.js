@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { User, Bell, Shield, Upload, XCircle } from "lucide-react";
 import Message from "../components/Error_successMessage";
@@ -7,13 +7,14 @@ import api from "../utils/axiosConfig";
 import { motion, AnimatePresence } from "framer-motion";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/cropImageUtil";
-import { useContext } from "react";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 const ProfileSettings = () => {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("profile");
   const { toggleTheme, isDark } = useContext(ThemeContext);
-  // const roleColor = user?.role === "admin" ? "blue" : "blue";
+
   const [userInfo, setUserInfo] = useState({
     email: "",
     username: "",
@@ -65,11 +66,11 @@ const ProfileSettings = () => {
           removeImage: false,
         });
       } catch (error) {
-        setErrors("Failed to load profile");
+        setErrors(t("profileSettings.errors.loadProfileError"));
       }
     };
     fetchProfile();
-  }, []);
+  }, [t]);
 
   // Clear messages on input interactions
   const clearMessages = () => {
@@ -86,11 +87,11 @@ const ProfileSettings = () => {
     const validTypes = ["image/jpeg", "image/png", "image/jpg"];
     const maxSize = 5 * 1024 * 1024;
     if (!validTypes.includes(file.type)) {
-      setErrors("Please upload a valid image file (JPEG, PNG)");
+      setErrors(t("profileSettings.errors.invalidImageType"));
       return;
     }
     if (file.size > maxSize) {
-      setErrors("Image size should be less than 5MB");
+      setErrors(t("profileSettings.errors.invalidImageSize"));
       return;
     }
 
@@ -103,7 +104,7 @@ const ProfileSettings = () => {
   const onZoomChange = useCallback((newZoom) => setZoom(newZoom), []);
   const onCropComplete = useCallback(
     (_, croppedAreaPx) => setCroppedAreaPixels(croppedAreaPx),
-    [],
+    []
   );
 
   // Confirm cropping
@@ -120,7 +121,7 @@ const ProfileSettings = () => {
       }));
       setShowCropper(false);
     } catch (err) {
-      setErrors("Failed to crop image");
+      setErrors(t("profileSettings.errors.cropImageError"));
     }
   };
 
@@ -147,13 +148,13 @@ const ProfileSettings = () => {
     clearMessages();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
-      setErrors("Please enter a valid email address");
+      setErrors(t("profileSettings.errors.invalidEmail"));
       return;
     }
     try {
       const checkRes = await api.post("/user/check-email", { email: newEmail });
       if (!checkRes.data.available) {
-        setErrors("Email is already in use");
+        setErrors(t("profileSettings.errors.emailInUse"));
         return;
       }
       await api.post("/user/initiate-email-change", { newEmail });
@@ -164,18 +165,18 @@ const ProfileSettings = () => {
         error: "",
       });
     } catch (error) {
-      setErrors("Failed to initiate email change");
+      setErrors(t("profileSettings.errors.initiateEmailChange"));
     }
   };
 
   const cancelEmailChangeRequest = async () => {
     try {
       await api.post("/user/cancel-email-change");
-      setSuccessMessage("Email change request cancelled.");
+      setSuccessMessage(t("profileSettings.success.emailChangeCancelled"));
     } catch (error) {
       setErrors(
         error.response?.data?.message ||
-          "Failed to cancel email change request",
+          t("profileSettings.errors.cancelEmailChange")
       );
     }
   };
@@ -191,12 +192,14 @@ const ProfileSettings = () => {
         email: verificationModal.email,
       }));
       setVerificationModal({ isOpen: false, email: "", code: "", error: "" });
-      setSuccessMessage("Email updated successfully");
+      setSuccessMessage(t("profileSettings.success.emailUpdated"));
       setIsEditing(false);
     } catch (error) {
       setVerificationModal((prev) => ({
         ...prev,
-        error: error.response?.data?.message || "Invalid verification code",
+        error:
+          error.response?.data?.message ||
+          t("profileSettings.errors.invalidVerificationCode"),
       }));
     }
   };
@@ -213,7 +216,7 @@ const ProfileSettings = () => {
 
       if (editForm.name !== userInfo.name) {
         if (editForm.name.length < 2 || editForm.name.length > 50) {
-          setErrors("Name must be between 2 and 50 characters");
+          setErrors(t("profileSettings.errors.invalidNameLength"));
           setLoading(false);
           return;
         }
@@ -233,7 +236,7 @@ const ProfileSettings = () => {
       const hasNameChange = editForm.name !== userInfo.name;
       const hasImageChange = editForm.image || editForm.removeImage;
       if (!hasNameChange && !hasImageChange) {
-        setErrors("No changes to save");
+        setErrors(t("profileSettings.errors.noChanges"));
         setLoading(false);
         return;
       }
@@ -254,9 +257,11 @@ const ProfileSettings = () => {
       }));
       setRawImage(null);
       setIsEditing(false);
-      setSuccessMessage("Profile updated successfully");
+      setSuccessMessage(t("profileSettings.success.profileUpdated"));
     } catch (error) {
-      setErrors(error.response?.data?.message || "Failed to update profile");
+      setErrors(
+        error.response?.data?.message || t("profileSettings.errors.updateProfile")
+      );
     } finally {
       setLoading(false);
     }
@@ -278,10 +283,13 @@ const ProfileSettings = () => {
 
   return (
     <SidebarLayout>
+      {/* Added inline right margin to offset for a right sidebar of width 225px.
+          If your sidebar collapses to 80px, adjust accordingly */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        style={{ marginRight: 225 }}
         className="w-full flex flex-col items-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10 overflow-x-hidden dark:bg-gray-900 transition-colors duration-300"
       >
         {/* Header */}
@@ -291,7 +299,7 @@ const ProfileSettings = () => {
           transition={{ duration: 0.5 }}
           className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8 transition-colors duration-300"
         >
-          Profile Settings
+          {t("profileSettings.header")}
         </motion.h1>
 
         {/* Tabs Navigation */}
@@ -303,9 +311,21 @@ const ProfileSettings = () => {
             className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8"
           >
             {[
-              { label: "Profile", id: "profile", icon: User },
-              { label: "Lock", id: "security", icon: Shield },
-              { label: "Alerts", id: "notifications", icon: Bell },
+              {
+                label: t("profileSettings.tabs.profile"),
+                id: "profile",
+                icon: User,
+              },
+              {
+                label: t("profileSettings.tabs.appearance"),
+                id: "security",
+                icon: Shield,
+              },
+              {
+                label: t("profileSettings.tabs.notifications"),
+                id: "notifications",
+                icon: Bell,
+              },
             ].map(({ label, id, icon: Icon }) => (
               <motion.button
                 key={id}
@@ -359,7 +379,7 @@ const ProfileSettings = () => {
                     {/* Profile Picture Section */}
                     <div className="space-y-4 sm:space-y-6">
                       <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
-                        Profile Picture
+                        {t("profileSettings.profilePictureHeader")}
                       </h3>
                       <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                         <div className="relative">
@@ -367,7 +387,7 @@ const ProfileSettings = () => {
                             {editForm.previewUrl ? (
                               <img
                                 src={editForm.previewUrl}
-                                alt="Profile"
+                                alt={t("profileSettings.profilePictureAlt")}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -397,7 +417,7 @@ const ProfileSettings = () => {
                           {isEditing && (
                             <>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Click the icon to choose a new profile picture
+                                {t("profileSettings.profilePictureHint")}
                               </p>
                               {editForm.previewUrl && (
                                 <button
@@ -405,7 +425,7 @@ const ProfileSettings = () => {
                                   className="mt-2 px-3 py-1 inline-flex items-center text-sm rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors duration-300"
                                 >
                                   <XCircle className="w-4 h-4 mr-1" />
-                                  Remove
+                                  {t("profileSettings.removeButton")}
                                 </button>
                               )}
                             </>
@@ -417,13 +437,13 @@ const ProfileSettings = () => {
                     {/* Profile Information Section */}
                     <div className="space-y-4 sm:space-y-6">
                       <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
-                        Basic Information
+                        {t("profileSettings.basicInformationHeader")}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         {/* Username Field */}
                         <div className="w-full">
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                            Username
+                            {t("profileSettings.username")}
                           </label>
                           <input
                             type="text"
@@ -432,14 +452,14 @@ const ProfileSettings = () => {
                             className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors duration-300"
                           />
                           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Username cannot be changed
+                            {t("profileSettings.usernameInfo")}
                           </p>
                         </div>
 
                         {/* Name Field */}
                         <div className="w-full">
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                            Name
+                            {t("profileSettings.name")}
                             {isEditing && (
                               <span className="text-red-500 ml-1">*</span>
                             )}
@@ -464,7 +484,7 @@ const ProfileSettings = () => {
                         {/* Email Field */}
                         <div className="md:col-span-2 w-full">
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                            Email
+                            {t("profileSettings.email")}
                             {isEditing && (
                               <span className="text-red-500 ml-1">*</span>
                             )}
@@ -514,14 +534,16 @@ const ProfileSettings = () => {
                             onClick={handleEditToggle}
                             className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-colors duration-300"
                           >
-                            Cancel
+                            {t("profileSettings.cancel")}
                           </button>
                           <button
                             onClick={handleSaveChanges}
                             disabled={loading}
                             className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-colors duration-300"
                           >
-                            {loading ? "Saving..." : "Save Changes"}
+                            {loading
+                              ? t("profileSettings.saving")
+                              : t("profileSettings.saveChanges")}
                           </button>
                         </>
                       ) : (
@@ -529,7 +551,7 @@ const ProfileSettings = () => {
                           onClick={handleEditToggle}
                           className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-colors duration-300"
                         >
-                          Edit Profile
+                          {t("profileSettings.editProfile")}
                         </button>
                       )}
                     </div>
@@ -537,22 +559,20 @@ const ProfileSettings = () => {
                 )}
 
                 {activeTab === "security" && (
-                  // In your Appearance Settings section
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
-                      Appearance Settings
+                      {t("profileSettings.appearanceHeader")}
                     </h3>
                     <div className="bg-white dark:bg-gray-700 rounded-lg p-4 sm:p-6">
                       <label className="inline-flex items-center cursor-pointer w-full justify-between">
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                            Dark Mode
+                            {t("profileSettings.darkMode")}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Toggle between light and dark themes
+                            {t("profileSettings.darkModeDescription")}
                           </p>
                         </div>
-
                         <div className="inline-flex items-center">
                           <input
                             type="checkbox"
@@ -562,26 +582,26 @@ const ProfileSettings = () => {
                           />
                           <div
                             className="
-    relative 
-    w-11 
-    h-6 
-    bg-gray-200 
-    peer-focus:outline-none 
-    rounded-full 
-    peer 
-    dark:bg-gray-600 
-    peer-checked:bg-blue-600 
-    peer-checked:after:translate-x-full 
-    after:content-['']
-    after:absolute 
-    after:top-[2px] 
-    after:start-[2px] 
-    after:bg-white 
-    after:rounded-full 
-    after:h-5 
-    after:w-5 
-    after:transition-all
-  "
+                              relative 
+                              w-11 
+                              h-6 
+                              bg-gray-200 
+                              peer-focus:outline-none 
+                              rounded-full 
+                              peer 
+                              dark:bg-gray-600 
+                              peer-checked:bg-blue-600 
+                              peer-checked:after:translate-x-full 
+                              after:content-['']
+                              after:absolute 
+                              after:top-[2px] 
+                              after:start-[2px] 
+                              after:bg-white 
+                              after:rounded-full 
+                              after:h-5 
+                              after:w-5 
+                              after:transition-all
+                            "
                           >
                             {/* Add RTL support */}
                             <style jsx>{`
@@ -602,15 +622,14 @@ const ProfileSettings = () => {
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
-                        Notification Preferences
+                        {t("profileSettings.notificationsHeader")}
                       </h3>
                       <div className="bg-white dark:bg-gray-700 rounded-lg p-4 sm:p-6 transition-colors duration-300">
                         <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 transition-colors duration-300">
-                          Coming Soon
+                          {t("profileSettings.notificationsComingSoonTitle")}
                         </h4>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 transition-colors duration-300">
-                          Notification settings will be available in a future
-                          update.
+                          {t("profileSettings.notificationsComingSoonDescription")}
                         </p>
                       </div>
                     </div>
@@ -647,7 +666,7 @@ const ProfileSettings = () => {
           <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl relative w-full max-w-sm sm:max-w-md transition-colors duration-300">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 transition-colors duration-300">
-                Crop your photo
+                {t("profileSettings.cropperTitle")}
               </h2>
               <div className="relative w-full h-48 sm:h-64 bg-gray-200 dark:bg-gray-700">
                 <Cropper
@@ -679,13 +698,13 @@ const ProfileSettings = () => {
                   onClick={handleCropCancel}
                   className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-all duration-300"
                 >
-                  Cancel
+                  {t("profileSettings.cropper.cancel")}
                 </button>
                 <button
                   onClick={handleCropComplete}
                   className="px-6 py-3 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 transition-all duration-300"
                 >
-                  Confirm Crop
+                  {t("profileSettings.cropper.confirm")}
                 </button>
               </div>
             </div>

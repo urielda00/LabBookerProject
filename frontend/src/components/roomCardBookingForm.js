@@ -56,7 +56,7 @@ const RoomCardBookingForm = ({
   useEffect(() => {
     if (activeRoom === room._id) {
       api
-        .get(
+        .get( 
           `/room/rooms/${room._id}/monthly-availability`,
         )
         .then((res) => {

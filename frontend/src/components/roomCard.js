@@ -23,8 +23,8 @@ const RoomCard = ({
   activeRoom,
   setActiveRoom,
 }) => {
-  const { t } = useTranslation();
-
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "he";
   const [visibleAmenities, setVisibleAmenities] = useState(room.amenities);
   const [extraCount, setExtraCount] = useState(0);
   const [showWeeklyBookings, setShowWeeklyBookings] = useState(false);
@@ -177,24 +177,22 @@ const RoomCard = ({
       </div>
 
       {/* Main Card Container */}
-      <div
-        className="
-          flex flex-col md:flex-row bg-white dark:bg-gray-800
-          rounded-2xl shadow-lg dark:shadow-gray-900/30 hover:shadow-xl
-          dark:hover:shadow-gray-900/50 transition-all duration-300
-          overflow-hidden border border-gray-200 dark:border-gray-700 h-full
-          mb-8
-        "
-      >
-        {/* Image Section */}
-        <div className="relative md:w-1/2 h-64 overflow-hidden">
+      <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/30 hover:shadow-xl dark:hover:shadow-gray-900/50 transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 h-full mb-8">
+        {/* Image Section - Updated styles */}
+        <div className="relative md:w-1/2 h-64 md:h-full min-h-[16rem]">
+          {" "}
+          {/* Changed this line */}
           <img
             src={room.imageUrl || RoomImg}
             alt={room.name}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105 absolute inset-0" // Added absolute and inset-0
             loading="lazy"
           />
-          <div className="absolute top-4 left-4 bg-blue-500 dark:bg-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-md">
+          <div
+            className={`absolute top-4 ${
+              isRTL ? "right-4" : "left-4"
+            } bg-blue-500 dark:bg-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-md z-10`}
+          >
             {room.type}
           </div>
         </div>
@@ -402,41 +400,40 @@ const RoomCard = ({
                       req.status === "pending"
                   );
                   const hasDeclined = declinedRequests[booking._id] || false;
-
                   return (
                     <div
                       key={booking._id}
-                      className="
-                        p-4 bg-gray-50 dark:bg-gray-700
-                        rounded-lg mb-3 transition-all
-                        hover:shadow-md dark:hover:shadow-gray-900/30
-                      "
+                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3 transition-all hover:shadow-md dark:hover:shadow-gray-900/30"
                     >
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-2">
+                      <div
+                        className={`flex flex-col sm:flex-row justify-between items-start gap-4 mb-2 ${
+                          isRTL ? "sm:flex-row-reverse" : ""
+                        }`}
+                      >
                         <div className="flex flex-col flex-grow">
-                          <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                          <div
+                            className={`flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 ${
+                              isRTL ? "flex-row-reverse" : ""
+                            }`}
+                          >
                             <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span
-                              className="
-                                bg-blue-100 dark:bg-blue-900/30
-                                px-2 py-1 rounded text-xs sm:text-sm
-                              "
-                            >
-                              {new Date(booking.date).toLocaleDateString()}
+                            <span className="bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded text-xs sm:text-sm">
+                              {new Date(booking.date).toLocaleDateString(
+                                i18n.language
+                              )}
                             </span>
                             <span className="text-blue-500 dark:text-blue-400 hidden sm:inline">
                               •
                             </span>
-                            <span
-                              className="
-                                bg-green-100 dark:bg-green-900/30
-                                px-2 py-1 rounded text-xs sm:text-sm
-                              "
-                            >
+                            <span className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded text-xs sm:text-sm">
                               {booking.startTime} - {booking.endTime}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 mt-2 text-sm">
+                          <div
+                            className={`flex items-center gap-2 mt-2 text-sm ${
+                              isRTL ? "flex-row-reverse" : ""
+                            }`}
+                          >
                             <span
                               className={`inline-block w-2 h-2 rounded-full ${
                                 booking.status === "Active"
@@ -447,16 +444,13 @@ const RoomCard = ({
                               }`}
                             ></span>
                             <span
-                              className={`
-                                px-2 py-1 rounded-full text-xs sm:text-sm
-                                ${
-                                  booking.status === "Active"
-                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200"
-                                    : booking.status === "Confirmed"
-                                    ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200"
-                                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200"
-                                }
-                              `}
+                              className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
+                                booking.status === "Active"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200"
+                                  : booking.status === "Confirmed"
+                                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200"
+                                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200"
+                              }`}
                             >
                               {t(`roomCard.status.${booking.status}`, {
                                 defaultValue: booking.status,
@@ -466,20 +460,18 @@ const RoomCard = ({
                         </div>
 
                         {booking.userId._id === userInfo._id ? (
-                          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                          <div
+                            className={`flex flex-col ${
+                              isRTL ? "items-start" : "items-end"
+                            } gap-2 w-full sm:w-auto`}
+                          >
                             {booking.transferRequests?.length > 0 && (
                               <button
                                 onClick={() => {
                                   setSelectedBooking(booking);
                                   setShowRequests(true);
                                 }}
-                                className="
-                                  text-xs px-2.5 py-1 bg-blue-100
-                                  dark:bg-blue-900/30 text-blue-600
-                                  dark:text-blue-300 rounded-full
-                                  hover:bg-blue-200 dark:hover:bg-blue-800/50
-                                  transition-colors w-full sm:w-auto
-                                "
+                                className="text-xs px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors w-full sm:w-auto"
                               >
                                 {t("roomCard.viewRequests")} (
                                 {booking.transferRequests.length})
@@ -487,31 +479,33 @@ const RoomCard = ({
                             )}
                           </div>
                         ) : (
-                          // If booking belongs to someone else
                           room.type === "Open" && (
                             <>
                               {["Pending", "Active"].includes(
                                 booking.status
                               ) ? (
-                                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                                <div
+                                  className={`flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs sm:text-sm ${
+                                    isRTL ? "flex-row-reverse" : ""
+                                  }`}
+                                >
                                   <Lock className="w-4 h-4" />
                                   <span>
                                     {t("roomCard.transferUnavailable")}
                                   </span>
                                 </div>
                               ) : hasDeclined ? (
-                                <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs sm:text-sm">
+                                <div
+                                  className={`flex items-center gap-1 text-red-600 dark:text-red-400 text-xs sm:text-sm ${
+                                    isRTL ? "flex-row-reverse" : ""
+                                  }`}
+                                >
                                   <X className="w-4 h-4" />
                                   <span>{t("roomCard.declined")}</span>
                                 </div>
                               ) : hasPendingRequest ? (
                                 <button
-                                  className="
-                                    bg-gray-300 dark:bg-gray-600
-                                    text-gray-500 dark:text-gray-300
-                                    cursor-not-allowed text-xs px-2.5 py-1
-                                    rounded-full w-full sm:w-auto
-                                  "
+                                  className="bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed text-xs px-2.5 py-1 rounded-full w-full sm:w-auto"
                                   disabled
                                 >
                                   {t("roomCard.requestSent")}
@@ -522,13 +516,7 @@ const RoomCard = ({
                                     setSelectedBooking(booking);
                                     setShowTransferModal(true);
                                   }}
-                                  className="
-                                    bg-sky-100 dark:bg-sky-900/30
-                                    text-sky-600 dark:text-sky-300
-                                    hover:bg-sky-200 dark:hover:bg-sky-800/50
-                                    text-xs px-2.5 py-1 rounded-full
-                                    transition-all w-full sm:w-auto
-                                  "
+                                  className="bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-800/50 text-xs px-2.5 py-1 rounded-full transition-all w-full sm:w-auto"
                                 >
                                   {t("roomCard.requestTransfer")}
                                 </button>
@@ -537,10 +525,13 @@ const RoomCard = ({
                           )
                         )}
                       </div>
-
                       {/* User info */}
                       <div className="mt-2 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                        <div
+                          className={`flex flex-wrap items-center gap-2 text-xs sm:text-sm ${
+                            isRTL ? "flex-row-reverse" : ""
+                          }`}
+                        >
                           <User className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                           <span className="font-medium dark:text-gray-100 break-words">
                             {booking.userId?.username}
@@ -550,7 +541,11 @@ const RoomCard = ({
                           </span>
                         </div>
                         {booking.additionalUsers?.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                          <div
+                            className={`flex flex-wrap items-center gap-2 text-xs sm:text-sm ${
+                              isRTL ? "flex-row-reverse" : ""
+                            }`}
+                          >
                             <Users className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                             <span className="font-medium dark:text-gray-100">
                               {t("roomCard.participants")}
