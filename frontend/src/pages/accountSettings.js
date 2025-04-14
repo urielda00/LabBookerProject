@@ -1,20 +1,22 @@
 import React, { useEffect, useState, useCallback, useContext } from "react";
-import { SidebarLayout } from "../components/SidebarLayout";
 import { User, Bell, Shield, Upload, XCircle } from "lucide-react";
-import Message from "../components/Error_successMessage";
-import VerificationModal from "../components/VerificationModal";
-import api from "../utils/axiosConfig";
 import { motion, AnimatePresence } from "framer-motion";
 import Cropper from "react-easy-crop";
-import { getCroppedImg } from "../utils/cropImageUtil";
-import { ThemeContext } from "../contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 
+import { SidebarLayout } from "../components/SidebarLayout";
+import { ThemeContext } from "../contexts/ThemeContext";
+import api from "../utils/axiosConfig";
+import { getCroppedImg } from "../utils/cropImageUtil";
+import Message from "../components/Error_successMessage";
+import VerificationModal from "../components/VerificationModal";
+import LanguageSwitcher from "../components/LanguageSwitcher ";
+
 const ProfileSettings = () => {
-  const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState("profile");
+  const { t } = useTranslation();
   const { toggleTheme, isDark } = useContext(ThemeContext);
 
+  const [activeTab, setActiveTab] = useState("profile");
   const [userInfo, setUserInfo] = useState({
     email: "",
     username: "",
@@ -22,7 +24,6 @@ const ProfileSettings = () => {
     profilePicture: null,
   });
 
-  // Edit form state
   const [editForm, setEditForm] = useState({
     email: "",
     name: "",
@@ -143,7 +144,7 @@ const ProfileSettings = () => {
     }));
   };
 
-  // Handle email changes
+  // Handle email changes (initiate verification)
   const handleEmailChange = async (newEmail) => {
     clearMessages();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -160,7 +161,7 @@ const ProfileSettings = () => {
       await api.post("/user/initiate-email-change", { newEmail });
       setVerificationModal({
         isOpen: true,
-        email: userInfo.email,
+        email: userInfo.email, // or you may want to store `newEmail` here
         code: "",
         error: "",
       });
@@ -187,6 +188,7 @@ const ProfileSettings = () => {
       await api.post("/user/verify-email-change", {
         verificationCode: verificationModal.code,
       });
+      // If successful, update userInfo email:
       setUserInfo((prev) => ({
         ...prev,
         email: verificationModal.email,
@@ -210,7 +212,9 @@ const ProfileSettings = () => {
       setLoading(true);
 
       if (editForm.email !== userInfo.email) {
+        // This triggers the email verification flow
         await handleEmailChange(editForm.email);
+        setLoading(false);
         return;
       }
 
@@ -235,6 +239,7 @@ const ProfileSettings = () => {
 
       const hasNameChange = editForm.name !== userInfo.name;
       const hasImageChange = editForm.image || editForm.removeImage;
+
       if (!hasNameChange && !hasImageChange) {
         setErrors(t("profileSettings.errors.noChanges"));
         setLoading(false);
@@ -260,7 +265,8 @@ const ProfileSettings = () => {
       setSuccessMessage(t("profileSettings.success.profileUpdated"));
     } catch (error) {
       setErrors(
-        error.response?.data?.message || t("profileSettings.errors.updateProfile")
+        error.response?.data?.message ||
+          t("profileSettings.errors.updateProfile")
       );
     } finally {
       setLoading(false);
@@ -270,6 +276,7 @@ const ProfileSettings = () => {
   const handleEditToggle = () => {
     clearMessages();
     if (isEditing) {
+      // reset form
       setEditForm({
         email: userInfo.email,
         name: userInfo.name,
@@ -283,14 +290,12 @@ const ProfileSettings = () => {
 
   return (
     <SidebarLayout>
-      {/* Added inline right margin to offset for a right sidebar of width 225px.
-          If your sidebar collapses to 80px, adjust accordingly */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ marginRight: 225 }}
-        className="w-full flex flex-col items-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10 overflow-x-hidden dark:bg-gray-900 transition-colors duration-300"
+        className="w-full flex flex-col items-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10 overflow-x-hidden
+                   dark:bg-gray-900 bg-gray-50 transition-colors duration-300"
       >
         {/* Header */}
         <motion.h1
@@ -318,7 +323,7 @@ const ProfileSettings = () => {
               },
               {
                 label: t("profileSettings.tabs.appearance"),
-                id: "security",
+                id: "security", // or "appearance"
                 icon: Shield,
               },
               {
@@ -365,7 +370,7 @@ const ProfileSettings = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-4xl"
         >
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 md:p-10 transition-colors duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 md:p-10 transition-colors duration-300">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -530,6 +535,7 @@ const ProfileSettings = () => {
                     <div className="flex justify-end space-x-2 sm:space-x-3">
                       {isEditing ? (
                         <>
+                          
                           <button
                             onClick={handleEditToggle}
                             className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-colors duration-300"
@@ -603,18 +609,12 @@ const ProfileSettings = () => {
                               after:transition-all
                             "
                           >
-                            {/* Add RTL support */}
-                            <style jsx>{`
-                              .peer-checked:after:translate-x-full {
-                                transform: translateX(
-                                  calc(1.25rem - 2px)
-                                ) !important;
-                              }
-                            `}</style>
+                            {/* Add RTL support if you have i18n with RTL */}
                           </div>
                         </div>
                       </label>
                     </div>
+                    {/* <LanguageSwitcher/> */}
                   </div>
                 )}
 
@@ -651,12 +651,7 @@ const ProfileSettings = () => {
           }
           onConfirm={handleVerifyEmail}
           onClose={() =>
-            setVerificationModal({
-              isOpen: false,
-              email: "",
-              code: "",
-              error: "",
-            })
+            setVerificationModal({ isOpen: false, email: "", code: "", error: "" })
           }
           onCancelEmailChange={cancelEmailChangeRequest}
         />

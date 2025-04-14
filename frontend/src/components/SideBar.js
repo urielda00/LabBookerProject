@@ -110,14 +110,14 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
               >
                 <LayoutDashboard className="w-6 h-6 text-blue-500 min-w-[24px] dark:text-blue-400" />
                 <span
-                  className={`ml-3 transition-opacity dark:text-gray-200 ${
+                  className={`ml-3 transition-opacity dark:text-gray-200 rtl:mr-3 ${
                     isExpanded ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   {t("sidebar.dashboard")}
                 </span>
                 <ChevronDown
-                  className={`ml-auto w-4 h-4 transition-transform dark:text-gray-200 ${
+                  className={`ml-auto w-4 h-4 transition-transform dark:text-gray-200  ${
                     showDashboardSubmenu ? "rotate-180" : ""
                   } ${isExpanded ? "opacity-100" : "opacity-0"}`}
                 />
@@ -170,7 +170,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
             >
               <item.icon className="w-6 h-6 text-blue-500 min-w-[24px] dark:text-blue-400" />
               <span
-                className={`ml-3 transition-opacity ${
+                className={`ml-3 transition-opacity rtl:mr-3 ${
                   isExpanded ? "opacity-100" : "opacity-0"
                 }`}
               >
@@ -192,7 +192,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
           >
             <LogOut className="w-6 h-6 text-red-500 min-w-[24px] dark:text-red-400" />
             <span
-              className={`ml-3 transition-opacity dark:text-gray-200 ${
+              className={`ml-3 transition-opacity dark:text-gray-200 rtl:mr-3 ${
                 isExpanded ? "opacity-100" : "opacity-0"
               }`}
             >
