@@ -30,6 +30,10 @@
     "yesterday": "אתמול"
   },
   "nextBooking": {
+    "confirmText": "אשר ביטול",
+    "cancelText": "השאר את ההזמנה",
+    "confirmation": "האם אתה בטוח שברצונך לבטל את ההזמנה הזו? פעולה זו אינה ניתנת לביטול.",
+    "detailsHeader": "פרטי ההזמנה",
     "loadingTitle": "טוען את ההזמנה שלך",
     "loadingMessage": "אנא המתן בזמן שאנו מעלים את פרטי ההזמנה",
     "noneTitle": "אין הזמנות עתידיות",
@@ -315,5 +319,12 @@
       "cancel": "ביטול",
       "confirm": "אשר חיתוך"
     }
+  },
+  "verificationModal": {
+    "title": "אימות שינוי כתובת אימייל",
+    "instruction": "אנא הזן את קוד האימות שנשלח אל:",
+    "placeholder": "000000",
+    "cancel": "ביטול",
+    "verify": "אימות"
   }
 }

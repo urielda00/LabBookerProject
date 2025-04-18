@@ -340,11 +340,10 @@ const NextBooking = ({
 
         {/* Header - Added dark mode text colors */}
         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-          Confirm Booking Cancellation
+          {t("nextBooking.cancelHeading")}
         </h3>
         <div className="text-gray-500 dark:text-gray-400">
-          Are you sure you want to cancel this booking? This action cannot be
-          undone.
+          {t("nextBooking.confirmation")}
         </div>
       </div>
 
@@ -353,7 +352,7 @@ const NextBooking = ({
           {/* Details Header - Dark mode background and border */}
           <div className="px-4 py-3 bg-gray-100 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Booking Details
+              {t("nextBooking.detailsHeader")}
             </h4>
           </div>
 
@@ -362,7 +361,7 @@ const NextBooking = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="block text-gray-500 dark:text-gray-400">
-                  Room
+                  {t("nextBooking.labels.room")}
                 </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.roomId?.name}
@@ -370,7 +369,7 @@ const NextBooking = ({
               </div>
               <div>
                 <span className="block text-gray-500 dark:text-gray-400">
-                  Date
+                  {t("nextBooking.labels.date")}
                 </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.date}
@@ -378,7 +377,7 @@ const NextBooking = ({
               </div>
               <div>
                 <span className="block text-gray-500 dark:text-gray-400">
-                  Time
+                  {t("nextBooking.labels.time")}
                 </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.startTime} - {booking.endTime}
@@ -386,7 +385,7 @@ const NextBooking = ({
               </div>
               <div>
                 <span className="block text-gray-500 dark:text-gray-400">
-                  Status
+                  {t("nextBooking.labels.status")}
                 </span>
                 <span className="font-medium text-gray-800 dark:text-gray-200">
                   {booking.status}
@@ -794,8 +793,8 @@ const NextBooking = ({
                           title: "Cancel Booking",
                           message: <ModalContent />,
                           onConfirm: handleCancelBooking,
-                          confirmText: "Confirm Cancellation",
-                          cancelText: "Keep Booking",
+                          confirmText: t("nextBooking.confirmText"),
+                          cancelText: t("nextBooking.cancelText"),
                         });
                         setIsModalOpen(true);
                       }}

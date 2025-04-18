@@ -31,6 +31,10 @@
     "yesterday": "Yesterday"
   },
   "nextBooking": {
+    "confirmText": "Confirm Cancellation",
+    "cancelText": "Keep Booking",
+    "confirmation": "Are you sure you want to cancel this booking? This action cannot be undone.",
+    "detailsHeader": "Booking Details",
     "loadingTitle": "Loading your booking",
     "loadingMessage": "Please wait while we fetch your details",
     "noneTitle": "No Upcoming Bookings",
@@ -315,5 +319,12 @@
       "cancel": "Cancel",
       "confirm": "Confirm Crop"
     }
+  },
+  "verificationModal": {
+    "title": "Verify Email Change",
+    "instruction": "Please enter the verification code sent to:",
+    "placeholder": "000000",
+    "cancel": "Cancel",
+    "verify": "Verify"
   }
 }

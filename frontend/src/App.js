@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,6 +8,7 @@ import {
 import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import i18n from "./i18n"; // ✅ import i18n
 
 // Import all your pages
 import LandingPage from "./pages/landingPage";
@@ -57,9 +58,16 @@ const PageTransition = ({ children }) => {
   );
 };
 
-// Wrapper component to handle animations
+// Wrapper component to handle animations + RTL
 const AnimatedRoutes = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    const currentLang = i18n.language;
+    const direction = currentLang === "he" ? "rtl" : "ltr";
+    document.documentElement.setAttribute("dir", direction);
+    document.documentElement.setAttribute("lang", currentLang);
+  }, [location.pathname]);
 
   return (
     <AnimatePresence mode="wait">
@@ -117,7 +125,7 @@ const AnimatedRoutes = () => {
           path="/issuereport"
           element={
             <PageTransition>
-              <IssueReport />{" "}
+              <IssueReport />
             </PageTransition>
           }
         />
@@ -125,7 +133,7 @@ const AnimatedRoutes = () => {
           path="/privacypolicy"
           element={
             <PageTransition>
-              <PrivacyPolicy />{" "}
+              <PrivacyPolicy />
             </PageTransition>
           }
         />
@@ -141,7 +149,7 @@ const AnimatedRoutes = () => {
           path="/termsofservice"
           element={
             <PageTransition>
-              <TermsOfService />{" "}
+              <TermsOfService />
             </PageTransition>
           }
         />
@@ -149,7 +157,7 @@ const AnimatedRoutes = () => {
           path="/issue-report"
           element={
             <PageTransition>
-              <AllIssues />{" "}
+              <AllIssues />
             </PageTransition>
           }
         />
@@ -195,7 +203,6 @@ const AnimatedRoutes = () => {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/bookingOperationpage"
           element={
@@ -206,7 +213,6 @@ const AnimatedRoutes = () => {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/UserManagement"
           element={
@@ -217,7 +223,6 @@ const AnimatedRoutes = () => {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/status-page"
           element={

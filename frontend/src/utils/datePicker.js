@@ -36,7 +36,8 @@ const CustomDatepicker = ({
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const popupRef = useRef(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === "he" ? "rtl" : "ltr";
   const currentTheme = themes[theme] || themes.blue;
 
   // Helper functions

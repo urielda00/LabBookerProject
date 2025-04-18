@@ -2,7 +2,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import Message from "./Error_successMessage";
-
+import { useTranslation } from "react-i18next";
 const VerificationModal = ({
   isOpen,
   email,
@@ -13,8 +13,8 @@ const VerificationModal = ({
   onClose,
   onCancelEmailChange, // New prop for cancel action
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="relative w-full max-w-md">
@@ -32,10 +32,10 @@ const VerificationModal = ({
           {/* Modal Content */}
           <div className="px-6 pb-6 pt-2">
             <h3 className="text-center text-xl font-semibold text-gray-800">
-              Verify Email Change
+              {t("verificationModal.title")}
             </h3>
             <p className="mt-2 text-center text-gray-600">
-              Please enter the verification code sent to:
+              {t("verificationModal.instruction")}
               <span className="block font-medium text-gray-800">{email}</span>
             </p>
 
@@ -73,14 +73,14 @@ const VerificationModal = ({
                 }}
                 className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 rounded-lg shadow-md hover:bg-gray-50 focus:ring-2 focus:ring-green-400 border border-gray-300 transition-all duration-300"
               >
-                Cancel
+                {t("verificationModal.cancel")}
               </button>
               <button
                 type="button"
                 onClick={onConfirm}
                 className="w-full sm:w-auto px-6 py-3 bg-white text-green-500 rounded-lg shadow-md hover:bg-green-500 hover:text-white focus:ring-2 focus:ring-green-400 transition-all duration-300"
               >
-                Verify
+                {t("verificationModal.verify")}
               </button>
             </div>
           </div>
