@@ -383,10 +383,13 @@ const ProfileSettings = () => {
                   <div className="space-y-6 sm:space-y-10">
                     {/* Profile Picture Section */}
                     <div className="space-y-4 sm:space-y-6">
-                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
+                      <h3
+                        dir="rtl"
+                        className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300"
+                      >
                         {t("profileSettings.profilePictureHeader")}
                       </h3>
-                      <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                      <div dir="ltr" className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                         <div className="relative">
                           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600">
                             {editForm.previewUrl ? (
@@ -396,7 +399,7 @@ const ProfileSettings = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 dark:text-gray-300">
+                              <div className="w-full h-full flex items-center  justify-center text-2xl sm:text-3xl font-bold text-gray-400 dark:text-gray-300">
                                 {userInfo.username?.[0]?.toUpperCase()}
                               </div>
                             )}
@@ -421,7 +424,7 @@ const ProfileSettings = () => {
                           </h3>
                           {isEditing && (
                             <>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-gray-500 dark:text-gray-400 rtl:mr-3">
                                 {t("profileSettings.profilePictureHint")}
                               </p>
                               {editForm.previewUrl && (
@@ -441,7 +444,10 @@ const ProfileSettings = () => {
 
                     {/* Profile Information Section */}
                     <div className="space-y-4 sm:space-y-6">
-                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
+                      <h3
+                        dir="rtl"
+                        className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300"
+                      >
                         {t("profileSettings.basicInformationHeader")}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -532,10 +538,9 @@ const ProfileSettings = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end space-x-2 sm:space-x-3">
+                    <div className="flex justify-end space-x-2 sm:space-x-3 rtl:space-x-reverse">
                       {isEditing ? (
                         <>
-                          
                           <button
                             onClick={handleEditToggle}
                             className="px-4 sm:px-6 py-2 sm:py-3 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-400 border border-gray-300 dark:border-gray-600 transition-colors duration-300"
@@ -566,7 +571,10 @@ const ProfileSettings = () => {
 
                 {activeTab === "security" && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
+                    <h3
+                      dir="rtl"
+                      className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2"
+                    >
                       {t("profileSettings.appearanceHeader")}
                     </h3>
                     <div className="bg-white dark:bg-gray-700 rounded-lg p-4 sm:p-6">
@@ -579,7 +587,7 @@ const ProfileSettings = () => {
                             {t("profileSettings.darkModeDescription")}
                           </p>
                         </div>
-                        <div className="inline-flex items-center">
+                        <div dir="ltr" className="inline-flex items-center">
                           <input
                             type="checkbox"
                             className="sr-only peer"
@@ -621,7 +629,10 @@ const ProfileSettings = () => {
                 {activeTab === "notifications" && (
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300">
+                      <h3
+                        dir="rtl"
+                        className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300"
+                      >
                         {t("profileSettings.notificationsHeader")}
                       </h3>
                       <div className="bg-white dark:bg-gray-700 rounded-lg p-4 sm:p-6 transition-colors duration-300">

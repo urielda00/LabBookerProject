@@ -88,7 +88,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
 
       <div className="h-full flex flex-col justify-between">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700" dir="ltr">
           <h2
             className={`text-xl font-bold text-gray-800 transition-opacity dark:text-gray-200 ${
               isExpanded ? "opacity-100" : "opacity-0"
