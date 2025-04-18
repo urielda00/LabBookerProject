@@ -110,6 +110,54 @@
   },
 
   "user": {
+    "errors": {
+      "emailRequired": "Email is required",
+      "userNotFound": "User not found",
+      "sendVerificationFailed": "Failed to send verification code",
+      "emailCodeRequired": "Email and verification code are required",
+      "invalidCode": "Invalid or expired verification code",
+      "verificationFailed": "Verification failed",
+      "resendFailed": "Failed to resend code",
+      "fetchFailed": "Failed to fetch users",
+      "countFailed": "Failed to get user count",
+      "profileFetchFailed": "Failed to fetch profile",
+      "uploadFailed": "File upload failed",
+      "profileUpdateFailed": "Failed to update profile",
+      "emailCheckFailed": "Failed to verify email availability",
+      "emailInvalid": "Invalid email format",
+      "emailInUse": "Email already in use",
+      "initiateEmailChangeFailed": "Failed to initiate email change",
+      "codeRequired": "Verification code required",
+      "noActiveRequest": "No active email change request",
+      "emailNotFound": "Email change request expired",
+      "emailUnavailable": "Email no longer available",
+      "verifyEmailChangeFailed": "Failed to update email",
+      "cancelEmailChangeFailed": "Failed to cancel email change request",
+      "invalidRole": "Invalid role selection",
+      "selfAction": "Cannot perform this action on yourself",
+      "roleUpdateFailed": "Failed to update user role",
+      "blockFailed": "Failed to block user",
+      "unblockFailed": "Failed to unblock user",
+      "deleteFailed": "Failed to delete user"
+    },
+    "success": {
+      "verificationSent": "Verification code sent",
+      "loginSuccess": "Login successful",
+      "resendSuccess": "New verification code sent",
+      "usersFetched": "Users retrieved successfully",
+      "countFetched": "User count retrieved successfully",
+      "profileFetched": "User profile retrieved successfully",
+      "profileUpdated": "Profile updated successfully",
+      "emailChecked": "Email availability verified",
+      "emailChangeInitiated": "Verification code sent to {{email}}",
+      "emailUpdated": "Email updated to {{email}}",
+      "emailChangeCancelled": "Email change request cancelled",
+      "roleUpdated": "User role updated to {{role}}",
+      "accountBlocked": "User blocked until {{date}}",
+      "accountUnblocked": "User unblocked successfully",
+      "userDeleted": "User deleted permanently"
+    },
+
     "notify": {
       "profileUpdated": "Your profile has been updated successfully.",
       "emailChanged": "Your email has been updated successfully.",
@@ -117,6 +165,28 @@
       "roleUpdated": "Your account role has been updated to {{role}}.",
       "accountBlocked": "Your account has been blocked until {{date}}.",
       "accountUnblocked": "Your account has been unblocked."
+    }
+  },
+  "room": {
+    "success": {
+      "fetchedAll": "Rooms fetched successfully",
+      "fetchedSingle": "Room fetched successfully",
+      "created": "Room created successfully",
+      "updated": "Room updated successfully",
+      "deleted": "Room and bookings deleted successfully",
+      "availabilityFetched": "Availability fetched successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch rooms",
+      "notFound": "Room not found",
+      "missingFields": "Missing required fields: name, type, capacity",
+      "missingOriginalName": "Original room name is required",
+      "invalidAmenities": "Invalid amenities format",
+      "uploadFailed": "File upload failed",
+      "createFailed": "Failed to create room",
+      "updateFailed": "Failed to update room",
+      "deleteFailed": "Failed to delete room",
+      "availabilityFailed": "Failed to fetch availability"
     }
   }
 }

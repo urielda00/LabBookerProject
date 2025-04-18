@@ -7,6 +7,8 @@ const cloudinary = require("../utils/cloudinary");
 const fs = require("fs");
 const crypto = require("crypto");
 const { sendVerificationEmail } = require("../utils/emailService");
+const R = require("../utils/response");
+
 
 // Import notifications controller
 const notificationsController = require("../controllers/notificationsController");
@@ -39,11 +41,11 @@ class UserController {
     try {
       const { email } = req.body;
       if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+        return R.send(req, res, 400, "user.errors.emailRequired");
       }
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
       // Generate verification code
       const verificationCode = crypto.randomInt(100000, 999999).toString();
@@ -53,17 +55,17 @@ class UserController {
       user.verificationExpires = codeExpiration;
       await user.save();
       // For testing, return code; remove in production
-      return res.status(200).json({
-        message: "Verification code sent",
-        verificationCode,
-        codeExpiration: codeExpiration.toISOString(),
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.verificationSent",
+        {},
+        { verificationCode, codeExpiration: codeExpiration.toISOString() }
+      );
     } catch (error) {
       console.error("Send verification code error:", error);
-      return res.status(500).json({
-        message: "Failed to send verification code",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.sendVerificationFailed");
     }
   }
 
@@ -72,9 +74,7 @@ class UserController {
     try {
       const { email, verificationCode } = req.body;
       if (!email || !verificationCode) {
-        return res.status(400).json({
-          message: "Email and verification code are required",
-        });
+        return R.send(req, res, 400, "user.errors.emailCodeRequired");
       }
       const user = await User.findOne({
         email,
@@ -82,9 +82,7 @@ class UserController {
         verificationExpires: { $gt: new Date() },
       });
       if (!user) {
-        return res.status(401).json({
-          message: "Invalid or expired verification code",
-        });
+        return R.send(req, res, 401, "user.errors.invalidCode");
       }
       // Clear verification code and expiration
       user.verificationCode = null;
@@ -93,24 +91,27 @@ class UserController {
       // Generate tokens
       const { accessToken, refreshToken } =
         await authMiddleware.generateTokens(user);
-      return res.status(200).json({
-        message: "Login successful",
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-        },
-        accessToken,
-        refreshToken,
-      });
-    } catch (error) {
-      console.error("Verify code error:", error);
-      return res.status(500).json({
-        message: "Verification failed",
-        error: error.message,
-      });
-    }
+        return R.send(
+          req,
+          res,
+          200,
+          "user.success.loginSuccess",
+          {},
+          {
+            user: {
+              id: user._id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+            },
+            accessToken,
+            refreshToken,
+          }
+        );
+      } catch (error) {
+        console.error("Verify code error:", error);
+        return R.send(req, res, 500, "user.errors.verificationFailed");
+      }
   }
 
   // Resend verification code
@@ -118,11 +119,11 @@ class UserController {
     try {
       const { email } = req.body;
       if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+        return R.send(req, res, 400, "user.errors.emailRequired");
       }
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
       // Generate new verification code
       const verificationCode = crypto.randomInt(100000, 999999).toString();
@@ -130,17 +131,17 @@ class UserController {
       user.verificationCode = verificationCode;
       user.verificationExpires = codeExpiration;
       await user.save();
-      return res.status(200).json({
-        message: "New verification code sent",
-        verificationCode, // Remove in production
-        codeExpiration: codeExpiration.toISOString(),
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.resendSuccess",
+        {},
+        { verificationCode, codeExpiration: codeExpiration.toISOString() }
+      );
     } catch (error) {
       console.error("Resend code error:", error);
-      return res.status(500).json({
-        message: "Failed to resend code",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.resendFailed");
     }
   }
 
@@ -150,27 +151,35 @@ class UserController {
       const users = await User.find().select(
         "-verificationCode -verificationExpires",
       );
-      return res.status(200).json(users);
-    } catch (error) {
-      console.error("Fetch users error:", error);
-      return res.status(500).json({
-        message: "Failed to fetch users",
-        error: error.message,
-      });
-    }
+       return R.send(
+      req,
+      res,
+      200,
+      "user.success.usersFetched",
+      {},
+      { users }
+    );
+  } catch (error) {
+    console.error("Fetch users error:", error);
+    return R.send(req, res, 500, "user.errors.fetchFailed");
+  }
   }
 
   // Get user count
   async getUserCount(req, res) {
     try {
       const count = await User.countDocuments();
-      return res.status(200).json({ count });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.countFetched",
+        {},
+        { count }
+      );
     } catch (error) {
       console.error("Get user count error:", error);
-      return res.status(500).json({
-        message: "Failed to get user count",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.countFailed");
     }
   }
 
@@ -181,15 +190,13 @@ class UserController {
         "-verificationCode -verificationExpires",
       );
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
       return res.status(200).json(user);
+
     } catch (error) {
       console.error("Get profile error:", error);
-      return res.status(500).json({
-        message: "Failed to get profile",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.profileFetchFailed");
     }
   }
 
@@ -199,7 +206,7 @@ class UserController {
       uploadMulter(req, res, async (err) => {
         if (err) {
           console.error("Error uploading file:", err.message);
-          return res.status(500).json({ message: "Failed to upload file" });
+          return R.send(req, res, 500, "user.errors.uploadFailed");
         }
         try {
           const { name, removeImage } = req.body; // parse removeImage from form data
@@ -279,16 +286,18 @@ class UserController {
           delete updatedUser.verificationExpires;
           delete updatedUser.emailChangeRequest;
 
-          return res.status(200).json({
-            message: "Profile updated successfully",
-            user: updatedUser,
-          });
+          return R.send(
+            req,
+            res,
+            200,
+            "user.success.profileUpdated",
+            {},
+            { user: updatedUser }
+          );
+  
         } catch (error) {
-          console.error("Update profile error:", error);
-          return res.status(500).json({
-            message: "Failed to update profile",
-            error: error.message,
-          });
+          console.error("Update error:", error);
+          return R.send(req, res, 500, "user.errors.profileUpdateFailed");
         }
       });
     });
@@ -299,21 +308,23 @@ class UserController {
     try {
       const { email } = req.body;
       if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+        return R.send(req, res, 400, "user.errors.emailRequired");
       }
       const existingUser = await User.findOne({
         email,
         _id: { $ne: req.user._id }, // Exclude current user
       });
-      return res.status(200).json({
-        available: !existingUser,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.emailChecked",
+        {},
+        { available: !existingUser }
+      );
     } catch (error) {
-      console.error("Check email availability error:", error);
-      return res.status(500).json({
-        message: "Failed to check email availability",
-        error: error.message,
-      });
+      console.error("Check email error:", error);
+      return R.send(req, res, 500, "user.errors.emailCheckFailed");
     }
   }
 
@@ -323,23 +334,24 @@ class UserController {
       const { newEmail } = req.body;
       const userId = req.user._id;
       if (!newEmail) {
-        return res.status(400).json({ message: "New email is required" });
+        return R.send(req, res, 400, "user.errors.emailRequired");
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(newEmail)) {
-        return res.status(400).json({ message: "Invalid email format" });
+        return R.send(req, res, 400, "user.errors.emailInvalid");
       }
       const existingUser = await User.findOne({
         email: newEmail.toLowerCase(),
         _id: { $ne: userId },
       });
       if (existingUser) {
-        return res.status(409).json({ message: "Email already in use" });
+        return R.send(req, res, 409, "user.errors.emailInUse");
       }
       const verificationCode = Math.floor(
         100000 + Math.random() * 900000,
       ).toString();
       const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
+      console.log(verificationCode);
       // Store temporarily in Redis
       await redisClient.set(
         `changeEmail:${userId}`,
@@ -362,15 +374,17 @@ class UserController {
       };
       await user.save();
       await sendVerificationEmail(req.user.email, verificationCode);
-      return res.status(200).json({
-        message: "Verification code sent to your current email address",
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.emailChangeInitiated",
+        { email: newEmail }
+      );
+  
     } catch (error) {
       console.error("initiateEmailChange error:", error);
-      return res.status(500).json({
-        message: "Failed to initiate email change",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.initiateEmailChangeFailed");
     }
   }
 
@@ -380,31 +394,28 @@ class UserController {
       const { verificationCode } = req.body;
       const userId = req.user._id;
       if (!verificationCode) {
-        return res
-          .status(400)
-          .json({ message: "Verification code is required" });
+        return R.send(req, res, 400, "user.errors.codeRequired");
+
       }
       // Retrieve code from Redis
       const storedCode = await redisClient.get(`changeEmail:${userId}`);
       if (!storedCode) {
-        return res
-          .status(400)
-          .json({ message: "No active email change request or code expired" });
+        return R.send(req, res, 400, "user.errors.noActiveRequest");
+
       }
       if (storedCode !== verificationCode) {
-        return res.status(400).json({ message: "Invalid verification code" });
+        return R.send(req, res, 400, "user.errors.invalidCode");
       }
       const pendingNewEmail = await redisClient.get(
         `changeEmail:newEmail:${userId}`,
       );
       if (!pendingNewEmail) {
-        return res.status(400).json({
-          message: "Could not find pending new email. Please try again.",
-        });
+        return R.send(req, res, 400, "user.errors.emailNotFound");
+
       }
       const user = await User.findById(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
       // Optional: Check if the new email is still available
       const emailInUse = await User.findOne({
@@ -412,9 +423,8 @@ class UserController {
         _id: { $ne: userId },
       });
       if (emailInUse) {
-        return res
-          .status(409)
-          .json({ message: "This email is no longer available" });
+        return R.send(req, res, 409, "user.errors.emailUnavailable");
+
       }
       // Update user's email and clear the pending request
       user.email = pendingNewEmail.toLowerCase();
@@ -438,20 +448,24 @@ class UserController {
           notificationError.message,
         );
       }
-      return res.status(200).json({
-        message: "Email updated successfully",
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-        },
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.emailUpdated",
+        { email: pendingNewEmail },
+        {
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+          }
+        }
+      );
+  
     } catch (error) {
       console.error("verifyEmailChange error:", error);
-      return res.status(500).json({
-        message: "Failed to verify email change",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.verifyEmailChangeFailed");
     }
   }
 
@@ -461,7 +475,7 @@ class UserController {
       const userId = req.user._id;
       const user = await User.findById(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
       user.emailChangeRequest = null;
       await user.save();
@@ -482,16 +496,12 @@ class UserController {
           notificationError.message,
         );
       }
-      return res
-        .status(200)
-        .json({ message: "Email change request cancelled." });
-    } catch (error) {
-      console.error("cancelEmailChange error:", error);
-      return res.status(500).json({
-        message: "Failed to cancel email change request",
-        error: error.message,
-      });
-    }
+      return R.send(req, res, 200, "user.success.emailChangeCancelled");
+
+  } catch (error) {
+    console.error("cancelEmailChange error:", error);
+    return R.send(req, res, 500, "user.errors.cancelEmailChangeFailed");
+  }
   }
 
   // Admin: Get all users with filters
@@ -522,19 +532,24 @@ class UserController {
       const result = await User.paginate(query, options);
 
       // Transform the result to match frontend expectations
-      return res.status(200).json({
-        docs: result.docs,
-        total: result.totalDocs,
-        limit: result.limit,
-        page: result.page,
-        totalPages: result.totalPages,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.usersFetched",
+        {},
+        {
+          docs: result.docs,
+          total: result.totalDocs,
+          limit: result.limit,
+          page: result.page,
+          totalPages: result.totalPages
+        }
+      );
+  
     } catch (error) {
       console.error("Get all users error:", error);
-      return res.status(500).json({
-        message: "Failed to fetch users",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.fetchFailed");
     }
   }
 
@@ -545,11 +560,11 @@ class UserController {
       const { role } = req.body;
 
       if (!["user", "admin", "manager"].includes(role)) {
-        return res.status(400).json({ message: "Invalid role" });
+        return R.send(req, res, 400, "user.errors.invalidRole");
       }
 
       if (userId === req.user._id.toString()) {
-        return res.status(400).json({ message: "Cannot modify your own role" });
+        return R.send(req, res, 400, "user.errors.selfAction");
       }
 
       const user = await User.findByIdAndUpdate(
@@ -559,7 +574,7 @@ class UserController {
       ).select("-verificationCode -verificationExpires");
 
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return R.send(req, res, 404, "user.errors.userNotFound");
       }
 
       // Create notification
@@ -571,13 +586,17 @@ class UserController {
       );
       
 
-      return res.status(200).json(user);
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.roleUpdated",
+        { role },
+        { user }
+      );
     } catch (error) {
       console.error("Update role error:", error);
-      return res.status(500).json({
-        message: "Failed to update role",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.roleUpdateFailed");
     }
   }
 
@@ -588,13 +607,13 @@ class UserController {
       const { blockDuration } = req.body; // in hours
 
       if (userId === req.user._id.toString()) {
-        return res.status(400).json({ message: "Cannot block yourself" });
+        return R.send(req, res, 400, "user.errors.selfAction");
       }
 
       const user = await User.findById(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+        return R.send(req, res, 404, "user.errors.userNotFound");
+            }
 
       const blockUntil = new Date(Date.now() + blockDuration * 60 * 60 * 1000);
       user.cancellationStats.blockedUntil = blockUntil;
@@ -609,16 +628,16 @@ class UserController {
       );
       
 
-      return res.status(200).json({
-        message: "User blocked successfully",
-        blockedUntil: blockUntil,
-      });
+      return R.send(
+        req,
+        res,
+        200,
+        "user.success.accountBlocked",
+        { date: blockUntil.toLocaleDateString("en-IL") }
+      );
     } catch (error) {
       console.error("Block user error:", error);
-      return res.status(500).json({
-        message: "Failed to block user",
-        error: error.message,
-      });
+      return R.send(req, res, 500, "user.errors.blockFailed");
     }
   }
 
@@ -629,8 +648,7 @@ class UserController {
       const user = await User.findById(userId);
 
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+        return R.send(req, res, 404, "user.errors.userNotFound");      }
 
       user.cancellationStats.blockedUntil = null;
       await user.save();
@@ -644,15 +662,13 @@ class UserController {
       );
       
 
-      return res.status(200).json({ message: "User unblocked successfully" });
-    } catch (error) {
-      console.error("Unblock user error:", error);
-      return res.status(500).json({
-        message: "Failed to unblock user",
-        error: error.message,
-      });
-    }
+      return R.send(req, res, 200, "user.success.accountUnblocked");
+  } catch (error) {
+    console.error("Unblock user error:", error);
+    return R.send(req, res, 500, "user.errors.unblockFailed");
   }
+}
+  
 
   // Admin: Delete user
   async deleteUser(req, res) {
@@ -660,22 +676,19 @@ class UserController {
       const { userId } = req.params;
 
       if (userId === req.user._id.toString()) {
-        return res.status(400).json({ message: "Cannot delete yourself" });
+        return R.send(req, res, 400, "user.errors.selfAction");
       }
 
       const user = await User.findByIdAndDelete(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+        return R.send(req, res, 404, "user.errors.userNotFound");
+            }
 
-      return res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
-      console.error("Delete user error:", error);
-      return res.status(500).json({
-        message: "Failed to delete user",
-        error: error.message,
-      });
-    }
+            return R.send(req, res, 200, "user.success.userDeleted");
+          } catch (error) {
+            console.error("Delete user error:", error);
+            return R.send(req, res, 500, "user.errors.deleteFailed");
+          }
   }
 }
 

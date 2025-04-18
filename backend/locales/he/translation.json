@@ -110,6 +110,53 @@
   },
 
   "user": {
+    "errors": {
+      "emailRequired": "נדרש אימייל",
+      "userNotFound": "המשתמש לא נמצא",
+      "sendVerificationFailed": "שליחת קוד אימות נכשלה",
+      "emailCodeRequired": "נדרשים אימייל וקוד אימות",
+      "invalidCode": "קוד אימות לא תקין או שפג תוקפו",
+      "verificationFailed": "אימות נכשל",
+      "resendFailed": "שליחת קוד מחדש נכשלה",
+      "fetchFailed": "טעינת המשתמשים נכשלה",
+      "countFailed": "טעינת ספירת המשתמשים נכשלה",
+      "profileFetchFailed": "טעינת הפרופיל נכשלה",
+      "uploadFailed": "העלאת הקובץ נכשלה",
+      "profileUpdateFailed": "עדכון הפרופיל נכשל",
+      "emailCheckFailed": "אימות זמינות האימייל נכשל",
+      "emailInvalid": "פורמט אימייל לא תקין",
+      "emailInUse": "אימייל כבר נמצא בשימוש",
+      "initiateEmailChangeFailed": "התחלת שינוי האימייל נכשלה",
+      "codeRequired": "נדרש קוד אימות",
+      "noActiveRequest": "אין בקשת שינוי אימייל פעילה",
+      "emailNotFound": "בקשת שינוי האימייל פגה",
+      "emailUnavailable": "האימייל כבר לא זמין",
+      "verifyEmailChangeFailed": "עדכון האימייל נכשל",
+      "cancelEmailChangeFailed": "ביטול בקשת שינוי האימייל נכשל",
+      "invalidRole": "בחירת תפקיד לא תקינה",
+      "selfAction": "לא ניתן לבצע פעולה זו על עצמך",
+      "roleUpdateFailed": "עדכון תפקיד המשתמש נכשל",
+      "blockFailed": "חסימת המשתמש נכשלה",
+      "unblockFailed": "ביטול החסימה נכשל",
+      "deleteFailed": "מחיקת המשתמש נכשלה"
+    },
+    "success": {
+      "verificationSent": "קוד אימות נשלח",
+      "loginSuccess": "התחברות בוצעה בהצלחה",
+      "resendSuccess": "קוד אימות חדש נשלח",
+      "usersFetched": "המשתמשים נטענו בהצלחה",
+      "countFetched": "ספירת המשתמשים נטענה בהצלחה",
+      "profileFetched": "פרופיל המשתמש נטען בהצלחה",
+      "profileUpdated": "הפרופיל עודכן בהצלחה",
+      "emailChecked": "זמינות אימייל אומתה",
+      "emailChangeInitiated": "קוד אימות נשלח ל־{{email}}",
+      "emailUpdated": "האימייל עודכן ל־{{email}}",
+      "emailChangeCancelled": "בקשת שינוי האימייל בוטלה",
+      "roleUpdated": "תפקיד המשתמש עודכן ל־{{role}}",
+      "accountBlocked": "המשתמש נחסם עד {{date}}",
+      "accountUnblocked": "החסימה בוטלה בהצלחה",
+      "userDeleted": "המשתמש נמחק לצמיתות"
+    },
     "notify": {
       "profileUpdated": "הפרופיל שלך עודכן בהצלחה.",
       "emailChanged": "כתובת האימייל שלך עודכנה בהצלחה.",
@@ -117,6 +164,28 @@
       "roleUpdated": "תפקיד החשבון שלך עודכן ל{{role}}.",
       "accountBlocked": "החשבון שלך נחסם עד לתאריך {{date}}.",
       "accountUnblocked": "החשבון שלך הוסר מהחסימה."
+    }
+  },
+  "room": {
+    "success": {
+      "fetchedAll": "החדרים נטענו בהצלחה",
+      "fetchedSingle": "החדר נטען בהצלחה",
+      "created": "החדר נוצר בהצלחה",
+      "updated": "החדר עודכן בהצלחה",
+      "deleted": "החדר וההזמנות נמחקו בהצלחה",
+      "availabilityFetched": "זמינות החדר נטענה בהצלחה"
+    },
+    "errors": {
+      "fetchFailed": "טעינת חדרים נכשלה",
+      "notFound": "החדר לא נמצא",
+      "missingFields": "חסרים שדות חובה: שם, סוג, קיבולת",
+      "missingOriginalName": "נדרש שם חדר מקורי",
+      "invalidAmenities": "פורמט שירותים לא תקין",
+      "uploadFailed": "העלאת קובץ נכשלה",
+      "createFailed": "יצירת חדר נכשלה",
+      "updateFailed": "עדכון חדר נכשלה",
+      "deleteFailed": "מחיקת חדר נכשלה",
+      "availabilityFailed": "טעינת זמינות נכשלה"
     }
   }
 }
