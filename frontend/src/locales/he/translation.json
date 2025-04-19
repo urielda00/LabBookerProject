@@ -1,4 +1,78 @@
 {
+  "common": {
+    "labBooker": "לאבבוקר",
+    "collegeName": "המכללה האקדמית להנדסה עזריאלי"
+  },
+  "signup": {
+    "createAccount": "צור חשבון",
+    "fillDetails": "מלא את הפרטים שלך כדי להתחיל",
+    "username": "שם משתמש",
+    "name": "שם מלא",
+    "email": "אימייל",
+    "usernamePlaceholder": "הכנס שם משתמש",
+    "namePlaceholder": "הכנס את שמך המלא",
+    "emailPlaceholder": "הכנס את כתובת האימייל שלך",
+    "continue": "המשך",
+    "verifyEmail": "אמת את כתובת האימייל",
+    "codeSentTo": "הכנס את הקוד שנשלח לכתובת",
+    "verificationCode": "קוד אימות",
+    "verificationCodePlaceholder": "הכנס קוד בן 6 ספרות",
+    "verify": "אמת",
+    "backToDetails": "← חזרה לפרטים",
+    "alreadyHaveAccount": "כבר יש לך חשבון?",
+    "login": "התחבר",
+    "errors": {
+      "invalidEmail": "אנא הזן כתובת אימייל תקינה",
+      "invalidCode": "קוד אימות שגוי",
+      "unexpected": "אירעה שגיאה"
+    }
+  },
+  "login": {
+    "welcomeBack": "ברוך שובך",
+    "signInToAccount": "התחבר לחשבונך",
+    "emailLabel": "אימייל",
+    "emailPlaceholder": "הכנס את כתובת האימייל שלך",
+    "continue": "המשך",
+    "enterVerificationCode": "הכנס את קוד האימות",
+    "codeSentTo": "הכנס את הקוד שנשלח לכתובת",
+    "codeLabel": "קוד אימות",
+    "codePlaceholder": "הכנס קוד בן 6 ספרות",
+    "verify": "אמת",
+    "backToEmail": "← חזרה לאימייל",
+    "resendCode": "שלח קוד שוב",
+    "resendCodeIn": "שלח קוד שוב בעוד {{seconds}} שניות",
+    "newCodeSent": "נשלח קוד אימות חדש!",
+    "dontHaveAccount": "אין לך חשבון?",
+    "signup": "הירשם",
+    "errors": {
+      "invalidCode": "קוד אימות שגוי",
+      "emailNotFound": "האימייל לא נמצא",
+      "tooManyAttempts": "יותר מדי ניסיונות. אנא נסה שוב מאוחר יותר",
+      "network": "שגיאת רשת. בדוק את החיבור שלך",
+      "unexpected": "אירעה שגיאה בלתי צפויה",
+      "invalidEmailFormat": "אנא הזן כתובת אימייל חוקית"
+    }
+  },
+  "hero": {
+    "headline": "מהפכה בחדרי הלימוד",
+    "description": "פשט את תהליך הזמנת חדרי המעבדה באמצעות פלטפורמה אינטואיטיבית שנבנתה במיוחד לסטודנטים של עזריאלי – מכללה אקדמית להנדסה.",
+    "createAccount": "צור חשבון",
+    "login": "התחבר",
+    "features": {
+      "easyBooking": {
+        "title": "הזמנה קלה",
+        "description": "הזמנת חדרים בלחיצת כפתור"
+      },
+      "collaborativeSpaces": {
+        "title": "מרחבים לשיתוף פעולה",
+        "description": "מצא את סביבת הלמידה המושלמת עבורך"
+      },
+      "secureAccess": {
+        "title": "גישה מאובטחת",
+        "description": "ניהול חדרים מאומת ומבוקר"
+      }
+    }
+  },
   "homepage": {
     "welcome": "ברוך הבא, {{username}}",
     "description": "נהל את הזמנת המעבדה שלך וגלה חדרים זמינים עם עדכוני מצב בזמן אמת.",

@@ -1,14 +1,10 @@
-// SignUpPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../utils/axiosConfig";
-
-// Import assets
 import collegeLogoWhite from "../assets/collegeLogoWhite.png";
 
-
-
-// FormInput Component (same as LoginPage)
+// Reusable Input
 const FormInput = ({
   label,
   type = "text",
@@ -47,7 +43,6 @@ const FormInput = ({
   );
 };
 
-// ErrorMessage Component (same as LoginPage)
 const ErrorMessage = ({ message, onClose, className }) => {
   if (!message) return null;
 
@@ -68,26 +63,18 @@ const ErrorMessage = ({ message, onClose, className }) => {
   );
 };
 
-// AuthButton Component (same as LoginPage)
 const AuthButton = ({ isSubmitting, label, className }) => {
   return (
     <button
       type="submit"
       disabled={isSubmitting}
-      className={`
-        w-full flex justify-center items-center px-4 py-3 rounded-lg
-        text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 
-        focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
-        ${className}
-      `}
+      className={`w-full flex justify-center items-center px-4 py-3 rounded-lg text-white font-medium 
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+      disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-700 
+      transition-all duration-300 transform hover:-translate-y-0.5 ${className}`}
     >
       {isSubmitting ? (
-        <svg
-          className="animate-spin h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
           <circle
             className="opacity-25"
             cx="12"
@@ -95,12 +82,12 @@ const AuthButton = ({ isSubmitting, label, className }) => {
             r="10"
             stroke="currentColor"
             strokeWidth="4"
-          ></circle>
+          />
           <path
             className="opacity-75"
             fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
         </svg>
       ) : (
         label
@@ -111,6 +98,8 @@ const AuthButton = ({ isSubmitting, label, className }) => {
 
 const SignUpPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
   const [stage, setStage] = useState("details");
   const [formData, setFormData] = useState({
     username: "",
@@ -136,7 +125,7 @@ const SignUpPage = () => {
     try {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        setGeneralError("Please enter a valid email address");
+        setGeneralError(t("signup.errors.invalidEmail"));
         return;
       }
 
@@ -149,7 +138,9 @@ const SignUpPage = () => {
       setStage("verification");
       setGeneralError("");
     } catch (error) {
-      setGeneralError(error.response?.data?.message || "An error occurred");
+      setGeneralError(
+        error.response?.data?.message || t("signup.errors.unexpected")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -168,7 +159,7 @@ const SignUpPage = () => {
       navigate("/login");
     } catch (error) {
       setGeneralError(
-        error.response?.data?.message || "Invalid verification code",
+        error.response?.data?.message || t("signup.errors.invalidCode")
       );
     } finally {
       setIsSubmitting(false);
@@ -179,44 +170,38 @@ const SignUpPage = () => {
     <form onSubmit={handleDetailsSubmit} className="space-y-6">
       <div className="text-center">
         <h2 className="text-xl text-white font-semibold mb-2">
-          Create Account
+          {t("signup.createAccount")}
         </h2>
-        <p className="text-gray-400 text-sm">
-          Fill in your details to get started
-        </p>
+        <p className="text-gray-400 text-sm">{t("signup.fillDetails")}</p>
       </div>
 
       <FormInput
         name="username"
-        label="Username"
+        label={t("signup.username")}
         value={formData.username}
         onChange={handleChange}
         error={errors.username}
-        placeholder="Enter your username"
+        placeholder={t("signup.usernamePlaceholder")}
       />
       <FormInput
         name="name"
-        label="Full Name"
+        label={t("signup.name")}
         value={formData.name}
         onChange={handleChange}
         error={errors.name}
-        placeholder="Enter your full name"
+        placeholder={t("signup.namePlaceholder")}
       />
       <FormInput
         name="email"
-        label="Email"
+        label={t("signup.email")}
         type="email"
         value={formData.email}
         onChange={handleChange}
         error={errors.email}
-        placeholder="Enter your email"
+        placeholder={t("signup.emailPlaceholder")}
       />
 
-      <AuthButton
-        isSubmitting={isSubmitting}
-        label="Continue"
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all duration-300 transform hover:-translate-y-0.5"
-      />
+      <AuthButton isSubmitting={isSubmitting} label={t("signup.continue")} />
 
       {generalError && (
         <ErrorMessage
@@ -231,10 +216,10 @@ const SignUpPage = () => {
     <form onSubmit={handleVerificationSubmit} className="space-y-6">
       <div className="text-center">
         <h2 className="text-xl text-white font-semibold mb-2">
-          Verify Your Email
+          {t("signup.verifyEmail")}
         </h2>
         <p className="text-gray-400 text-sm">
-          Enter the code sent to
+          {t("signup.codeSentTo")}
           <br />
           <span className="font-medium text-gray-300">{formData.email}</span>
         </p>
@@ -242,28 +227,24 @@ const SignUpPage = () => {
 
       <FormInput
         name="verificationCode"
-        label="Verification Code"
+        label={t("signup.verificationCode")}
         value={formData.verificationCode}
         onChange={handleChange}
         error={errors.verificationCode}
-        placeholder="Enter 6-digit code"
+        placeholder={t("signup.verificationCodePlaceholder")}
         maxLength={6}
         className="text-center tracking-widest text-lg"
       />
 
       <div className="space-y-4">
-        <AuthButton
-          isSubmitting={isSubmitting}
-          label="Verify"
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all duration-300 transform hover:-translate-y-0.5"
-        />
+        <AuthButton isSubmitting={isSubmitting} label={t("signup.verify")} />
 
         <button
           type="button"
           className="text-sm text-gray-400 hover:text-white transition-colors duration-300 block mx-auto"
           onClick={() => setStage("details")}
         >
-          ← Back to Details
+          {t("signup.backToDetails")}
         </button>
 
         {generalError && (
@@ -279,8 +260,7 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-center space-x-3 mb-8">
+        <div dir="ltr" className="flex items-center justify-center space-x-3 mb-8">
           <img
             className="w-16 md:w-20 h-auto object-contain drop-shadow-xl"
             src={collegeLogoWhite}
@@ -291,25 +271,23 @@ const SignUpPage = () => {
               LabBooker
             </h4>
             <p className="text-xs md:text-sm text-gray-400">
-              Azrieli College of Engineering
-            </p>
+              {t("common.collegeName")}
+            </p>{" "}
           </div>
         </div>
 
-        {/* Form Container */}
         <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl shadow-2xl px-4 py-8 sm:px-10">
           {stage === "details" ? renderDetailsForm() : renderVerificationForm()}
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-gray-400">
-            Already have an account?{" "}
+            {t("signup.alreadyHaveAccount")}{" "}
             <button
               onClick={() => navigate("/login")}
               className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-300"
             >
-              Log in
+              {t("signup.login")}
             </button>
           </p>
         </div>

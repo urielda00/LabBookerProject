@@ -1,4 +1,78 @@
 {
+  "common": {
+    "labBooker": "LabBooker",
+    "collegeName": "Azrieli College of Engineering"
+  },
+  "signup": {
+    "createAccount": "Create Account",
+    "fillDetails": "Fill in your details to get started",
+    "username": "Username",
+    "name": "Full Name",
+    "email": "Email",
+    "usernamePlaceholder": "Enter your username",
+    "namePlaceholder": "Enter your full name",
+    "emailPlaceholder": "Enter your email",
+    "continue": "Continue",
+    "verifyEmail": "Verify Your Email",
+    "codeSentTo": "Enter the code sent to",
+    "verificationCode": "Verification Code",
+    "verificationCodePlaceholder": "Enter 6-digit code",
+    "verify": "Verify",
+    "backToDetails": "← Back to Details",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Log in",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "invalidCode": "Invalid verification code",
+      "unexpected": "An error occurred"
+    }
+  },
+  "login": {
+    "welcomeBack": "Welcome Back",
+    "signInToAccount": "Sign in to your account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "continue": "Continue",
+    "enterVerificationCode": "Enter Verification Code",
+    "codeSentTo": "Enter the code sent to",
+    "codeLabel": "Verification Code",
+    "codePlaceholder": "Enter 6-digit code",
+    "verify": "Verify",
+    "backToEmail": "← Back to Email",
+    "resendCode": "Resend code",
+    "resendCodeIn": "Resend code in {{seconds}}s",
+    "newCodeSent": "New verification code sent!",
+    "dontHaveAccount": "Don't have an account?",
+    "signup": "Sign up",
+    "errors": {
+      "invalidCode": "Invalid verification code",
+      "emailNotFound": "Email not found",
+      "tooManyAttempts": "Too many attempts. Please try again later",
+      "network": "Network error. Please check your connection.",
+      "unexpected": "An unexpected error occurred",
+      "invalidEmailFormat": "Please enter a valid email address"
+    }
+  },
+  "hero": {
+    "headline": "Revolutionizing Study Spaces",
+    "description": "Simplify your lab room booking experience with our intuitive platform designed for Azrieli College of Engineering students.",
+    "createAccount": "Create Account",
+    "login": "Login",
+    "features": {
+      "easyBooking": {
+        "title": "Easy Booking",
+        "description": "Seamless room reservation in just a few clicks"
+      },
+      "collaborativeSpaces": {
+        "title": "Collaborative Spaces",
+        "description": "Find the perfect study environment"
+      },
+      "secureAccess": {
+        "title": "Secure Access",
+        "description": "Verified and controlled room management"
+      }
+    }
+  },
   "homepage": {
     "welcome": "Welcome, {{username}}",
     "description": "Manage your lab bookings and explore available rooms with real-time status updates.",

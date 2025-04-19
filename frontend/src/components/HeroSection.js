@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BookOpen, Users, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
 import collegeLogoPNG from "../assets/collegeLogoWhite.png";
 import collegeLogoPNG2x from "../assets/collegeLogoWhite@2x.png";
 import collegeLogoWEBP from "../assets/collegeLogoWhite.webp";
@@ -10,27 +12,28 @@ import Header from "../assets/header-bg.jpg";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const features = [
     {
       icon: <BookOpen />,
-      title: "Easy Booking",
-      description: "Seamless room reservation in just a few clicks",
+      title: t("hero.features.easyBooking.title"),
+      description: t("hero.features.easyBooking.description"),
     },
     {
       icon: <Users />,
-      title: "Collaborative Spaces",
-      description: "Find the perfect study environment",
+      title: t("hero.features.collaborativeSpaces.title"),
+      description: t("hero.features.collaborativeSpaces.description"),
     },
     {
       icon: <Shield />,
-      title: "Secure Access",
-      description: "Verified and controlled room management",
+      title: t("hero.features.secureAccess.title"),
+      description: t("hero.features.secureAccess.description"),
     },
   ];
 
   return (
-    <div
+    <div dir ="ltr"
       className="relative min-h-screen w-full flex items-center justify-center bg-cover bg-center pt-16"
       style={{ backgroundImage: `url(${Header})` }}
     >
@@ -38,9 +41,8 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" />
 
       <div className="relative z-10 container mx-auto px-4 md:px-8 lg:px-16 h-full flex flex-col items-center justify-between">
-        {/* Content container */}
         <div className="grid md:grid-cols-2 gap-12 items-center w-full">
-          {/* Left Column - Content */}
+          {/* Left Column */}
           <div className="text-white text-left">
             <motion.h1
               initial={{ opacity: 0, y: 50 }}
@@ -48,7 +50,7 @@ const HeroSection = () => {
               transition={{ duration: 0.7 }}
               className="text-xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6"
             >
-              Revolutionizing Study Spaces
+              {t("hero.headline")}
             </motion.h1>
 
             <motion.p
@@ -57,8 +59,7 @@ const HeroSection = () => {
               transition={{ duration: 0.7, delay: 0.3 }}
               className="text-base md:text-xl mb-6 md:mb-8 text-grayLight max-w-[500px]"
             >
-              Simplify your lab room booking experience with our intuitive
-              platform designed for Azrieli College of Engineering students.
+              {t("hero.description")}
             </motion.p>
 
             <motion.div
@@ -72,19 +73,19 @@ const HeroSection = () => {
                 className="w-full sm:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-primaryToRight text-sm md:text-base text-white rounded-lg font-semibold hover:bg-gradient-primaryToLeft transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
               >
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-                Create Account
+                {t("hero.createAccount")}
               </button>
               <button
                 onClick={() => navigate("/login")}
                 className="w-full sm:w-auto px-4 py-2.5 md:px-6 md:py-3 border border-white text-sm md:text-base text-white rounded-lg font-semibold hover:bg-white hover:text-grayDark transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
               >
                 <Shield className="w-4 h-4 md:w-5 md:h-5" />
-                Login
+                {t("hero.login")}
               </button>
             </motion.div>
           </div>
 
-          {/* Right Column - Features */}
+          {/* Right Column */}
           <div className="grid grid-cols-1 gap-4 md:gap-6">
             {features.map((feature, index) => (
               <motion.div
@@ -110,51 +111,42 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* College Logo - Simplified Hover */}
+        {/* College Logo */}
         <div className="w-full flex justify-center mt-8">
-  <div className="relative 
-    w-32 h-32      // 128px - Mobile
-    sm:w-40 sm:h-40  // 160px - Small screens
-    md:w-48 md:h-48  // 192px - Medium screens
-    lg:w-56 lg:h-56  // 224px - Large screens
-    xl:w-64 xl:h-64  // 256px - Extra large
-    overflow-visible
-  ">
-    <picture>
-      <source 
-        srcSet={`${collegeLogoWEBP} 512w, ${collegeLogoWEBP2x} 1024w`}
-        type="image/webp" 
-        sizes="(max-width: 640px) 128px,
-               (max-width: 768px) 160px,
-               (max-width: 1024px) 192px,
-               256px"
-      />
-      <source 
-        srcSet={`${collegeLogoPNG} 512w, ${collegeLogoPNG2x} 1024w`}
-        type="image/png"
-        sizes="(max-width: 640px) 128px,
-               (max-width: 768px) 160px,
-               (max-width: 1024px) 192px,
-               256px"
-      />
-      <img
-        src={collegeLogoPNG}
-        alt="Azrieli College Logo"
-        className="w-full h-full object-contain opacity-90 hover:opacity-100 
-                   transform-gpu origin-center transition-all duration-300 
-                   hover:scale-105 cursor-pointer"
-        style={{
-          imageRendering: 'crisp-edges',
-          filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))',
-          willChange: 'transform, opacity'
-        }}
-        loading="eager"
-        width="512"
-        height="512"
-      />
-    </picture>
-  </div>
-</div>
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 overflow-visible">
+            <picture>
+              <source
+                srcSet={`${collegeLogoWEBP} 512w, ${collegeLogoWEBP2x} 1024w`}
+                type="image/webp"
+                sizes="(max-width: 640px) 128px,
+                       (max-width: 768px) 160px,
+                       (max-width: 1024px) 192px,
+                       256px"
+              />
+              <source
+                srcSet={`${collegeLogoPNG} 512w, ${collegeLogoPNG2x} 1024w`}
+                type="image/png"
+                sizes="(max-width: 640px) 128px,
+                       (max-width: 768px) 160px,
+                       (max-width: 1024px) 192px,
+                       256px"
+              />
+              <img
+                src={collegeLogoPNG}
+                alt="Azrieli College Logo"
+                className="w-full h-full object-contain opacity-90 hover:opacity-100 transform-gpu origin-center transition-all duration-300 hover:scale-105 cursor-pointer"
+                style={{
+                  imageRendering: "crisp-edges",
+                  filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.15))",
+                  willChange: "transform, opacity",
+                }}
+                loading="eager"
+                width="512"
+                height="512"
+              />
+            </picture>
+          </div>
+        </div>
       </div>
     </div>
   );
