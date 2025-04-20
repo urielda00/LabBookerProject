@@ -400,5 +400,186 @@
     "placeholder": "000000",
     "cancel": "ביטול",
     "verify": "אימות"
+  },
+  "userManagement": {
+    "header": "ניהול משתמשים",
+    "searchPlaceholder": "חפש משתמשים...",
+    "searchButton": "חיפוש",
+    "allRoles": "כל התפקידים",
+    "user": "משתמש",
+    "admin": "מנהל",
+    "manager": "מנהל מערכת",
+    "columns": {
+      "user": "משתמש",
+      "email": "אימייל",
+      "role": "תפקיד",
+      "status": "סטטוס",
+      "actions": "פעולות"
+    },
+    "status": {
+      "active": "פעיל",
+      "blocked": "חסום"
+    },
+    "pagination": {
+      "page": " מתוך ",
+      "prev": "הקודם",
+      "next": "הבא"
+    },
+    "modals": {
+      "unblock": {
+        "message": "האם אתה בטוח שברצונך לשחרר את {{name}} מחסימה?",
+        "confirm": "שחרור",
+        "cancel": "ביטול"
+      },
+      "delete": {
+        "message": "האם אתה בטוח שברצונך למחוק לצמיתות את {{name}}? פעולה זו אינה ניתנת לביטול.",
+        "confirm": "מחק",
+        "cancel": "ביטול"
+      }
+    },
+    "toast": {
+      "fetchError": "אירעה שגיאה בעת טעינת המשתמשים",
+      "roleUpdated": "התפקיד עודכן בהצלחה",
+      "roleFailed": "נכשל עדכון התפקיד",
+      "blockSuccess": "המשתמש נחסם בהצלחה",
+      "blockFailed": "נכשל חסימת המשתמש",
+      "unblockSuccess": "המשתמש שוחרר מחסימה בהצלחה",
+      "unblockFailed": "נכשל שחרור המשתמש",
+      "deleteSuccess": "המשתמש נמחק בהצלחה",
+      "deleteFailed": "נכשל מחיקת המשתמש"
+    }
+  },
+  "roomPage": {
+    "header": "ניהול חדרים",
+    "operations": {
+      "create": "יצירת חדר",
+      "update": "עדכון חדר",
+      "delete": "מחיקת חדר",
+      "select": "בחר פעולה"
+    },
+    "forms": {
+      "createSuccess": "החדר נוצר בהצלחה.",
+      "updateSuccess": "החדר עודכן בהצלחה.",
+      "deleteSuccess": "החדר נמחק בהצלחה."
+    }
+  },
+  "createRoom": {
+    "title": "יצירת חדר חדש",
+    "sections": {
+      "basic": "פרטים ",
+      "amenities": "מתקנים",
+      "upload": "העלאת תמונה"
+    },
+    "fields": {
+      "namePlaceHolder": "הכנס שם לחדר",
+      "capacityPlaceHolder": "הכנס קיבולת",
+      "descriptionPlaceHolder": "הכנס תיאור",
+      "name": "שם החדר",
+      "type": "סוג החדר",
+      "capacity": "קיבולת",
+      "description": "תיאור",
+      "selectType": "בחר סוג חדר",
+      "types": {
+        "open": "פתוח",
+        "small": "סמינר קטן",
+        "large": "סמינר גדול"
+      },
+      "searchAmenities": "חפש מתקנים...",
+      "selectAmenities": "בחר מתקנים",
+      "selectedAmenities": " מתקנים נבחרו"
+    },
+    "validation": {
+      "requiredFields": "נא למלא את שם החדר, סוג וקיבולת.",
+      "minAmenities": "נא לבחור לפחות שלושה מתקנים."
+    },
+    "messages": {
+      "success": "החדר נוצר בהצלחה!",
+      "error": "אירעה שגיאה בעת יצירת החדר"
+    },
+    "buttons": {
+      "submit": "צור חדר",
+      "submitting": "יוצר..."
+    }
+  },
+  "updateRoom": {
+    "title": "עדכון חדר",
+    "selectSection": {
+      "title": "בחר חדר",
+      "label": "חדרים זמינים",
+      "placeholder": "בחר חדר",
+      "fetchBtn": "קבל פרטי חדר",
+      "fetching": "טוען..."
+    },
+    "sections": {
+      "basic": "פרטים בסיסיים",
+      "amenities": "מתקנים",
+      "upload": "עדכון תמונה"
+    },
+    "fields": {
+      "name": "שם החדר",
+      "type": "סוג החדר",
+      "capacity": "קיבולת",
+      "description": "תיאור",
+      "selectType": "בחר סוג חדר",
+      "types": {
+        "open": "פתוח",
+        "small": "סמינר קטן",
+        "large": "סמינר גדול"
+      },
+      "searchAmenities": "חפש מתקנים...",
+      "selectAmenities": "בחר מתקנים",
+      "selectedAmenities": "{{count}} מתקנים נבחרו"
+    },
+    "validation": {
+      "requiredFields": "נא למלא את שם החדר, סוג וקיבולת.",
+      "minAmenities": "נא לבחור לפחות שלושה מתקנים.",
+      "noRoomSelected": "נא לבחור חדר תקף.",
+      "loadRoomsError": "שגיאה בטעינת רשימת החדרים.",
+      "fetchRoomError": "שגיאה בטעינת פרטי החדר. נסה שוב."
+    },
+    "messages": {
+      "success": "החדר עודכן בהצלחה!",
+      "error": "אירעה שגיאה בעת עדכון החדר."
+    },
+    "buttons": {
+      "submit": "עדכן חדר",
+      "submitting": "מעדכן..."
+    }
+  },
+  "deleteRoom": {
+    "title": "מחיקת חדר",
+    "selectTitle": "בחר חדר",
+    "availableRooms": "חדרים זמינים",
+    "chooseRoom": "בחר חדר",
+    "roomDetailsTitle": "פרטי החדר הנבחר",
+    "fields": {
+      "name": "שם",
+      "type": "סוג",
+      "capacity": "קיבולת"
+    },
+    "validation": {
+      "noRoomSelected": "אנא בחר חדר תחילה."
+    },
+    "errors": {
+      "loadRooms": "שגיאה בטעינת רשימת החדרים.",
+      "delete": "שגיאה במחיקת החדר."
+    },
+    "success": {
+      "title": "החדר וההזמנות המשויכות נמחקו בהצלחה!",
+      "detailsTitle": "פרטי החדר שנמחק:",
+      "deletedBookings": "מספר ההזמנות שנמחקו: {{count}}"
+    },
+    "modal": {
+      "title": "אישור מחיקת חדר",
+      "message": "האם אתה בטוח שברצונך למחוק את החדר? פעולה זו אינה ניתנת לביטול.",
+      "warning": "פעולה זו תמחק לצמיתות את החדר ו-{{count}} הזמנות משויכות"
+    },
+    "buttons": {
+      "delete": "מחק חדר",
+      "deleting": "מוחק...",
+      "reset": "איפוס",
+      "cancel": "ביטול"
+    },
+    "relatedBookings": "הזמנות משויכות ({{count}})"
   }
 }

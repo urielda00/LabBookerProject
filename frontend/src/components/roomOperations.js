@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Plus, Edit, Trash } from "lucide-react";
-
+import { useTranslation } from "react-i18next";
 const RoomOperations = ({
   setOperation,
   setRoomId,
@@ -15,7 +15,7 @@ const RoomOperations = ({
       setRoomDetails(null);
     }
   };
-
+  const { t } = useTranslation();
   const buttonVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -24,9 +24,9 @@ const RoomOperations = ({
   };
 
   const operations = [
-    { label: "Create Room", operation: "create", icon: Plus },
-    { label: "Update Room", operation: "update", icon: Edit },
-    { label: "Delete Room", operation: "delete", icon: Trash },
+    { label: t("roomPage.operations.create"), operation: "create", icon: Plus },
+    { label: t("roomPage.operations.update"), operation: "update", icon: Edit },
+    { label: t("roomPage.operations.delete"), operation: "delete", icon: Trash },
   ];
 
   return (

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { SidebarLayout } from "../components/SidebarLayout";
+import { useTranslation } from "react-i18next";
 import {
   User,
   Trash2,
@@ -32,7 +33,7 @@ const UserManagement = () => {
   const [showUnblockModal, setShowUnblockModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const { t } = useTranslation();
   const fetchUsers = useCallback(
     async (
       page = pagination.page,
@@ -125,7 +126,7 @@ const UserManagement = () => {
 
   return (
     <SidebarLayout>
-      <motion.div
+      <motion.div dir="ltr"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -143,7 +144,7 @@ const UserManagement = () => {
             </motion.div>
           </div>
         )}
-
+        
         <div className="max-w-7xl mx-auto flex flex-col min-h-[calc(100vh-4rem)]">
           {/* Header */}
           <motion.h1
@@ -151,7 +152,7 @@ const UserManagement = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6"
           >
-            User Management
+            {t("userManagement.header")}
           </motion.h1>
 
           {/* Search and Filter */}
@@ -164,7 +165,7 @@ const UserManagement = () => {
                 <Search className="h-5 w-5 text-gray-400 ml-2 sm:ml-3 dark:text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder={t("userManagement.searchButton")}
                   className="w-full p-2 sm:p-2.5 pl-2 border-0 focus:ring-0 bg-transparent dark:text-gray-200 text-sm sm:text-base"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -174,7 +175,7 @@ const UserManagement = () => {
                 type="submit"
                 className="px-4 sm:px-5 bg-green-500 text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm text-sm sm:text-base"
               >
-                Search
+                {t("userManagement.searchButton")}
               </button>
             </div>
             <select
@@ -182,10 +183,10 @@ const UserManagement = () => {
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
             >
-              <option value="all">All Roles</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
+              <option value="all">{t("userManagement.allRoles")}</option>
+              <option value="user">{t("userManagement.user")}</option>
+              <option value="admin">{t("userManagement.admin")}</option>
+              <option value="manager">{t("userManagement.manager")}</option>
             </select>
           </motion.form>
 
@@ -195,7 +196,11 @@ const UserManagement = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    {["User", "Email", "Role", "Status", "Actions"].map(
+                    {[t("userManagement.columns.user"),
+                     t("userManagement.columns.email"),
+                     t("userManagement.columns.role"),
+                     t("userManagement.columns.status"),
+                     t("userManagement.columns.actions")].map(
                       (header, index) => (
                         <th
                           key={index}
@@ -275,12 +280,12 @@ const UserManagement = () => {
                             {user.cancellationStats?.blockedUntil ? (
                               <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
                                 <Ban size={14} className="shrink-0" />
-                                <span>Blocked</span>
+                                <span>{t("userManagement.status.blocked")}</span>
                               </span>
                             ) : (
                               <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                 <CheckCircle2 size={14} className="shrink-0" />
-                                <span>Active</span>
+                                <span>{t("userManagement.status.active")}</span>
                               </span>
                             )}
                           </button>
@@ -351,7 +356,7 @@ const UserManagement = () => {
           {/* Pagination */}
           <motion.div className="flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 gap-3 flex-shrink-0">
             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Page {pagination.page} of {pagination.totalPages}
+            {t("userManagement.pagination.page")} {pagination.page} of {pagination.totalPages}
             </div>
 
             <div className="flex gap-2">
@@ -360,18 +365,18 @@ const UserManagement = () => {
                   setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
                 }
                 disabled={pagination.page === 1}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white dark:text-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 disabled:opacity-50"
               >
-                Previous
+                {t("userManagement.pagination.prev")}
               </button>
               <button
                 onClick={() =>
                   setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
                 }
                 disabled={pagination.page === pagination.totalPages}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white dark:text-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 disabled:opacity-50" 
               >
-                Next
+                {t("userManagement.pagination.next")}
               </button>
             </div>
           </motion.div>

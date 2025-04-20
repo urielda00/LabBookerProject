@@ -3,7 +3,8 @@ import iconMapping from "../utils/iconMapping";
 import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import api from "../utils/axiosConfig"; // Import the centralized Axios instance
+import api from "../utils/axiosConfig";
+import { useTranslation } from "react-i18next";
 
 const UpdateRoomForm = ({
   roomId,
@@ -12,6 +13,7 @@ const UpdateRoomForm = ({
   setRoomDetails,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const [roomsList, setRoomsList] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -35,20 +37,18 @@ const UpdateRoomForm = ({
   useEffect(() => {
     const fetchAllRooms = async () => {
       try {
-        const response = await api.get(
-          "/room/rooms",
-        );
+        const response = await api.get("/room/rooms");
         setRoomsList(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load rooms list.");
+        setError(t("updateRoom.validation.loadRoomsError"));
       }
     };
     fetchAllRooms();
-  }, []);
+  }, [t]);
 
   const handleRoomFetch = async () => {
     if (!roomId) {
-      setError("Please select a valid room.");
+      setError(t("updateRoom.validation.noRoomSelected"));
       return;
     }
     setFetchingRoom(true);
@@ -56,9 +56,7 @@ const UpdateRoomForm = ({
     setSuccessMessage("");
 
     try {
-      const response = await api.get(
-        `/room/rooms/${roomId}`,
-      );
+      const response = await api.get(`/room/rooms/${roomId}`);
       const room = response.data;
 
       setFormData({
@@ -73,10 +71,7 @@ const UpdateRoomForm = ({
       setRoomDetails(room);
       setShowForm(true);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Error fetching room details. Please try again.",
-      );
+      setError(t("updateRoom.validation.fetchRoomError"));
     } finally {
       setFetchingRoom(false);
     }
@@ -91,7 +86,7 @@ const UpdateRoomForm = ({
     setSelectedAmenities((prev) =>
       prev.includes(amenity)
         ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity],
+        : [...prev, amenity]
     );
   };
 
@@ -106,13 +101,13 @@ const UpdateRoomForm = ({
     setSuccessMessage("");
 
     if (!formData.name || !formData.type || !formData.capacity) {
-      setError("Please fill in the name, type, and capacity fields.");
+      setError(t("updateRoom.validation.requiredFields"));
       setLoading(false);
       return;
     }
 
     if (selectedAmenities.length < 3) {
-      setError("Please select at least three amenities.");
+      setError(t("updateRoom.validation.minAmenities"));
       setLoading(false);
       return;
     }
@@ -132,15 +127,14 @@ const UpdateRoomForm = ({
     if (formData.image) formPayload.append("image", formData.image);
 
     try {
-      const response = await api.put(
-        `/room/rooms/${roomId}`,
-        formPayload,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
+      const response = await api.put(`/room/rooms/${roomId}`, formPayload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (response.status === 200) {
-        setSuccessMessage("Room updated successfully!");
-        onSuccess("Room updated successfully!");
+        const successMsg = t("updateRoom.messages.success");
+        setSuccessMessage(successMsg);
+        onSuccess(successMsg);
         setFormData({
           name: "",
           type: "",
@@ -155,10 +149,7 @@ const UpdateRoomForm = ({
         setShowForm(false);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "An error occurred while updating the room.",
-      );
+      setError(t("updateRoom.messages.error"));
     } finally {
       setLoading(false);
     }
@@ -172,18 +163,17 @@ const UpdateRoomForm = ({
       className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-950/50 p-4 sm:p-6 md:p-8 lg:p-10 transition-colors duration-300"
     >
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8">
-        Update Room
+        {t("updateRoom.title")}
       </h2>
 
-      {/* Room Selection Section */}
       <div className="space-y-4 sm:space-y-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-          Select Room
+          {t("updateRoom.selectSection.title")}
         </h3>
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Available Rooms
+            {t("updateRoom.selectSection.label")}
           </label>
           <select
             value={roomId}
@@ -191,7 +181,7 @@ const UpdateRoomForm = ({
             className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           >
             <option value="" disabled className="dark:bg-gray-700">
-              Choose a Room
+              {t("updateRoom.selectSection.placeholder")}
             </option>
             {roomsList.map((room) => (
               <option
@@ -205,13 +195,8 @@ const UpdateRoomForm = ({
           </select>
         </div>
 
-        {/* Messages */}
         <div className="text-center">
-          {[
-            "Please select a valid room.",
-            "Failed to fetch room",
-            "Failed to load rooms list.",
-          ].includes(error) && (
+          {error && (
             <Message
               message={error}
               type="error"
@@ -232,11 +217,12 @@ const UpdateRoomForm = ({
           onClick={handleRoomFetch}
           className="w-full py-2 sm:py-3 px-4 sm:px-6 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 text-sm sm:text-base rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white transition-all duration-300 focus:ring-2 focus:ring-green-400 border border-gray-200 dark:border-gray-600"
         >
-          {fetchingRoom ? "Fetching..." : "Get Room Details"}
+          {fetchingRoom
+            ? t("updateRoom.selectSection.fetching")
+            : t("updateRoom.selectSection.fetchBtn")}
         </button>
       </div>
 
-      {/* Update Form */}
       {showForm && (
         <motion.form
           onSubmit={handleSubmit}
@@ -245,16 +231,14 @@ const UpdateRoomForm = ({
           transition={{ duration: 0.5 }}
           className="space-y-6 sm:space-y-8 mt-6 sm:mt-8"
         >
-          {/* Basic Details */}
           <div className="space-y-4 sm:space-y-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              Basic Details
+              {t("updateRoom.sections.basic")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              {/* Name Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Room Name
+                  {t("updateRoom.fields.name")}
                 </label>
                 <input
                   type="text"
@@ -265,10 +249,9 @@ const UpdateRoomForm = ({
                 />
               </div>
 
-              {/* Type Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Room Type
+                  {t("updateRoom.fields.type")}
                 </label>
                 <select
                   name="type"
@@ -276,25 +259,18 @@ const UpdateRoomForm = ({
                   onChange={handleInputChange}
                   className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
-                  <option value="" disabled className="dark:bg-gray-700">
-                    Select Room Type
+                  <option value="" disabled>
+                    {t("updateRoom.fields.selectType")}
                   </option>
-                  <option value="Open" className="dark:bg-gray-700">
-                    Open
-                  </option>
-                  <option value="Small Seminar" className="dark:bg-gray-700">
-                    Small Seminar
-                  </option>
-                  <option value="Large Seminar" className="dark:bg-gray-700">
-                    Large Seminar
-                  </option>
+                  <option value="Open">{t("updateRoom.fields.types.open")}</option>
+                  <option value="Small Seminar">{t("updateRoom.fields.types.small")}</option>
+                  <option value="Large Seminar">{t("updateRoom.fields.types.large")}</option>
                 </select>
               </div>
 
-              {/* Capacity Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Capacity
+                  {t("updateRoom.fields.capacity")}
                 </label>
                 <input
                   type="number"
@@ -305,10 +281,9 @@ const UpdateRoomForm = ({
                 />
               </div>
 
-              {/* Description Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Description
+                  {t("updateRoom.fields.description")}
                 </label>
                 <textarea
                   name="description"
@@ -320,10 +295,9 @@ const UpdateRoomForm = ({
             </div>
           </div>
 
-          {/* Amenities Section */}
           <div className="space-y-4 sm:space-y-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              Amenities
+              {t("updateRoom.sections.amenities")}
             </h3>
             <div className="relative">
               <button
@@ -333,8 +307,10 @@ const UpdateRoomForm = ({
               >
                 <span className="text-sm sm:text-base">
                   {selectedAmenities.length > 0
-                    ? `${selectedAmenities.length} amenities selected`
-                    : "Select Amenities"}
+                    ? t("updateRoom.fields.selectedAmenities", {
+                        count: selectedAmenities.length,
+                      })
+                    : t("updateRoom.fields.selectAmenities")}
                 </span>
                 <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
               </button>
@@ -343,7 +319,7 @@ const UpdateRoomForm = ({
                 <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-950/50 p-3 sm:p-4 max-h-48 sm:max-h-60 overflow-y-auto">
                   <input
                     type="text"
-                    placeholder="Search amenities..."
+                    placeholder={t("updateRoom.fields.searchAmenities")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
@@ -353,16 +329,14 @@ const UpdateRoomForm = ({
                       .filter((amenity) =>
                         amenity
                           .toLowerCase()
-                          .includes(searchQuery.toLowerCase()),
+                          .includes(searchQuery.toLowerCase())
                       )
                       .map((amenity) => (
                         <label
                           key={amenity}
                           className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer text-sm text-gray-800 dark:text-gray-200"
                         >
-                          <span className="w-5 h-5">
-                            {iconMapping[amenity]}
-                          </span>
+                          <span className="w-5 h-5">{iconMapping[amenity]}</span>
                           <span className="capitalize flex-1">{amenity}</span>
                           <input
                             type="checkbox"
@@ -378,10 +352,9 @@ const UpdateRoomForm = ({
             </div>
           </div>
 
-          {/* Image Upload Section */}
           <div className="space-y-4">
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              Update Image
+              {t("updateRoom.sections.upload")}
             </h3>
             <input
               type="file"
@@ -391,7 +364,6 @@ const UpdateRoomForm = ({
             />
           </div>
 
-          {/* Messages */}
           <div className="text-center">
             {error && (
               <Message
@@ -409,14 +381,15 @@ const UpdateRoomForm = ({
             )}
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={loading}
               className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
             >
-              {loading ? "Updating..." : "Update Room"}
+              {loading
+                ? t("updateRoom.buttons.submitting")
+                : t("updateRoom.buttons.submit")}
             </button>
           </div>
         </motion.form>

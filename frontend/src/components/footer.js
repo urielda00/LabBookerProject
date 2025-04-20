@@ -150,7 +150,7 @@ function Footer() {
           </div>
 
           {/* Newsletter */}
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             <h4 className="text-lg font-semibold text-white uppercase tracking-wide">
               {t("footer.newsletter.title")}
             </h4>
@@ -194,7 +194,7 @@ function Footer() {
             <p className="text-xs text-gray-500 leading-relaxed">
               {t("footer.newsletter.helpText")}
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Copyright Section */}

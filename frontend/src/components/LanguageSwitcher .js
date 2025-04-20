@@ -107,10 +107,10 @@ const LanguageSwitcher = () => {
             </button>
 
             {/* Divider */}
-            <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+            {/* <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" /> */}
 
             {/* Dark Mode Toggle */}
-            <button
+            {/* <button
               onClick={toggleDarkMode}
               className="
                 flex items-center justify-between w-full
@@ -129,7 +129,7 @@ const LanguageSwitcher = () => {
                   <Sun className="w-4 h-4" />
                 )}
               </span>
-            </button>
+            </button> */}
           </div>
         </div>
       )}

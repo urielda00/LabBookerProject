@@ -4,7 +4,7 @@ import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import api from "../utils/axiosConfig"; // Import the centralized Axios instance
-
+import { useTranslation } from "react-i18next";
 const CreateRoomForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -14,6 +14,7 @@ const CreateRoomForm = ({ onSuccess }) => {
     amenities: [],
     image: null,
   });
+  const { t } = useTranslation();
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState("");
@@ -33,7 +34,7 @@ const CreateRoomForm = ({ onSuccess }) => {
     setSelectedAmenities((prev) =>
       prev.includes(amenity)
         ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity],
+        : [...prev, amenity]
     );
   };
 
@@ -69,11 +70,9 @@ const CreateRoomForm = ({ onSuccess }) => {
     if (formData.image) formPayload.append("image", formData.image);
 
     try {
-      const response = await api.post(
-        "/room/rooms",
-        formPayload,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
+      const response = await api.post("/room/rooms", formPayload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (response.status === 201) {
         setSuccessMessage("Room created successfully!");
@@ -91,7 +90,7 @@ const CreateRoomForm = ({ onSuccess }) => {
     } catch (err) {
       setErrors(
         err.response?.data?.message ||
-          "An error occurred while creating the room",
+          "An error occurred while creating the room"
       );
     } finally {
       setLoading(false);
@@ -106,7 +105,7 @@ const CreateRoomForm = ({ onSuccess }) => {
       className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-xl dark:shadow-gray-950/50 p-4 sm:p-6 md:p-8 lg:p-10 transition-colors duration-300"
     >
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8">
-        Create a New Room
+        {t("createRoom.title")}
       </h2>
 
       <form
@@ -116,13 +115,14 @@ const CreateRoomForm = ({ onSuccess }) => {
         {/* Section: Basic Details */}
         <div className="space-y-4 sm:space-y-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-            Basic Details
+            {t("createRoom.sections.basic")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Room Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Room Name <span className="text-red-500">*</span>
+                {t("createRoom.fields.name")}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -130,14 +130,15 @@ const CreateRoomForm = ({ onSuccess }) => {
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Enter room name"
+                placeholder={t("createRoom.fields.namePlaceHolder")}
               />
             </div>
 
             {/* Room Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Room Type <span className="text-red-500">*</span>
+                {t("createRoom.fields.type")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <select
                 name="type"
@@ -146,16 +147,16 @@ const CreateRoomForm = ({ onSuccess }) => {
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 <option value="" disabled className="dark:bg-gray-700">
-                  Select Room Type
+                  {t("createRoom.fields.selectType")}
                 </option>
                 <option value="Open" className="dark:bg-gray-700">
-                  Open
+                  {t("createRoom.fields.types.open")}
                 </option>
                 <option value="Small Seminar" className="dark:bg-gray-700">
-                  Small Seminar
+                  {t("createRoom.fields.types.small")}
                 </option>
                 <option value="Large Seminar" className="dark:bg-gray-700">
-                  Large Seminar
+                  {t("createRoom.fields.types.large")}
                 </option>
               </select>
             </div>
@@ -163,7 +164,8 @@ const CreateRoomForm = ({ onSuccess }) => {
             {/* Capacity */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Capacity <span className="text-red-500">*</span>
+                {t("createRoom.fields.capacity")}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -171,21 +173,21 @@ const CreateRoomForm = ({ onSuccess }) => {
                 value={formData.capacity}
                 onChange={handleInputChange}
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Enter capacity"
+                placeholder={t("createRoom.fields.capacityPlaceHolder")}
               />
             </div>
 
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Description
+                {t("createRoom.fields.description")}
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Enter room description"
+                placeholder={t("createRoom.fields.descriptionPlaceHolder")}
               />
             </div>
           </div>
@@ -194,7 +196,7 @@ const CreateRoomForm = ({ onSuccess }) => {
         {/* Section: Amenities */}
         <div className="space-y-4 sm:space-y-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-            Amenities
+            {t("createRoom.sections.amenities")}
           </h3>
           <div className="relative">
             <button
@@ -204,9 +206,12 @@ const CreateRoomForm = ({ onSuccess }) => {
             >
               <span className="text-sm sm:text-base">
                 {selectedAmenities.length > 0
-                  ? `${selectedAmenities.length} amenities selected`
-                  : "Select Amenities"}
+                  ? t("createRoom.fields.selectedAmenities", {
+                      count: selectedAmenities.length,
+                    })
+                  : t("createRoom.fields.selectAmenities")}
               </span>
+
               <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
             </button>
 
@@ -214,15 +219,15 @@ const CreateRoomForm = ({ onSuccess }) => {
               <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-950/50 p-3 sm:p-4 max-h-48 sm:max-h-60 overflow-y-auto">
                 <input
                   type="text"
-                  placeholder="Search amenities..."
+                  placeholder={t("createRoom.fields.searchAmenities")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
                   {availableAmenities
                     .filter((amenity) =>
-                      amenity.toLowerCase().includes(searchQuery.toLowerCase()),
+                      amenity.toLowerCase().includes(searchQuery.toLowerCase())
                     )
                     .map((amenity) => (
                       <label
@@ -248,7 +253,7 @@ const CreateRoomForm = ({ onSuccess }) => {
         {/* Section: Image Upload */}
         <div className="space-y-4">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-            Upload Image
+            {t("createRoom.sections.upload")}
           </h3>
           <input
             type="file"
@@ -283,7 +288,7 @@ const CreateRoomForm = ({ onSuccess }) => {
             disabled={loading}
             className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
           >
-            {loading ? "Creating..." : "Create Room"}
+            {loading ? t("createRoom.buttons.submitting"): t("createRoom.buttons.submit")}
           </button>
         </div>
       </form>
