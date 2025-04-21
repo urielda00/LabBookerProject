@@ -547,39 +547,33 @@
     }
   },
   "deleteRoom": {
-    "title": "מחיקת חדר",
-    "selectTitle": "בחר חדר",
+    "date":"תאריך",
+    "header": "מחיקת חדר",
+    "selectRoom": "בחר חדר",
     "availableRooms": "חדרים זמינים",
     "chooseRoom": "בחר חדר",
-    "roomDetailsTitle": "פרטי החדר הנבחר",
-    "fields": {
-      "name": "שם",
-      "type": "סוג",
-      "capacity": "קיבולת"
-    },
-    "validation": {
-      "noRoomSelected": "אנא בחר חדר תחילה."
-    },
-    "errors": {
-      "loadRooms": "שגיאה בטעינת רשימת החדרים.",
-      "delete": "שגיאה במחיקת החדר."
-    },
-    "success": {
+    "selectedRoomDetails": "פרטי החדר שנבחר",
+    "name": "שם",
+    "type": "סוג",
+    "capacity": "קיבולת",
+    "reset": "איפוס",
+    "delete": "מחק חדר",
+    "deleting": "מוחק...",
+    "pleaseSelectRoom": "אנא בחר חדר קודם.",
+    "confirmDeleteTitle": "אישור מחיקת חדר",
+    "confirmDeleteText": "האם אתה בטוח שברצונך למחוק את החדר הזה? פעולה זו אינה ניתנת לביטול.",
+    "roomDetails": "פרטי החדר",
+    "associatedBookings": "הזמנות משויכות ",
+    "bookedBy": "הוזמן על ידי",
+    "with": "עם",
+    "permanentDeleteWarning": "פעולה זו תמחק לצמיתות את החדר ו הזמנות משויכות.",
+    "successMessage": {
       "title": "החדר וההזמנות המשויכות נמחקו בהצלחה!",
-      "detailsTitle": "פרטי החדר שנמחק:",
-      "deletedBookings": "מספר ההזמנות שנמחקו: {{count}}"
+      "details": "פרטי החדר שנמחק:",
+      "numBookings": "מספר ההזמנות שנמחקו: "
     },
-    "modal": {
-      "title": "אישור מחיקת חדר",
-      "message": "האם אתה בטוח שברצונך למחוק את החדר? פעולה זו אינה ניתנת לביטול.",
-      "warning": "פעולה זו תמחק לצמיתות את החדר ו-{{count}} הזמנות משויכות"
-    },
-    "buttons": {
-      "delete": "מחק חדר",
-      "deleting": "מוחק...",
-      "reset": "איפוס",
-      "cancel": "ביטול"
-    },
-    "relatedBookings": "הזמנות משויכות ({{count}})"
+    "errorLoadingRooms": "נכשל בטעינת רשימת החדרים.",
+    "errorDeleteRoom": "שגיאה במחיקת החדר.",
+    "cancel": "ביטול"
   }
 }
