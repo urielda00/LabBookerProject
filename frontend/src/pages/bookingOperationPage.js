@@ -6,12 +6,12 @@ import BookingOperations from "../components/bookingOperations";
 import CretaeBooking from "../components/createBooking";
 import UpdateBooking from "../components/updateBooking";
 import DeleteBooking from "../components/deleteBooking";
-
+import { useTranslation } from "react-i18next";
 const BookingPage = () => {
   const [operation, setOperation] = useState("create");
   const [bookingId, setBookingId] = useState("");
   const [bookingDetails, setBookingDetails] = useState(null);
-
+  const { t } = useTranslation();
   const handleSuccess = (message) => {
     console.log(message);
     setBookingId("");
@@ -32,7 +32,7 @@ const BookingPage = () => {
           transition={{ duration: 0.5 }}
           className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8"
         >
-          Booking Management
+          {t("bookingPage.title")}
         </motion.h1>
 
         {/* Booking Operations */}

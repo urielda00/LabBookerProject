@@ -4,7 +4,7 @@ import CustomDatepicker from "../utils/datePicker";
 import { motion } from "framer-motion";
 import { FaTimes } from "react-icons/fa"; // For remove icon
 import api from "../utils/axiosConfig"; // Import the centralized Axios instance
-
+import { useTranslation } from "react-i18next";
 const CreateBookingByNamesForm = ({ onSuccess }) => {
   // Main form data
   const [formData, setFormData] = useState({
@@ -19,6 +19,7 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
   // Single colleague email input
   const [colleagueEmail, setColleagueEmail] = useState("");
 
+  const { t } = useTranslation();
   // States for availability
   const [availability, setAvailability] = useState(null);
   const [displaySlots, setDisplaySlots] = useState([]);
@@ -71,11 +72,12 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
         setColleagueEmail("");
         setFormData((prev) => ({ ...prev, colleagues: [] }));
         setFormError("");
-        setSuccessMessage("Room details fetched successfully!");
+        setSuccessMessage(t("createBookingByNames.roomFetched"));
       }
     } catch (error) {
       setFormError(
-        error.response?.data?.message || "Error fetching room details.",
+        error.response?.data?.message ||
+          t("createBookingByNames.fetchRoomError")
       );
       setRoomType(null);
       setRequiredUsers(0);
@@ -96,28 +98,28 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
   const handleAddColleague = () => {
     const email = colleagueEmail.trim();
     if (!email) {
-      setFormError("Please enter a valid email address.");
+      setFormError(t("createBookingByNames.invalidEmail"));
       return;
     }
 
     // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setFormError("Please enter a valid email address.");
+      setFormError(t("createBookingByNames.invalidEmail"));
       return;
     }
 
     // Check if maximum number of colleagues is reached
     if (formData.colleagues.length >= maxAdditionalUsers) {
       setFormError(
-        `You can only add up to ${maxAdditionalUsers} additional user(s).`,
+        t("createBookingByNames.maxUsers", { count: maxAdditionalUsers })
       );
       return;
     }
 
     // Check for duplicate emails
     if (formData.colleagues.includes(email)) {
-      setFormError("This email has already been added.");
+      setFormError(t("createBookingByNames.duplicateEmail"));
       return;
     }
 
@@ -128,7 +130,7 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
     }));
     setColleagueEmail("");
     setFormError("");
-    setSuccessMessage("Colleague added successfully!");
+    setSuccessMessage(t("createBookingByNames.colleagueAdded"));
   };
 
   // Remove a colleague
@@ -138,13 +140,13 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
       colleagues: prev.colleagues.filter((email) => email !== emailToRemove),
     }));
     setFormError("");
-    setSuccessMessage("Colleague removed.");
+    setSuccessMessage(t("createBookingByNames.colleagueRemoved"));
   };
 
   // Fetch monthly availability by roomName
   const fetchAvailability = async () => {
     if (!formData.roomName) {
-      setFormError("Please enter a room name first.");
+      setFormError(t("createBookingByNames.roomRequired"));
       return;
     }
     setLoadingAvailability(true);
@@ -157,21 +159,23 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
     try {
       // Adjust the endpoint as per your backend
       const response = await api.get(
-        `/room/rooms-by-name/${formData.roomName}/monthly-availability`,
+        `/room/rooms-by-name/${formData.roomName}/monthly-availability`
       );
       if (response.status === 200) {
         setAvailability(response.data.availability || []);
         // Extract date strings
         const dateStrings = (response.data.availability || []).map(
-          (day) => day.date,
+          (day) => day.date
         );
         setAvailableDates(dateStrings);
-        setSuccessMessage("Availability fetched successfully!");
+        setSuccessMessage(t("createBookingByNames.success.availabilityFetched"));
       }
     } catch (error) {
       setFormError(
         error.response?.data?.message ||
-          `Unable to fetch availability for room: ${formData.roomName}`,
+          t("createBookingByNames.errors.fetchAvailabilityError", {
+            roomName: formData.roomName,
+          })
       );
     } finally {
       setLoadingAvailability(false);
@@ -238,29 +242,31 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
   };
 
   // Validate form
-  const validateForm = () => {
-    if (!formData.roomName.trim()) return "Please enter a room name.";
-    if (!formData.username.trim()) return "Please enter your username.";
-    if (!formData.date) return "Please choose a date.";
-    if (!formData.startTime || !formData.endTime)
-      return "Please select a time slot.";
+const validateForm = () => {
+  if (!formData.roomName.trim())
+    return t("createBookingByNames.errors.roomRequired");
+  if (!formData.username.trim())
+    return t("createBookingByNames.errors.usernameRequired");
+  if (!formData.date)
+    return t("createBookingByNames.errors.dateRequired");
+  if (!formData.startTime || !formData.endTime)
+    return t("createBookingByNames.errors.timeRequired");
 
-    // Validate required additional users
-    if (
-      roomType === "Small Seminar" &&
-      formData.colleagues.length !== requiredUsers
-    ) {
-      return "Small Seminar rooms require exactly 2 additional users.";
-    }
-    if (
-      roomType === "Large Seminar" &&
-      formData.colleagues.length !== requiredUsers
-    ) {
-      return "Large Seminar rooms require exactly 3 additional users.";
-    }
+  if (
+    roomType === "Small Seminar" &&
+    formData.colleagues.length !== requiredUsers
+  ) {
+    return t("createBookingByNames.errors.smallSeminarRequirement");
+  }
+  if (
+    roomType === "Large Seminar" &&
+    formData.colleagues.length !== requiredUsers
+  ) {
+    return t("createBookingByNames.errors.largeSeminarRequirement");
+  }
 
-    return "";
-  };
+  return "";
+};
 
   // Create booking (by name) => POST to e.g. /api/book/booking/create-by-names
   const handleSubmit = async (e) => {
@@ -291,11 +297,11 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
       if (response.status === 201) {
         setSuccessMessage(
-          response.data.message || "Booking created successfully!",
+          response.data.message || t("createBookingByNames.bookingCreated")
         );
         onSuccess?.(response.data.message);
 
@@ -318,7 +324,8 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
       }
     } catch (err) {
       setFormError(
-        err.response?.data?.message || "Error creating booking by names.",
+        err.response?.data?.message ||
+          t("createBookingByNames.createBookingError")
       );
     } finally {
       setIsSubmitting(false);
@@ -333,7 +340,7 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
       className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 md:p-8 lg:p-10 transition-colors duration-300"
     >
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8">
-        Create a Booking
+        {t("createBookingByNames.title")}
       </h2>
 
       <form
@@ -343,12 +350,13 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
         {/* Section: Basic Details */}
         <div className="space-y-4 sm:space-y-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
-            Booking Details
+            {t("createBookingByNames.sectionDetails")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Room Name <span className="text-red-500">*</span>
+                {t("createBookingByNames.roomNameLabel")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
@@ -364,14 +372,15 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
                   onClick={fetchRoomDetails}
                   className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base whitespace-nowrap"
                 >
-                  Fetch Details
+                  {t("createBookingByNames.fetchDetails")}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Your Username <span className="text-red-500">*</span>
+                {t("createBookingByNames.usernameLabel")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -391,16 +400,17 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {roomType === "Open" ? (
-                  "Additional users are not allowed for Open rooms."
+                  t("createBookingByNames.additionalNotAllowed")
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                     <span>
-                      Add Additional User{" "}
+                      {t("createBookingByNames.addUserLabel")}{" "}
                       <span className="text-red-500">*</span>
                     </span>
                     <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       (Exactly {requiredUsers} user
-                      {requiredUsers > 1 ? "s" : ""} required)
+                      {requiredUsers > 1 ? "s" : ""}{" "}
+                      {t("createBookingByNames.required")})
                     </span>
                   </div>
                 )}
@@ -442,7 +452,7 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
                             : "bg-green-500 dark:bg-green-600 text-white hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400"
                         }`}
                     >
-                      Add User
+                      {t("createBookingByNames.addUserBtn")}
                     </button>
                   </div>
 
@@ -501,7 +511,7 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
         {/* Section: Availability */}
         <div className="space-y-4 sm:space-y-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
-            Check Availability
+            {t("createBookingByNames.checkAvailability")}
           </h3>
           <button
             type="button"
@@ -513,13 +523,16 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
                 : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
             }`}
           >
-            {loadingAvailability ? "Loading..." : "Fetch Availability"}
+            {loadingAvailability
+              ? "Loading..."
+              : t("createBookingByNames.fetchAvailability")}
           </button>
 
           {availableDates.length > 0 && (
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Select Date <span className="text-red-500">*</span>
+                {t("createBookingByNames.selectDate")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="max-w-full overflow-x-auto">
                 <CustomDatepicker
@@ -536,7 +549,8 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
           {formData.date && (
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Select Time Slot <span className="text-red-500">*</span>
+                {t("createBookingByNames.selectTimeSlot")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               {displaySlots.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
@@ -595,7 +609,9 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
               ) : (
                 <div className="text-center p-3 sm:p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                   <p className="text-red-500 dark:text-red-400 text-sm">
-                    No available slots for {formData.date}
+                    {t("createBookingByNames.noAvailableSlots", {
+                      date: formData.date,
+                    })}
                   </p>
                 </div>
               )}
@@ -641,13 +657,13 @@ const CreateBookingByNamesForm = ({ onSuccess }) => {
             }`}
           >
             {isSubmitting
-              ? "Creating..."
+              ? t("createBookingByNames.submitCreating")
               : roomType !== "Open" &&
-                  formData.colleagues.length !== requiredUsers
-                ? `Add ${requiredUsers - formData.colleagues.length} More User${
-                    requiredUsers - formData.colleagues.length > 1 ? "s" : ""
-                  }`
-                : "Create Booking"}
+                formData.colleagues.length !== requiredUsers
+              ? t("createBookingByNames.addMoreUsers", {
+                  count: requiredUsers - formData.colleagues.length,
+                })
+              : t("createBookingByNames.createBooking")}
           </button>
         </div>
       </form>
