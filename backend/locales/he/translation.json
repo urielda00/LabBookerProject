@@ -187,5 +187,16 @@
       "deleteFailed": "מחיקת חדר נכשלה",
       "availabilityFailed": "טעינת זמינות נכשלה"
     }
+  },
+  "page": {
+    "success": {
+      "updated": "הדף עודכן בהצלחה"
+    },
+    "errors": {
+      "notFound": "אין תוכן זמין",
+      "serverError": "שגיאת שרת",
+      "updateFailed": "העדכון נכשל",
+      "missingTranslations": "חסרים תרגומים נדרשים לאחת השפות או יותר"
+    }
   }
 }

@@ -8,8 +8,12 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import api from "../utils/axiosConfig";
+import { useTranslation } from "react-i18next";
 
 const TermsOfService = () => {
+  
+// In your components
+const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [pageData, setPageData] = useState({
@@ -83,14 +87,17 @@ const TermsOfService = () => {
   const fetchPageData = async () => {
     try {
       const response = await api.get(`/pages/terms-of-service`);
-      setPageData({
-        title: response.data.title,
-        content: response.data.content,
-        lastUpdated: response.data.lastUpdated,
-      });
+      const lang     = i18n.language; // e.g. "en" or "he"
+const { translations, lastUpdated } = response.data;
+
+setPageData({
+  title:       translations.title[lang]   || translations.title.en,
+  content:     translations.content[lang] || translations.content.en,
+  lastUpdated,
+});
       setError(null);
     } catch (err) {
-      setError("Failed to load terms of service");
+      setError(t("page.errors.notFound"));
       console.error("Fetch error:", err);
     } finally {
       setLoading(false);
@@ -169,19 +176,19 @@ const TermsOfService = () => {
               </article>
 
               <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Last updated:{" "}
-                  {pageData.lastUpdated
-                    ? new Date(pageData.lastUpdated).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )
-                    : "No update date available"}
-                </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+  {t("page.lastUpdated")}:{" "}
+  {pageData.lastUpdated
+    ? new Date(pageData.lastUpdated).toLocaleDateString(
+        i18n.language, // Use current language
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        },
+      )
+    : t("page.noUpdateDate")}
+</p>
               </div>
             </>
           )}

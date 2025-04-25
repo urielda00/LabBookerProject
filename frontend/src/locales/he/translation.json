@@ -689,5 +689,17 @@
       "selectRequired": "אנא בחר הזמנה למחיקה.",
       "deleteFailed": "שגיאה במחיקת ההזמנה"
     }
+  },
+  "page": {
+    "edit": "ערוך דף",
+    "title": "כותרת",
+    "contentPlaceholder": "כתוב את התוכן כאן...",
+    "save": "שמור שינויים",
+    "cancel": "בטל",
+    "lastUpdated": "עודכן לאחרונה",
+    "noUpdateDate": "אין תאריך עדכון זמין",
+    "errors": {
+      "notFound": "אין תוכן זמין"
+    }
   }
 }

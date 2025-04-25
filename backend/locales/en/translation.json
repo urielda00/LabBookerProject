@@ -188,5 +188,18 @@
       "deleteFailed": "Failed to delete room",
       "availabilityFailed": "Failed to fetch availability"
     }
-  }
+  },
+  
+    "page": {
+      "success": {
+        "updated": "Page updated successfully"
+      },
+      "errors": {
+        "notFound": "No content available",
+        "serverError": "Server error",
+        "updateFailed": "Update failed",
+        "missingTranslations": "Missing required translations for one or more languages"
+      }
+    }
+  
 }

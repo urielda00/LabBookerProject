@@ -1,18 +1,30 @@
 // routes/pageRoutes.js
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware"); // Correct path
-const { getPage, updatePage } = require("../controllers/pageController");
+const authMiddleware = require("../middleware/authMiddleware");
+const pageController = require("../controllers/pageController");
 
-// Public access to read pages
-router.get("/:slug", getPage);
+// Public read access with caching headers
+router.get("/:slug", 
+  (req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  },
+  pageController.getPage
+);
 
-// Admin-only access for updates
-router.put(
-  "/:slug",
-  authMiddleware.requireAuth, // Use class method
-  authMiddleware.requireRole(["admin"]), // Pass array of allowed roles
-  updatePage,
+// Protected update endpoint
+router.put("/:slug",
+  authMiddleware.requireAuth, // Verify authentication first
+  authMiddleware.requireRole("admin"), // Then verify role
+  (req, res, next) => {
+    // Validate content type before processing
+    if (!req.is("application/json")) {
+      return res.status(415).json({ message: "Unsupported Media Type" });
+    }
+    next();
+  },
+  pageController.updatePage
 );
 
 module.exports = router;

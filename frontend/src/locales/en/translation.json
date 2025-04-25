@@ -690,5 +690,17 @@
       "selectRequired": "Please select a booking to delete.",
       "deleteFailed": "Error deleting booking"
     }
-  }
+  },
+    "page": {
+      "edit": "Edit Page",
+      "title": "Title",
+      "contentPlaceholder": "Write your content here...",
+      "save": "Save Changes",
+      "cancel": "Cancel",
+      "lastUpdated": "Last updated",
+      "noUpdateDate": "No update date available",
+      "errors": {
+        "notFound": "No content available"
+      }
+    }
 }

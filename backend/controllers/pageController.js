@@ -1,32 +1,34 @@
+// controllers/pageController.js
 const Page = require("../models/Pages");
+const R    = require("../utils/response");
 
 exports.getPage = async (req, res) => {
   try {
-    const page = await Page.findOne({ slug: req.params.slug }).populate(
-      "lastUpdatedBy",
-      "name email role",
-    );
+    const page = await Page.findOne({ slug: req.params.slug })
+      .select("slug title content updatedAt lastUpdatedBy")
+      .populate("lastUpdatedBy", "name email role");
 
     if (!page) {
-      return res.status(200).json({
-        exists: false,
-        message: "No content available",
-      });
+      // 404 + i18n key
+      return R.send(req, res, 404, "page.errors.notFound");
     }
 
-    res.json({
+    const lang = req.language || "en";
+    const payload = {
       exists: true,
       slug: page.slug,
-      title: page.title,
-      content: page.content,
-      lastUpdated: page.updatedAt,
+      translations: {
+        title:   page.title,
+        content: page.content,
+      },
+      lastUpdated:   page.updatedAt,
       lastUpdatedBy: page.lastUpdatedBy,
-    });
+    };
+
+    return R.send(req, res, 200, null, {}, payload);
   } catch (error) {
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    console.error("getPage error:", error);
+    return R.send(req, res, 500, "page.errors.serverError", { error: error.message });
   }
 };
 
@@ -34,10 +36,29 @@ exports.updatePage = async (req, res) => {
   try {
     const { title, content } = req.body;
 
+    // require both EN & HE
+    if (
+      !title       ||
+      !content     ||
+      !title.en    ||
+      !title.he    ||
+      !content.en  ||
+      !content.he
+    ) {
+      return R.send(req, res, 400, "page.errors.missingTranslations");
+    }
+
     const existingPage = await Page.findOne({ slug: req.params.slug });
+
     const updateData = {
-      title: title || existingPage?.title || "Privacy Policy",
-      content: content || existingPage?.content || "",
+      title: {
+        en: title.en,
+        he: title.he,
+      },
+      content: {
+        en: content.en,
+        he: content.he,
+      },
       lastUpdatedBy: req.user._id,
     };
 
@@ -48,23 +69,23 @@ exports.updatePage = async (req, res) => {
         new: true,
         upsert: true,
         runValidators: true,
-      },
+        setDefaultsOnInsert: true,
+      }
     ).populate("lastUpdatedBy", "name email role");
 
-    res.json({
-      message: "Page updated successfully",
-      page: {
-        slug: page.slug,
-        title: page.title,
+    const payload = {
+      slug: page.slug,
+      translations: {
+        title:   page.title,
         content: page.content,
-        lastUpdated: page.updatedAt,
-        lastUpdatedBy: page.lastUpdatedBy,
       },
-    });
+      lastUpdated:   page.updatedAt,
+      lastUpdatedBy: page.lastUpdatedBy,
+    };
+
+    return R.send(req, res, 200, "page.success.updated", {}, payload);
   } catch (error) {
-    res.status(500).json({
-      message: "Update failed",
-      error: error.message,
-    });
+    console.error("updatePage error:", error);
+    return R.send(req, res, 500, "page.errors.updateFailed", { error: error.message });
   }
 };
