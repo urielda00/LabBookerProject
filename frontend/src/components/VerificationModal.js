@@ -78,7 +78,7 @@ const VerificationModal = ({
               <button
                 type="button"
                 onClick={onConfirm}
-                className="w-full sm:w-auto px-6 py-3 bg-white text-green-500 rounded-lg shadow-md hover:bg-green-500 hover:text-white focus:ring-2 focus:ring-green-400 transition-all duration-300"
+                className="w-full sm:w-auto px-6 py-3 bg-white text-blue-500 rounded-lg shadow-md hover:bg-blue-500 hover:text-white focus:ring-2 focus:ring-blue-400 transition-all duration-300"
               >
                 {t("verificationModal.verify")}
               </button>

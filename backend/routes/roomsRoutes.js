@@ -2,26 +2,30 @@ const express = require("express");
 const router = express.Router();
 const roomController = require("../controllers/roomsController");
 
-// Rooms Route
+// GET all rooms
 router.get("/rooms", async (req, res) => {
   try {
-    // Call the controller function to get rooms
     const response = await roomController.getRooms();
-    return res.status(200).json(response);
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching rooms:", error.message);
-    return res.status(500).json({ message: "Failed to fetch rooms" });
+    res.status(500).json({ 
+      message: req.t(error.message) 
+    });
   }
 });
 
+// GET single room by name
 router.get("/rooms/:name", async (req, res) => {
   try {
-    // Call the controller function to get the room by id
     const response = await roomController.getRooms(req.params.name);
-    return res.status(200).json(response);
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching room:", error.message);
-    return res.status(500).json({ message: "Failed to fetch room" });
+    const status = error.message === 'room.errors.notFound' ? 404 : 500;
+    res.status(status).json({ 
+      message: req.t(error.message) 
+    });
   }
 });
 
@@ -29,13 +33,14 @@ router.get("/rooms/:name", async (req, res) => {
 router.post("/rooms", async (req, res) => {
   try {
     const response = await roomController.createRoom(req, res);
-    res
-      .status(response.status)
-      .json({ message: response.message, room: response.room });
+    res.status(response.status).json({
+      message: req.t(response.message),
+      room: response.room
+    });
   } catch (error) {
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Failed to create room" });
+    res.status(error.status || 500).json({
+      message: req.t(error.message || "room.errors.createFailed")
+    });
   }
 });
 
@@ -43,52 +48,49 @@ router.post("/rooms", async (req, res) => {
 router.put("/rooms/:name", async (req, res) => {
   try {
     const response = await roomController.updateRoom(req, res);
-    res
-      .status(response.status)
-      .json({ message: response.message, room: response.room });
+    res.status(response.status).json({
+      message: req.t(response.message),
+      room: response.room
+    });
   } catch (error) {
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Failed to update room" });
+    res.status(error.status || 500).json({
+      message: req.t(error.message || "room.errors.updateFailed")
+    });
   }
 });
 
 router.delete("/rooms/:name", async (req, res) => {
-  try {
-    const response = await roomController.deleteRoom(req.params.name);
-    return res.status(200).json(response);
-  } catch (error) {
-    console.error("Error deleting room:", error.message);
-    return res.status(500).json({ message: "Failed to delete room" });
-  }
+  const response = await roomController.deleteRoom(req.params.name);
+  return res.status(response.status).json({
+    message: req.t(response.message),
+    ...(response.data && { data: response.data }),
+    ...(response.error && { error: response.error })
+  });
 });
 
 router.get("/rooms/:roomId/monthly-availability", async (req, res) => {
   const { roomId } = req.params;
-
   try {
     const response = await roomController.getRoomAvailabilityForWeek(roomId);
     return res.status(200).json(response);
   } catch (error) {
-    console.error("Error fetching room availability:", error.message);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch room availability" });
+    const status = error.message === "room.errors.notFound" ? 404 : 500;
+    return res.status(status).json({
+      message: req.t(error.message)
+    });
   }
 });
 
-// GET /rooms-by-name/:name/monthly-availability
 router.get("/rooms-by-name/:name/monthly-availability", async (req, res) => {
   try {
     const { name } = req.params;
-    const response =
-      await roomController.getRoomAvailabilityForWeekByName(name);
+    const response = await roomController.getRoomAvailabilityForWeekByName(name);
     return res.status(200).json(response);
   } catch (error) {
-    console.error("Error fetching room availability by name:", error.message);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch room availability" });
+    const status = error.message === "room.errors.notFound" ? 404 : 500;
+    return res.status(status).json({
+      message: req.t(error.message)
+    });
   }
 });
 

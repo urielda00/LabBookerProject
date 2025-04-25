@@ -10,7 +10,7 @@ async function getRooms(name = null) {
     if (name) {
       const room = await Room.findOne({ name });
       if (!room) {
-        throw new Error("Room not found");
+        throw new Error("room.errors.notFound");
       }
       return room;
     } else {
@@ -19,7 +19,7 @@ async function getRooms(name = null) {
     }
   } catch (error) {
     console.error("Error in getRooms:", error.message);
-    throw new Error("Unable to fetch rooms");
+    throw new Error("room.errors.fetchFailed");
   }
 }
 
@@ -28,7 +28,7 @@ async function createRoom(req, res) {
     uploadMulter(req, res, async (err) => {
       if (err) {
         console.error("Error uploading file:", err.message);
-        reject({ status: 500, message: "Failed to upload file" });
+        reject({ status: 500, message: "room.errors.uploadFailed" });
       } else {
         try {
           // Extract fields from the request body
@@ -46,19 +46,16 @@ async function createRoom(req, res) {
                   if (item.name && item.icon) {
                     return { name: item.name, icon: item.icon };
                   }
-                  throw new Error(
-                    "Each amenity must have a 'name' and 'icon' property.",
-                  );
+                  throw new Error("room.errors.invalidAmenities");
                 });
               } else {
                 // If amenities is a stringified array, try to parse it
                 parsedAmenities = JSON.parse(amenities);
               }
             } catch (parseError) {
-              reject({
-                status: 400,
-                message:
-                  "Invalid format for amenities. It should be an array of objects with 'name' and 'icon' properties.",
+              reject({ 
+                status: 400, 
+                message: "room.errors.invalidAmenities" 
               });
               return;
             }
@@ -73,10 +70,7 @@ async function createRoom(req, res) {
 
           // Check for required fields
           if (!name || !type || !capacity) {
-            reject({
-              status: 400,
-              message: "Missing required fields: name, type, capacity",
-            });
+            reject({ status: 400, message: "room.errors.missingFields" });
             return;
           }
 
@@ -96,15 +90,13 @@ async function createRoom(req, res) {
           // Return response with the created room
           resolve({
             status: 201,
-            message: "Room created successfully",
-            room: newRoom,
+            message: "room.success.created",
+            room: newRoom
           });
         } catch (error) {
-          console.error("Error creating room:", error.message);
-          reject({
-            status: 500,
-            message:
-              "Failed to create room. Please check the input and try again.",
+          reject({ 
+            status: 500, 
+            message: "room.errors.createFailed" 
           });
         }
       }
@@ -116,21 +108,24 @@ async function updateRoom(req, res) {
   return new Promise((resolve, reject) => {
     uploadMulter(req, res, async (err) => {
       if (err) {
-        reject({ status: 500, message: "Failed to upload file" });
+        reject({ status: 500, message: "room.errors.uploadFailed" });
       } else {
         try {
           const { name, type, capacity, description, amenities } = req.body; // Original name passed in request body
           const originalName = req.body.originalName; // Ensure the original name is passed for identification
 
           if (!originalName) {
-            reject({ status: 400, message: "Original room name is missing" });
+            
             return;
-          }
+          } reject({ 
+            status: 400, 
+            message: "room.errors.missingOriginalName" 
+          });
 
           // Find the room by the original name
           const room = await Room.findOne({ name: originalName });
           if (!room) {
-            reject({ status: 404, message: "Room not found" });
+            reject({ status: 404, message: "room.errors.notFound" });
             return;
           }
 
@@ -146,17 +141,15 @@ async function updateRoom(req, res) {
             try {
               room.amenities = JSON.parse(amenities).map((amenity) => {
                 if (!amenity.name || !amenity.icon) {
-                  throw new Error(
-                    "Each amenity must have 'name' and 'icon' properties.",
-                  );
+                  throw new Error("room.errors.invalidAmenities");
                 }
                 return { name: amenity.name, icon: amenity.icon };
               });
             } catch (parseError) {
               reject({
                 status: 400,
-                message:
-                  "Invalid format for amenities. It should be an array of objects with 'name' and 'icon' properties.",
+                message: "room.errors.invalidAmenities"
+
               });
               return;
             }
@@ -171,17 +164,16 @@ async function updateRoom(req, res) {
           // Save updated room (using the original name for identification)
           await room.save();
 
+          await room.save();
           resolve({
             status: 200,
-            message: "Room updated successfully",
-            room,
+            message: "room.success.updated",
+            room
           });
         } catch (error) {
-          console.error("Error updating room:", error.message);
           reject({
             status: 500,
-            message:
-              "Failed to update room. Please check the input and try again.",
+            message: "room.errors.updateFailed"
           });
         }
       }
@@ -197,7 +189,7 @@ async function deleteRoom(name) {
     if (!room) {
       return {
         status: 404,
-        message: "Room not found",
+        message: "room.errors.notFound",
       };
     }
 
@@ -216,7 +208,7 @@ async function deleteRoom(name) {
 
     return {
       status: 200,
-      message: "Room and associated bookings deleted successfully",
+      message: "room.success.deleted",
       data: {
         roomName: room.name,
         deletedBookingsCount: deletedBookings.deletedCount,
@@ -226,8 +218,7 @@ async function deleteRoom(name) {
     console.error("Error deleting room:", error.message);
     return {
       status: 500,
-      message:
-        "Failed to delete room and associated bookings. Please try again.",
+      message: "room.errors.deleteFailed",
       error: error.message,
     };
   }
@@ -270,7 +261,8 @@ function generateTwoHourSlots() {
 
 const getRoomAvailabilityForWeek = async (roomId) => {
   const room = await Room.findById(roomId);
-  if (!room) throw new Error("Room not found.");
+  if (!room) throw new Error("room.errors.notFound");
+
 
   const dates = generateNext7Days();
   const bookings = await Booking.find({
@@ -314,7 +306,7 @@ const getRoomAvailabilityForWeek = async (roomId) => {
 // Make the same time comparison changes to getRoomAvailabilityForWeekByName
 async function getRoomAvailabilityForWeekByName(roomName) {
   const room = await Room.findOne({ name: roomName });
-  if (!room) throw new Error("Room not found by that name.");
+  if (!room) throw new Error("room.errors.notFound");
 
   const dates = generateNext7Days();
   const bookings = await Booking.find({
