@@ -180,7 +180,7 @@ const UpdateRoomForm = ({
             onChange={(e) => setRoomId(e.target.value)}
             className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           >
-            <option value="" disabled className="dark:bg-gray-700">
+            <option value="" disabled className="dark:bg-gray-700 ">
               {t("updateRoom.selectSection.placeholder")}
             </option>
             {roomsList.map((room) => (
@@ -259,12 +259,18 @@ const UpdateRoomForm = ({
                   onChange={handleInputChange}
                   className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
-                  <option value="" disabled>
-                    {t("updateRoom.fields.selectType")}
+                  <option value="" disabled className="dark:bg-gray-700">
+                    {t("createRoom.fields.selectType")}
                   </option>
-                  <option value="Open">{t("updateRoom.fields.types.open")}</option>
-                  <option value="Small Seminar">{t("updateRoom.fields.types.small")}</option>
-                  <option value="Large Seminar">{t("updateRoom.fields.types.large")}</option>
+                  <option value="Open" className="dark:bg-gray-700">
+                    {t("createRoom.fields.types.open")}
+                  </option>
+                  <option value="Small Seminar" className="dark:bg-gray-700">
+                    {t("createRoom.fields.types.small")}
+                  </option>
+                  <option value="Large Seminar" className="dark:bg-gray-700">
+                    {t("createRoom.fields.types.large")}
+                  </option>
                 </select>
               </div>
 
@@ -336,7 +342,9 @@ const UpdateRoomForm = ({
                           key={amenity}
                           className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer text-sm text-gray-800 dark:text-gray-200"
                         >
-                          <span className="w-5 h-5">{iconMapping[amenity]}</span>
+                          <span className="w-5 h-5">
+                            {iconMapping[amenity]}
+                          </span>
                           <span className="capitalize flex-1">{amenity}</span>
                           <input
                             type="checkbox"

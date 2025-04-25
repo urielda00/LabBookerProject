@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import Message from "./Error_successMessage";
 import { motion } from "framer-motion";
-import api from "../utils/axiosConfig"; // Import the centralized Axios instance
+import api from "../utils/axiosConfig";
+import { useTranslation } from "react-i18next";
 
 const validStatuses = ["Pending", "Confirmed", "Canceled"];
 
 const UpdateBooking = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [userBookings, setUserBookings] = useState([]);
   const [selectedBookingId, setSelectedBookingId] = useState("");
@@ -31,7 +33,7 @@ const UpdateBooking = ({ onSuccess }) => {
 
   const fetchBookings = async () => {
     if (!username.trim()) {
-      setErrors("Please enter a username to fetch bookings.");
+      setErrors(t("updateBooking.errors.usernameRequired"));
       return;
     }
 
@@ -41,46 +43,45 @@ const UpdateBooking = ({ onSuccess }) => {
     setSelectedBookingId("");
 
     try {
-      const response = await api.get(
-        `/book/bookings/upcoming/${username}`,
-      );
-
+      const response = await api.get(`/book/bookings/upcoming/${username}`);
       if (response.status === 200) {
         const bookings = response.data.bookings || [];
         setUserBookings(bookings);
 
         if (bookings.length === 0) {
-          setErrors(`No upcoming bookings found for username: "${username}"`);
+          setErrors(t("updateBooking.noBookings", { username }));
         } else {
-          setSuccessMessage(`Found ${bookings.length} upcoming booking(s)`);
+          setSuccessMessage(
+            t("updateBooking.foundBookings", { count: bookings.length })
+          );
         }
       }
     } catch (err) {
       setErrors(
         err.response?.data?.message ||
-          `Error fetching upcoming bookings for username: ${username}`,
+          t("updateBooking.fetchError", { username })
       );
     } finally {
       setLoadingBookings(false);
     }
   };
 
-  // Update the handleUpdate function to prevent updating to the same status
   const handleUpdate = async () => {
     if (!username.trim()) {
-      setErrors("Please enter a username first.");
+      setErrors(t("updateBooking.errors.usernameRequired"));
       return;
     }
     if (!selectedBookingId) {
-      setErrors("Please select a booking to update.");
+      setErrors(t("updateBooking.errors.bookingRequired"));
       return;
     }
 
     const currentStatus = userBookings.find(
-      (b) => b._id === selectedBookingId,
+      (b) => b._id === selectedBookingId
     )?.status;
+
     if (status === currentStatus) {
-      setErrors("Please select a different status to update.");
+      setErrors(t("updateBooking.errors.sameStatus"));
       return;
     }
 
@@ -95,18 +96,23 @@ const UpdateBooking = ({ onSuccess }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.status === 200) {
         setSuccessMessage(
-          `Booking status successfully updated from ${currentStatus} to ${status}`,
+          t("updateBooking.successUpdate", {
+            from: currentStatus,
+            to: status,
+          })
         );
         onSuccess?.(response.data.message);
         await fetchBookings();
       }
     } catch (err) {
-      setErrors(err.response?.data?.message || "Error updating booking status");
+      setErrors(
+        err.response?.data?.message || t("updateBooking.errors.updateFailed")
+      );
     } finally {
       setLoadingUpdate(false);
     }
@@ -120,22 +126,22 @@ const UpdateBooking = ({ onSuccess }) => {
       className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 md:p-8 lg:p-10 transition-colors duration-300"
     >
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8">
-        Update Booking Status
+        {t("updateBooking.title")}
       </h2>
 
       <form
         className="space-y-6 sm:space-y-8 md:space-y-10"
         onSubmit={(e) => e.preventDefault()}
       >
-        {/* Username Section */}
         <div className="space-y-4 sm:space-y-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-700">
-            User Details
+            {t("updateBooking.sectionUser")}
           </h3>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-grow">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Username <span className="text-red-500">*</span>
+                {t("updateBooking.username")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -145,7 +151,7 @@ const UpdateBooking = ({ onSuccess }) => {
                   resetMessages();
                 }}
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
-                placeholder="Enter username to fetch bookings"
+                placeholder={t("updateBooking.usernamePlaceholder")}
               />
             </div>
             <button
@@ -158,20 +164,21 @@ const UpdateBooking = ({ onSuccess }) => {
                   : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
               }`}
             >
-              {loadingBookings ? "Fetching..." : "Fetch Bookings"}
+              {loadingBookings
+                ? t("updateBooking.fetching")
+                : t("updateBooking.fetch")}
             </button>
           </div>
         </div>
 
-        {/* Bookings Section */}
         {userBookings.length > 0 && (
           <div className="space-y-4 sm:space-y-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-700">
-              Select Booking
+              {t("updateBooking.sectionSelect")}
             </h3>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Available Bookings
+                {t("updateBooking.availableBookings")}
               </label>
               <select
                 value={selectedBookingId}
@@ -181,13 +188,9 @@ const UpdateBooking = ({ onSuccess }) => {
                 }}
                 className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
               >
-                <option value="">-- Select a booking to update --</option>
+                <option value="">{t("updateBooking.selectBooking")}</option>
                 {userBookings.map((booking) => (
-                  <option
-                    key={booking._id}
-                    value={booking._id}
-                    className="text-sm sm:text-base dark:bg-gray-700"
-                  >
+                  <option key={booking._id} value={booking._id}>
                     Room: {booking.roomId?.name} | Date: {booking.date} | Time:{" "}
                     {booking.startTime}-{booking.endTime}
                   </option>
@@ -197,17 +200,15 @@ const UpdateBooking = ({ onSuccess }) => {
           </div>
         )}
 
-        {/* Status Section */}
         {selectedBookingId && (
           <div className="space-y-4 sm:space-y-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-700">
-              Update Status
+              {t("updateBooking.sectionUpdate")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              {/* Current Status Display */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Current Status
+                  {t("updateBooking.currentStatus")}
                 </label>
                 <div className="p-2 sm:p-3 bg-gray-100 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-lg">
                   <div className="flex items-center space-x-2">
@@ -217,12 +218,12 @@ const UpdateBooking = ({ onSuccess }) => {
                           ?.status === "Confirmed"
                           ? "bg-green-500 dark:bg-green-600"
                           : userBookings.find(
-                                (b) => b._id === selectedBookingId,
-                              )?.status === "Canceled"
-                            ? "bg-red-500 dark:bg-red-600"
-                            : "bg-yellow-500 dark:bg-yellow-600"
+                              (b) => b._id === selectedBookingId
+                            )?.status === "Canceled"
+                          ? "bg-red-500 dark:bg-red-600"
+                          : "bg-yellow-500 dark:bg-yellow-600"
                       }`}
-                    ></span>
+                    />
                     <span className="font-medium text-gray-800 dark:text-gray-200 text-sm sm:text-base">
                       {userBookings.find((b) => b._id === selectedBookingId)
                         ?.status || "Unknown"}
@@ -231,10 +232,10 @@ const UpdateBooking = ({ onSuccess }) => {
                 </div>
               </div>
 
-              {/* New Status Selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  New Status <span className="text-red-500">*</span>
+                  {t("updateBooking.newStatus")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={status}
@@ -259,98 +260,34 @@ const UpdateBooking = ({ onSuccess }) => {
                         userBookings.find((b) => b._id === selectedBookingId)
                           ?.status
                       }
-                      className="text-sm sm:text-base dark:bg-gray-700"
                     >
-                      {s}{" "}
+                      {s}
                       {s ===
                       userBookings.find((b) => b._id === selectedBookingId)
                         ?.status
-                        ? "(Current)"
+                        ? ` (${t("updateBooking.statusRequiredNote")})`
                         : ""}
                     </option>
                   ))}
                 </select>
-                {status ===
-                  userBookings.find((b) => b._id === selectedBookingId)
-                    ?.status && (
-                  <p className="mt-1 text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">
-                    Please select a different status to update
-                  </p>
-                )}
               </div>
-            </div>
-
-            {/* Booking Details Summary */}
-            <div className="mt-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Selected Booking Details
-              </h4>
-              {(() => {
-                const selectedBooking = userBookings.find(
-                  (b) => b._id === selectedBookingId,
-                );
-                return selectedBooking ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                    <div className="space-y-1">
-                      <span className="block text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        Room
-                      </span>
-                      <span className="font-medium text-sm sm:text-base dark:text-gray-200">
-                        {selectedBooking.roomId?.name}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="block text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        Date
-                      </span>
-                      <span className="font-medium text-sm sm:text-base dark:text-gray-200">
-                        {selectedBooking.date}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="block text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        Time
-                      </span>
-                      <span className="font-medium text-sm sm:text-base dark:text-gray-200">
-                        {selectedBooking.startTime} - {selectedBooking.endTime}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="block text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        Booking ID
-                      </span>
-                      <span className="font-medium text-sm sm:text-base dark:text-gray-200">
-                        {selectedBooking._id.slice(-6)}
-                      </span>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
             </div>
           </div>
         )}
 
-        {/* Messages */}
         <div className="text-center">
           {errors && (
-            <Message
-              message={errors}
-              type="error"
-              onClose={resetMessages}
-              className="dark:bg-red-900/20 dark:text-red-300"
-            />
+            <Message message={errors} type="error" onClose={resetMessages} />
           )}
           {successMessage && (
             <Message
               message={successMessage}
               type="success"
               onClose={resetMessages}
-              className="dark:bg-green-900/20 dark:text-green-300"
             />
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
           {userBookings.length > 0 && (
             <button
@@ -358,7 +295,7 @@ const UpdateBooking = ({ onSuccess }) => {
               onClick={resetForm}
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm sm:text-base"
             >
-              Reset
+              {t("updateBooking.reset")}
             </button>
           )}
           {selectedBookingId && (
@@ -372,7 +309,9 @@ const UpdateBooking = ({ onSuccess }) => {
                   : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
               }`}
             >
-              {loadingUpdate ? "Updating..." : "Update Booking"}
+              {loadingUpdate
+                ? t("updateBooking.updating")
+                : t("updateBooking.update")}
             </button>
           )}
         </div>

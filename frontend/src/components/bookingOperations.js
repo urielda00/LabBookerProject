@@ -2,13 +2,15 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Calendar, Edit, Trash } from "lucide-react"; // Added icons for better mobile display
-
+import { useTranslation } from "react-i18next";
 const BookingOperations = ({
   setOperation,
   setBookingId,
   setBookingDetails,
   operation,
 }) => {
+  const { t } = useTranslation(); // Initialize the translation function
+
   const handleOperationChange = (newOperation) => {
     setOperation(newOperation);
     if (newOperation !== "create") {
@@ -25,11 +27,14 @@ const BookingOperations = ({
   };
 
   const operations = [
-    { label: "Create Booking", operation: "create", icon: Calendar },
-    { label: "Update Booking", operation: "update", icon: Edit },
-    { label: "Delete Booking", operation: "delete", icon: Trash },
+    {
+      label: t("createBookingByNames.createBooking"),
+      operation: "create",
+      icon: Calendar,
+    },
+    { label: t("updateBooking.update"), operation: "update", icon: Edit },
+    { label: t("deleteBooking.title"), operation: "delete", icon: Trash },
   ];
-
   return (
     <motion.div
       initial="initial"
