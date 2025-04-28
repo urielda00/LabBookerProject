@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import api from "../utils/axiosConfig";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 const UpdateRoomForm = ({
   roomId,
@@ -13,7 +14,7 @@ const UpdateRoomForm = ({
   setRoomDetails,
   onSuccess,
 }) => {
-  const { t } = useTranslation();
+  const { t , i18n} = useTranslation();
   const [roomsList, setRoomsList] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -176,18 +177,19 @@ const UpdateRoomForm = ({
             {t("updateRoom.selectSection.label")}
           </label>
           <select
+            // dir={i18n.dir()}
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+            className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           >
-            <option value="" disabled className="dark:bg-gray-700 ">
+            <option value="" disabled className="dark:bg-gray-700 ltr:mr-2">
               {t("updateRoom.selectSection.placeholder")}
             </option>
             {roomsList.map((room) => (
               <option
                 key={room._id}
                 value={room.name}
-                className="dark:bg-gray-700"
+                className="dark:bg-gray-700 rtl:space-x-6"
               >
                 {room.name}
               </option>
@@ -215,7 +217,7 @@ const UpdateRoomForm = ({
         <button
           type="button"
           onClick={handleRoomFetch}
-          className="w-full py-2 sm:py-3 px-4 sm:px-6 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 text-sm sm:text-base rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white transition-all duration-300 focus:ring-2 focus:ring-green-400 border border-gray-200 dark:border-gray-600"
+          className="w-full py-2 sm:py-3 px-4 sm:px-6 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 text-sm sm:text-base rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white transition-all duration-300 focus:ring-2 focus:ring-blue-400 border border-gray-200 dark:border-gray-600"
         >
           {fetchingRoom
             ? t("updateRoom.selectSection.fetching")
@@ -245,7 +247,7 @@ const UpdateRoomForm = ({
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 />
               </div>
 
@@ -257,7 +259,7 @@ const UpdateRoomForm = ({
                   name="type"
                   value={formData.type}
                   onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
                   <option value="" disabled className="dark:bg-gray-700">
                     {t("createRoom.fields.selectType")}
@@ -283,7 +285,7 @@ const UpdateRoomForm = ({
                   name="capacity"
                   value={formData.capacity}
                   onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 />
               </div>
 
@@ -295,7 +297,7 @@ const UpdateRoomForm = ({
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 />
               </div>
             </div>
@@ -309,7 +311,7 @@ const UpdateRoomForm = ({
               <button
                 type="button"
                 onClick={() => setShowAmenitiesDropdown((prev) => !prev)}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 <span className="text-sm sm:text-base">
                   {selectedAmenities.length > 0
@@ -328,7 +330,7 @@ const UpdateRoomForm = ({
                     placeholder={t("updateRoom.fields.searchAmenities")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {availableAmenities
@@ -350,7 +352,7 @@ const UpdateRoomForm = ({
                             type="checkbox"
                             checked={selectedAmenities.includes(amenity)}
                             onChange={() => handleAmenityToggle(amenity)}
-                            className="form-checkbox h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-500 rounded dark:bg-gray-600"
+                            className="form-checkbox h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-500 rounded dark:bg-gray-600"
                           />
                         </label>
                       ))}
@@ -368,7 +370,7 @@ const UpdateRoomForm = ({
               type="file"
               onChange={handleImageChange}
               accept="image/*"
-              className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
             />
           </div>
 
@@ -393,7 +395,7 @@ const UpdateRoomForm = ({
             <button
               type="submit"
               disabled={loading}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
             >
               {loading
                 ? t("updateRoom.buttons.submitting")

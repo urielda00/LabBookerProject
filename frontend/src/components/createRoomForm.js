@@ -129,7 +129,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t("createRoom.fields.namePlaceHolder")}
               />
             </div>
@@ -144,7 +144,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 <option value="" disabled className="dark:bg-gray-700">
                   {t("createRoom.fields.selectType")}
@@ -172,7 +172,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                 name="capacity"
                 value={formData.capacity}
                 onChange={handleInputChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t("createRoom.fields.capacityPlaceHolder")}
               />
             </div>
@@ -186,7 +186,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t("createRoom.fields.descriptionPlaceHolder")}
               />
             </div>
@@ -202,7 +202,7 @@ const CreateRoomForm = ({ onSuccess }) => {
             <button
               type="button"
               onClick={() => setShowAmenitiesDropdown((prev) => !prev)}
-              className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
             >
               <span className="text-sm sm:text-base">
                 {selectedAmenities.length > 0
@@ -222,7 +222,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                   placeholder={t("createRoom.fields.searchAmenities")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
                   {availableAmenities
@@ -240,7 +240,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                           type="checkbox"
                           checked={selectedAmenities.includes(amenity)}
                           onChange={() => handleAmenityToggle(amenity)}
-                          className="form-checkbox h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-500 rounded dark:bg-gray-600"
+                          className="form-checkbox h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-500 rounded dark:bg-gray-600"
                         />
                       </label>
                     ))}
@@ -259,7 +259,7 @@ const CreateRoomForm = ({ onSuccess }) => {
             type="file"
             onChange={handleImageChange}
             accept="image/*"
-            className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+            className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           />
         </div>
 
@@ -286,7 +286,7 @@ const CreateRoomForm = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 rounded-lg shadow-md hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
           >
             {loading ? t("createRoom.buttons.submitting"): t("createRoom.buttons.submit")}
           </button>
