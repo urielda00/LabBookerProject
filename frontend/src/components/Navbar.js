@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { RiUserSettingsLine } from "react-icons/ri";
 import { useNotifications } from "../hooks/useNotifications";
 import api from "../utils/axiosConfig";
+import { FaLaptopCode } from "react-icons/fa";
 import {
   Menu,
   X,
@@ -248,85 +249,91 @@ const Navbar = ({
   );
 
   // Profile dropdown menu
-  const ProfileDropdown = useMemo(() => {
-    if (!state.profileDropdownOpen || !userInfo) return null;
-    return (
-      <div
-        id="profile-dropdown"
-        className={`absolute bg-gray-800 rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 ${
-          isMobile ? "w-72 left-1/2 -translate-x-[90%]" : "w-72 right-0"
-        }`}
-        style={{ maxHeight: isMobile ? "80vh" : "auto" }}
-        onMouseEnter={() =>
-          setState((prev) => ({ ...prev, profileDropdownOpen: true }))
-        }
-        onMouseLeave={() =>
-          setState((prev) => ({ ...prev, profileDropdownOpen: false }))
-        }
-      >
-        <div className="p-4 bg-gray-800 border-b border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-white p-0.5 hover:border-blue-500 transition-colors">
-              <div className="w-full h-full rounded-full overflow-hidden">
-                {userInfo.profilePicture ? (
-                  <img
-                    src={userInfo.profilePicture}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold text-xl">
-                    {userInfo.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">
-                {userInfo.username}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                {userInfo.email}
-              </p>
+  // Profile dropdown menu
+const ProfileDropdown = useMemo(() => {
+  if (!state.profileDropdownOpen || !userInfo) return null;
+  
+  return (
+    <div
+      id="profile-dropdown"
+      className={`absolute bg-gray-800 rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 ${
+        isMobile ? "w-72 left-1/2 -translate-x-[90%]" : "w-72 right-0"
+      }`}
+      style={{ maxHeight: isMobile ? "80vh" : "auto" }}
+      onMouseEnter={() => setState(prev => ({ ...prev, profileDropdownOpen: true }))}
+      onMouseLeave={() => setState(prev => ({ ...prev, profileDropdownOpen: false }))}
+    >
+      {/* Profile Header */}
+      <div className="p-4 bg-gray-800 border-b border-gray-700">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-white p-0.5 hover:border-blue-500 transition-colors">
+            <div className="w-full h-full rounded-full overflow-hidden">
+              {userInfo.profilePicture ? (
+                <img
+                  src={userInfo.profilePicture}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold text-xl">
+                  {userInfo.username.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white truncate">
+              {userInfo.username}
+            </p>
+            <p className="text-xs text-gray-400 truncate">
+              {userInfo.email}
+            </p>
+          </div>
         </div>
-        <div className="py-2">
-          {profileMenuItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.path}
-              onClick={() =>
-                setState((prev) => ({ ...prev, profileDropdownOpen: false }))
-              }
-              className="flex items-center px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-700 transition-all group"
-            >
-              <span className="p-1.5 rounded-lg bg-gray-800 transition-colors group-hover:bg-blue-500/20">
-                {item.icon}
-              </span>
-              <span className="ml-3 text-sm font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 border-t border-gray-700 transition-all group"
-        >
-          <span className="p-1.5 rounded-lg bg-red-500/10 transition-colors group-hover:bg-red-500/20">
-            <LogOut className="w-5 h-5" />
-          </span>
-          <span className="ml-3 text-sm font-medium">{t("nav.logout")}</span>
-        </button>
       </div>
-    );
-  }, [
-    state.profileDropdownOpen,
-    userInfo,
-    profileMenuItems,
-    handleLogout,
-    isMobile,
-    t,
-  ]);
+
+      {/* Menu Items */}
+      <div className="py-2">
+        {profileMenuItems.map((item, index) => (
+          <Link
+            key={index}
+            to={item.path}
+            onClick={() => setState(prev => ({ ...prev, profileDropdownOpen: false }))}
+            className="flex items-center px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-700 transition-all group"
+          >
+            <span className="p-1.5 rounded-lg bg-gray-800 transition-colors group-hover:bg-blue-500/20">
+              {item.icon}
+            </span>
+            <span className="ml-3 text-sm font-medium">{item.label}</span>
+          </Link>
+        ))}
+
+       {/* Inside ProfileDropdown component */}
+<div className="px-4 py-3 border-t border-gray-700/50">
+  <LanguageSwitcher />
+</div>
+      </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 border-t border-gray-700 transition-all group"
+      >
+        <span className="p-1.5 rounded-lg bg-red-500/10 transition-colors group-hover:bg-red-500/20">
+          <LogOut className="w-5 h-5" />
+        </span>
+        <span className="ml-3 text-sm font-medium">{t("nav.logout")}</span>
+      </button>
+    </div>
+  );
+}, [
+  state.profileDropdownOpen,
+  userInfo,
+  profileMenuItems,
+  handleLogout,
+  isMobile,
+  t
+]);
 
   // Notification dropdown menu
   const NotificationDropdown = useMemo(() => {
@@ -532,7 +539,10 @@ const Navbar = ({
             to="/"
             className="text-2xl font-bold text-blue-500 tracking-wider relative group hover:text-blue-400 transition-all"
           >
-            <span className="relative z-10">LabBooker</span>
+<span className="relative z-10 flex items-center gap-2">
+  <FaLaptopCode className="w-5 h-5" />
+  LabBooker
+</span>
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
           </Link>
         </div>
@@ -545,7 +555,7 @@ const Navbar = ({
           </div>
 
           {/* 3) LanguageSwitcher placed near the user buttons */}
-          <LanguageSwitcher />
+          {/* <LanguageSwitcher /> */}
 
           {/* If logged in */}
           {userInfo ? (

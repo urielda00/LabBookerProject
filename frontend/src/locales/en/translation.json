@@ -102,7 +102,8 @@
     "allCaughtUp": "All caught up!",
     "noNewNotifications": "You have no new notifications",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "language": "English"
   },
   "nextBooking": {
     "confirmText": "Confirm Cancellation",

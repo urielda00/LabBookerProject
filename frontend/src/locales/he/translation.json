@@ -101,7 +101,8 @@
     "allCaughtUp": "הכל מעודכן!",
     "noNewNotifications": "אין התראות חדשות",
     "today": "היום",
-    "yesterday": "אתמול"
+    "yesterday": "אתמול",
+    "language": "עברית"
   },
   "nextBooking": {
     "confirmText": "אשר ביטול",
