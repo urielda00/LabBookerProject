@@ -50,15 +50,15 @@ const RoomOperations = ({
             font-semibold rounded-xl shadow-md hover:shadow-xl 
             transition-all duration-300 
             border border-gray-100 dark:border-gray-700 
-            hover:border-green-200 dark:hover:border-green-600 
+            hover:border-blue-200 dark:hover:border-blue-600 
             group ${
               operation === currentOperation
-                ? "ring-2 ring-green-500 dark:ring-green-600 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                ? "ring-2 ring-blue-500 dark:ring-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                 : ""
             }`}
         >
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 dark:text-green-400 shrink-0" />
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 dark:text-blue-400 shrink-0" />
             <span className="text-xs sm:text-sm md:text-base text-center sm:text-left">
               {label}
             </span>

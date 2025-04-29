@@ -150,7 +150,7 @@ const UpdateBooking = ({ onSuccess }) => {
                   setUsername(e.target.value);
                   resetMessages();
                 }}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
                 placeholder={t("updateBooking.usernamePlaceholder")}
               />
             </div>
@@ -161,7 +161,7 @@ const UpdateBooking = ({ onSuccess }) => {
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors text-sm sm:text-base whitespace-nowrap ${
                 loadingBookings || !username.trim()
                   ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
+                  : "bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400"
               }`}
             >
               {loadingBookings
@@ -186,7 +186,7 @@ const UpdateBooking = ({ onSuccess }) => {
                   setSelectedBookingId(e.target.value);
                   resetMessages();
                 }}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
               >
                 <option value="">{t("updateBooking.selectBooking")}</option>
                 {userBookings.map((booking) => (
@@ -216,7 +216,7 @@ const UpdateBooking = ({ onSuccess }) => {
                       className={`inline-block w-2 h-2 rounded-full ${
                         userBookings.find((b) => b._id === selectedBookingId)
                           ?.status === "Confirmed"
-                          ? "bg-green-500 dark:bg-green-600"
+                          ? "bg-blue-500 dark:bg-blue-600"
                           : userBookings.find(
                               (b) => b._id === selectedBookingId
                             )?.status === "Canceled"
@@ -243,7 +243,7 @@ const UpdateBooking = ({ onSuccess }) => {
                     setStatus(e.target.value);
                     resetMessages();
                   }}
-                  className={`w-full p-2 sm:p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base ${
+                  className={`w-full p-2 sm:p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
                     status ===
                     userBookings.find((b) => b._id === selectedBookingId)
                       ?.status
@@ -306,7 +306,7 @@ const UpdateBooking = ({ onSuccess }) => {
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors text-sm sm:text-base ${
                 loadingUpdate
                   ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
+                  : "bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400"
               }`}
             >
               {loadingUpdate

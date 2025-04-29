@@ -95,11 +95,11 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
         const successMsg = (
           <div className="space-y-2">
             <p>{t("deleteRoom.successMessage.title")}</p>
-            <div className="text-sm bg-green-50 p-3 rounded-md">
-              <p className="font-medium text-green-800">
+            <div className="text-sm bg-blue-50 p-3 rounded-md">
+              <p className="font-medium text-blue-800">
                 {t("deleteRoom.successMessage.details")}
               </p>
-              <ul className="mt-1 text-green-700">
+              <ul className="mt-1 text-blue-700">
                 <li>
                   {t("deleteRoom.name")} {deletedRoom.name}
                 </li>
@@ -110,7 +110,7 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
                   {t("deleteRoom.capacity")} {deletedRoom.capacity}
                 </li>
               </ul>
-              <p className="mt-2 font-medium text-green-800">
+              <p className="mt-2 font-medium text-blue-800">
                 {t("deleteRoom.successMessage.numBookings")}{" "}
                 {relatedBookings.length}
               </p>
@@ -157,7 +157,7 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
               <select
                 value={roomId}
                 onChange={handleRoomSelect}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 disabled={loadingRooms}
               >
                 <option value="" disabled className="dark:bg-gray-700">

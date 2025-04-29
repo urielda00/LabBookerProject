@@ -364,13 +364,13 @@ const validateForm = () => {
                   name="roomName"
                   value={formData.roomName}
                   onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
                   placeholder="e.g. Large Seminar Room A"
                 />
                 <button
                   type="button"
                   onClick={fetchRoomDetails}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400 text-sm sm:text-base whitespace-nowrap"
+                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 text-sm sm:text-base whitespace-nowrap"
                 >
                   {t("createBookingByNames.fetchDetails")}
                 </button>
@@ -387,7 +387,7 @@ const validateForm = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
+                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 dark:text-gray-200"
                 placeholder="e.g. jdoe"
               />
             </div>
@@ -427,10 +427,10 @@ const validateForm = () => {
                         setFormError("");
                         setSuccessMessage("");
                       }}
-                      className={`w-full p-2 sm:p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base
+                      className={`w-full p-2 sm:p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base
                         ${
                           formData.colleagues.length === requiredUsers
-                            ? "border-green-500 dark:border-green-600"
+                            ? "border-blue-500 dark:border-blue-600"
                             : "border-gray-300 dark:border-gray-600"
                         }
                         bg-white dark:bg-gray-700 dark:text-gray-200`}
@@ -449,7 +449,7 @@ const validateForm = () => {
                           !colleagueEmail.trim() ||
                           formData.colleagues.length >= requiredUsers
                             ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "bg-green-500 dark:bg-green-600 text-white hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400"
+                            : "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:ring-2 focus:ring-blue-400"
                         }`}
                     >
                       {t("createBookingByNames.addUserBtn")}
@@ -460,7 +460,7 @@ const validateForm = () => {
                     <p
                       className={`text-xs sm:text-sm ${
                         formData.colleagues.length === requiredUsers
-                          ? "text-green-600 dark:text-green-400"
+                          ? "text-blue-600 dark:text-blue-400"
                           : "text-red-600 dark:text-red-400"
                       }`}
                     >
@@ -487,7 +487,7 @@ const validateForm = () => {
                         {formData.colleagues.map((email, index) => (
                           <span
                             key={index}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
                           >
                             {email}
                             <button
@@ -520,7 +520,7 @@ const validateForm = () => {
             className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-colors text-sm sm:text-base ${
               loadingAvailability || !roomType
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
+                : "bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400"
             }`}
           >
             {loadingAvailability
@@ -538,7 +538,7 @@ const validateForm = () => {
                 <CustomDatepicker
                   onDateChange={handleDateSelected}
                   availableDates={availableDates}
-                  theme="green"
+                  theme="blue"
                   className="dark:bg-gray-700"
                 />
               </div>
@@ -596,8 +596,8 @@ const validateForm = () => {
                         type="button"
                         className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-lg transition text-xs sm:text-sm ${
                           isSelected
-                            ? "bg-green-500 dark:bg-green-600 text-white border-green-500"
-                            : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-gray-600"
+                            ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500"
+                            : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600"
                         }`}
                         disabled={slotStatus !== "Available"}
                       >
@@ -634,7 +634,7 @@ const validateForm = () => {
               message={successMessage}
               type="success"
               onClose={() => setSuccessMessage("")}
-              className="dark:bg-green-900/20 dark:text-green-300"
+              className="dark:bg-blue-900/20 dark:text-blue-300"
             />
           )}
         </div>
@@ -653,7 +653,7 @@ const validateForm = () => {
               (roomType !== "Open" &&
                 formData.colleagues.length !== requiredUsers)
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                : "bg-white dark:bg-gray-700 text-green-500 dark:text-green-400 hover:bg-green-500 dark:hover:bg-green-600 hover:text-white focus:ring-2 focus:ring-green-400"
+                : "bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400"
             }`}
           >
             {isSubmitting
