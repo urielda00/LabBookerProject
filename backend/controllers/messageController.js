@@ -31,11 +31,19 @@ const sendMessage = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 const getAllMessages = async (req, res) => {
   try {
-    const messages = await Message.find()
-      .sort({ createdAt: 1 }) // oldest first
-      .populate("sender", "username"); // populate sender username only
+    const { limit = 20, before } = req.query;
+
+    const query = before
+      ? { createdAt: { $lt: new Date(before) } }
+      : {};
+
+    const messages = await Message.find(query)
+      .sort({ createdAt: -1 }) // newest first
+      .limit(Number(limit))
+      .populate("sender", "username");
 
     return res.status(200).json({ messages });
   } catch (error) {
