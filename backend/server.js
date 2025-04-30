@@ -4,10 +4,10 @@ const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const { i18nMiddleware } = require('./utils/i18n');
+const { i18nMiddleware } = require("./utils/i18n");
 require("dotenv").config();
 
-//Moe added this
+// Moe added this
 require("./utils/cron");
 
 // Verbose logging for route imports
@@ -25,6 +25,7 @@ const issueRoutes = require("./routes/issueRoutes");
 const pageRoutes = require("./routes/pageRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const faqRoutes = require("./routes/faqRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 console.log("[IMPORT] Route imports completed");
 
 // Debugging function for route registration
@@ -39,7 +40,7 @@ function debugRouteRegistration(app, path, routes) {
     } else {
       console.warn(
         `[ROUTE] Unexpected routes type for ${path}:`,
-        typeof routes,
+        typeof routes
       );
     }
     app.use(path, routes);
@@ -51,7 +52,13 @@ function debugRouteRegistration(app, path, routes) {
 
 const app = express();
 
-app.use(i18nMiddleware);                // the ready‑made handler
+// Socket.IO Setup
+const http = require("http");
+const socketIo = require("socket.io");
+const server = http.createServer(app);
+const io = socketIo(server);
+
+app.use(i18nMiddleware); // the ready‑made handler
 
 // Extensive Logging Middleware
 app.use((req, res, next) => {
@@ -62,9 +69,9 @@ app.use((req, res, next) => {
   res.end = function (chunk, encoding) {
     const duration = Date.now() - start;
     console.log(
-      `[${new Date().toISOString()}] ${req.method} ${req.url} - ${
+      `[${new Date().toISOString()}] ${req.method} ${req.url} - $(
         res.statusCode
-      } (${duration}ms)`,
+      ) (${duration}ms)`
     );
     originalEnd.call(this, chunk, encoding);
   };
@@ -75,13 +82,17 @@ app.use((req, res, next) => {
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000", "https://labbooker-frontend.onrender.com"],
+    origin: [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://labbooker-frontend.onrender.com",
+    ],
 
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
     exposedHeaders: ["X-System-Health", "X-Response-Time"],
     credentials: true,
-  }),
+  })
 );
 
 app.use(
@@ -94,7 +105,7 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  }),
+  })
 );
 
 app.use(express.json());
@@ -139,10 +150,10 @@ mongoose
       // Create new TTL index for bookings
       await Booking.collection.createIndex(
         { deletedAt: 1 },
-        { expireAfterSeconds: ONE_WEEK_IN_SECONDS },
+        { expireAfterSeconds: ONE_WEEK_IN_SECONDS }
       );
       console.log(
-        "✅ TTL index for Bookings created successfully (7 days expiration)",
+        "✅ TTL index for Bookings created successfully (7 days expiration)"
       );
     } catch (error) {
       console.error("❌ Error setting up TTL index for Bookings:", error);
@@ -165,10 +176,10 @@ mongoose
       // it will be automatically removed after 3 days.
       await Notification.collection.createIndex(
         { readAt: 1 },
-        { expireAfterSeconds: THREE_DAYS_IN_SECONDS },
+        { expireAfterSeconds: THREE_DAYS_IN_SECONDS }
       );
       console.log(
-        "✅ Notification TTL index created successfully (3 days expiration)",
+        "✅ Notification TTL index created successfully (3 days expiration)"
       );
     } catch (error) {
       console.error("❌ Error setting up Notification TTL index:", error);
@@ -181,22 +192,27 @@ mongoose
       // Drop existing index on createdAt if it exists
       try {
         await TransferRequest.collection.dropIndex("createdAt_1");
-        console.log("✅ Existing TransferRequest TTL index dropped successfully");
+        console.log(
+          "✅ Existing TransferRequest TTL index dropped successfully"
+        );
       } catch (error) {
         console.log("ℹ️ No existing TransferRequest TTL index to drop");
       }
 
-      // Create a TTL index on the createdAt field to automatically remove 
+      // Create a TTL index on the createdAt field to automatically remove
       // transfer requests after 7 days
       await TransferRequest.collection.createIndex(
         { createdAt: 1 },
         { expireAfterSeconds: SEVEN_DAYS_IN_SECONDS }
       );
       console.log(
-        "✅ TransferRequest TTL index created successfully (7 days expiration)",
+        "✅ TransferRequest TTL index created successfully (7 days expiration)"
       );
     } catch (error) {
-      console.error("❌ Error setting up TTL index for TransferRequest:", error);
+      console.error(
+        "❌ Error setting up TTL index for TransferRequest:",
+        error
+      );
     }
 
     // Setup TTL index for HealthChecks
@@ -215,10 +231,10 @@ mongoose
       // Create TTL index for HealthCheck documents
       await HealthCheck.collection.createIndex(
         { timestamp: 1 },
-        { expireAfterSeconds: THIRTY_DAYS_IN_SECONDS },
+        { expireAfterSeconds: THIRTY_DAYS_IN_SECONDS }
       );
       console.log(
-        "✅ TTL index for HealthCheck created successfully (30 days expiration)",
+        "✅ TTL index for HealthCheck created successfully (30 days expiration)"
       );
     } catch (error) {
       console.error("❌ Error setting up TTL index for HealthCheck:", error);
@@ -265,6 +281,7 @@ try {
     { path: "/api/pages", routes: pageRoutes },
     { path: "/api/contact", routes: contactRoutes },
     { path: "/api/faq", routes: faqRoutes },
+    { path: "/api/message", routes: messageRoutes },
   ];
 
   routesToRegister.forEach(({ path, routes }) => {
@@ -279,8 +296,32 @@ try {
 // Specific Booking Routes Debugging
 console.log(
   "[DEBUG] Booking Routes Content:",
-  require("./routes/bookingRoutes"),
+  require("./routes/bookingRoutes")
 );
+
+// Socket.IO Logic for real-time communication
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Example of emitting events
+  socket.emit("welcome", { message: "Welcome to the server!" });
+
+  // Example of handling events
+  socket.on("send_message", (message) => {
+    console.log("Message received:", message);
+    // Broadcast the message to other connected clients
+    socket.broadcast.emit("new_message", message);
+  });
+
+  // Handle disconnect
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
+
+
+app.set('io', io);
+
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -308,20 +349,17 @@ app.use((req, res, next) => {
 process.on("SIGINT", async () => {
   console.log("Received SIGINT. Closing server and database connection...");
 
-  try {
-    await mongoose.connection.close(false);
+  await mongoose.connection.close();
+  console.log("MongoDB connection closed.");
+
+  server.close(() => {
+    console.log("Server shut down gracefully.");
     process.exit(0);
-  } catch (err) {
-    console.error("Error during graceful shutdown:", err);
-    process.exit(1);
-  }
+  });
 });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log("[SERVER] Startup Complete");
 });
-
-module.exports = app;
