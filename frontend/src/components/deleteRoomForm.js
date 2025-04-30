@@ -157,11 +157,11 @@ const DeleteRoomForm = ({ operation, onSuccess }) => {
               <select
                 value={roomId}
                 onChange={handleRoomSelect}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className=" rtl:pr-8 w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 disabled={loadingRooms}
               >
                 <option value="" disabled className="dark:bg-gray-700">
-                  {t("deleteRoom.selectRoom")}
+                  {t("deleteRoom.selecatRoom")}
                 </option>
                 {roomsList.map((room) => (
                   <option

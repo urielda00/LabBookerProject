@@ -180,9 +180,9 @@ const UpdateRoomForm = ({
             // dir={i18n.dir()}
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+            className="rtl:pr-8 w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           >
-            <option value="" disabled className="dark:bg-gray-700 ltr:mr-2">
+            <option value="" disabled className="dark:bg-gray-700 ltr:mr-2 ">
               {t("updateRoom.selectSection.placeholder")}
             </option>
             {roomsList.map((room) => (

@@ -41,9 +41,9 @@ const getAllMessages = async (req, res) => {
       : {};
 
     const messages = await Message.find(query)
-      .sort({ createdAt: -1 }) // newest first
+      .sort({ createdAt: -1 }) // fetching latest messages first
       .limit(Number(limit))
-      .populate("sender", "username");
+      .populate("sender", "username"); 
 
     return res.status(200).json({ messages });
   } catch (error) {

@@ -144,7 +144,7 @@ const CreateRoomForm = ({ onSuccess }) => {
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="rtl:pr-8 w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 <option value="" disabled className="dark:bg-gray-700">
                   {t("createRoom.fields.selectType")}

@@ -384,7 +384,7 @@ const ProfileSettings = () => {
                     {/* Profile Picture Section */}
                     <div className="space-y-4 sm:space-y-6">
                       <h3
-                        dir="rtl"
+                        
                         className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300"
                       >
                         {t("profileSettings.profilePictureHeader")}
@@ -445,7 +445,7 @@ const ProfileSettings = () => {
                     {/* Profile Information Section */}
                     <div className="space-y-4 sm:space-y-6">
                       <h3
-                        dir="rtl"
+                        
                         className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 transition-colors duration-300"
                       >
                         {t("profileSettings.basicInformationHeader")}
