@@ -702,5 +702,26 @@
     "errors": {
       "notFound": "אין תוכן זמין"
     }
+  },
+  "chat": {
+  "adminChat": "צ'אט מנהלים",
+  "publicChat": "צ'אט כללי",
+  "public": "ציבורי",
+  "admin": "מנהל",
+  "you": "את/ה",
+  "open": "פתח צ'אט",
+  "close": "סגור צ'אט",
+  "emojiPicker": "בחירת אימוג'י",
+  "unreadMessages": "{{count}} הודעות חדשות",
+  "adminPlaceholder": "הודעה למנהלים...",
+  "publicPlaceholder": "הקלד הודעה...",
+  
+  "errors": {
+    "message_too_long": "הודעה ארוכה מדי (מקסימום 500 תווים)",
+    "rate_limit": "אנא המתן לפני שליחת הודעה נוספת",
+    "channel_not_allowed": "אין לך הרשאה לכתוב בערוץ זה",
+    "chat_disabled": "הצ'אט הציבורי מושבת כרגע",
+    "empty_message": "הודעה לא יכולה להיות ריקה"
   }
+}
 }

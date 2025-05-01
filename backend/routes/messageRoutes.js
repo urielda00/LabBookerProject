@@ -4,7 +4,8 @@ const {
   sendMessage,
   getAllMessages,
   getChatSettings,
-  updateChatSettings
+  updateChatSettings,
+  markMessagesRead
 } = require('../controllers/messageController');
 const authMiddleware = require('../middleware/authMiddleware');  // <-- your JWT guard
 
@@ -12,8 +13,12 @@ const authMiddleware = require('../middleware/authMiddleware');  // <-- your JWT
 router.post('/send', authMiddleware.requireAuth, sendMessage);
 router.get('/', authMiddleware.requireAuth, getAllMessages);
 
+
 // admin‐only settings
 router.get('/settings', authMiddleware.requireAuth, getChatSettings);
 router.post('/settings', authMiddleware.requireAuth, updateChatSettings);
+
+router.post('/mark-read', authMiddleware.requireAuth, markMessagesRead);
+
 
 module.exports = router;

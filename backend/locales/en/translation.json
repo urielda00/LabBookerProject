@@ -200,6 +200,12 @@
         "updateFailed": "Update failed",
         "missingTranslations": "Missing required translations for one or more languages"
       }
-    }
+    },
+
+    "chat": {
+  "notify": {
+    "mention": "You were mentioned in chat by {{from}}: {{snippet}}"
+  }
+}
   
 }

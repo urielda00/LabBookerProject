@@ -703,5 +703,27 @@
       "errors": {
         "notFound": "No content available"
       }
-    }
+    },
+    "chat": {
+  "adminChat": "Admin Chat",
+  "publicChat": "Public Chat",
+  "public": "Public",
+  "admin": "Admin",
+  "you": "You",
+  "open": "Open chat",
+  "close": "Close chat",
+  "emojiPicker": "Emoji picker",
+  "unreadMessages": "{{count}} new messages",
+  "adminPlaceholder": "Admin message...",
+  "publicPlaceholder": "Type message...",
+  
+  
+  "errors": {
+    "message_too_long": "Message too long (max 500 characters)",
+    "rate_limit": "Please wait before sending another message",
+    "channel_not_allowed": "You can't post in this channel",
+    "chat_disabled": "Public chat is currently disabled",
+    "empty_message": "Message cannot be empty"
+  }
+}
 }

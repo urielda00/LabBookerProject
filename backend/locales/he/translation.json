@@ -198,5 +198,11 @@
       "updateFailed": "העדכון נכשל",
       "missingTranslations": "חסרים תרגומים נדרשים לאחת השפות או יותר"
     }
+  },
+
+  "chat": {
+  "notify": {
+    "mention": "הוזכרת בצ'אט על ידי {{from}}: {{snippet}}"
   }
+}
 }

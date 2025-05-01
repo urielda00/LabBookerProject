@@ -1,67 +1,86 @@
 // controllers/messageController.js
-const Message     = require('../models/Message');
-const User        = require('../models/User');
+const Message = require('../models/Message');
+const User = require('../models/User');
 const ChatSetting = require('../models/ChatSetting');
+const notificationsController = require('./notificationsController');
 
 const sendMessage = async (req, res) => {
   const { content, channel = 'all' } = req.body;
   const io = req.app.get('io');
-
-  // 1. We trust the JWT-populated req.user now
   const sender = req.user;
   if (!sender) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  // 2. Load the chat-enabled flag
-  const { enabled } = await ChatSetting.findOne() || {};
-
-  // 3. Block normal users when chat is disabled
+  // 1) check chat enabled
+  const { enabled } = (await ChatSetting.findOne()) || {};
   if (!enabled && sender.role !== 'admin') {
     return res.status(403).json({ message: 'Chat is currently disabled.' });
   }
-
-  // 4. Enforce admin-only on the admin channel
   if (channel === 'admin' && sender.role !== 'admin') {
     return res.status(403).json({ message: 'Only admins can post here.' });
   }
 
-   // 5a) Save the raw message
-   const raw = new Message({ sender: sender._id, content, channel });
-   await raw.save();
-  
-    // 5b) Populate the sender so the client can render username, avatar, etc.
-    const message = await raw.populate('sender', 'username role profilePicture');
-  
-    // 5c) Broadcast the fully populated message
-    io.emit('chatMessage', message);
-    return res.status(201).json({ message });
+  // 2) create message with sender already in readBy
+  const raw = new Message({
+    sender: sender._id,
+    content,
+    channel,
+    readBy: [sender._id],
+  });
+  await raw.save();
+
+  // 3) populate sender for the client
+  await raw.populate('sender', 'username role profilePicture');
+  const message = raw; // now populated
+
+  // 4) handle @-mentions
+  const mentionPattern = /@([A-Za-z0-9_]+)/g;
+  let match;
+  while ((match = mentionPattern.exec(content))) {
+    const username = match[1];
+    const userMentioned = await User.findOne({ username }).select('_id');
+    if (userMentioned) {
+      await notificationsController.createNotification(
+        userMentioned._id,               // recipient
+        'chat.notify.mention',           // i18n key
+        { from: sender.username, snippet: content.slice(0, 50) },
+        'mention',                       // type
+        message._id.toString()           // related ID
+      );
+    }
+  }
+
+  // 5) broadcast to all clients
+  io.emit('chatMessage', message);
+  return res.status(201).json({ message });
 };
 
-// (Other methods unchanged…)
-// controllers/messageController.js
+
 const getAllMessages = async (req, res) => {
   const { limit = 50, before, channel = 'all' } = req.query;
   const query = { channel };
-  if (before) query.createdAt = { $lt: new Date(before) };
+  if (before) {
+    query.createdAt = { $lt: new Date(before) };
+  }
 
-  // fetch the latest `limit` messages (newest first)
   const raw = await Message.find(query)
     .sort({ createdAt: -1 })
     .limit(+limit)
     .populate('sender', 'username role profilePicture');
 
-  // reverse so they become oldest→newest
-  const messages = raw.reverse();
-
+  const messages = raw.reverse(); // oldest → newest
   return res.status(200).json({ messages });
 };
 
 
 const getChatSettings = async (req, res) => {
   const settings = await ChatSetting.findOne();
-  return res.status(200).json({ enabled: settings?.enabled ?? true });
+  return res
+    .status(200)
+    .json({ enabled: settings?.enabled ?? true });
 };
+
 
 const updateChatSettings = async (req, res) => {
   const { enabled } = req.body;
@@ -72,15 +91,38 @@ const updateChatSettings = async (req, res) => {
   if (user.role !== 'admin') {
     return res.status(403).json({ message: 'Forbidden' });
   }
+
   const settings = await ChatSetting.findOneAndUpdate(
-    {}, { enabled }, { new: true, upsert: true }
+    {}, { enabled },
+    { new: true, upsert: true }
   );
   return res.status(200).json({ enabled: settings.enabled });
 };
+
+
+// POST /message/mark-read
+const markMessagesRead = async (req, res) => {
+  const userId = req.user._id;
+  const { channel } = req.body;
+
+  // Only update messages that are actually unread
+  await Message.updateMany(
+    { 
+      channel,
+      readBy: { $ne: userId },
+      createdAt: { $lte: new Date() } // Only existing messages
+    },
+    { $addToSet: { readBy: userId } }
+  );
+
+  return res.sendStatus(204);
+};
+
 
 module.exports = {
   sendMessage,
   getAllMessages,
   getChatSettings,
-  updateChatSettings
+  updateChatSettings,
+  markMessagesRead,
 };
