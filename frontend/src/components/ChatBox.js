@@ -11,10 +11,11 @@ import { useTranslation } from 'react-i18next';
 //   transports: ['websocket', 'polling'],
 // });
 
-// after: let browser decide the origin
-const socket = io({
+// derive WS URL from your API_BASE (strip off the /api suffix)
+const SOCKET_URL = process.env.REACT_APP_API_BASE_URL.replace(/\/api\/?$/, '');
+const socket = io(SOCKET_URL, {
   path: '/ws',
-  transports: ['websocket','polling'],
+  transports: ['websocket','polling']
 });
 
 export default function ChatBox({ user }) {
