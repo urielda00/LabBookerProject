@@ -2,18 +2,13 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  content: {
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true },
+  channel: {
     type: String,
-    required: true
+    enum: ['all', 'admin'],
+    default: 'all'
   }
-}, {
-  timestamps: true 
-});
+}, { timestamps: true });
 
-const Message = mongoose.model('Message', messageSchema);
-module.exports = Message;
+module.exports = mongoose.model('Message', messageSchema);

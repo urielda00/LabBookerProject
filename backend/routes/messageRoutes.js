@@ -1,12 +1,19 @@
-// routes/messageRoutes.js
 const express = require('express');
 const router = express.Router();
-const { sendMessage , getAllMessages} = require('../controllers/messageController');
+const {
+  sendMessage,
+  getAllMessages,
+  getChatSettings,
+  updateChatSettings
+} = require('../controllers/messageController');
+const authMiddleware = require('../middleware/authMiddleware');  // <-- your JWT guard
 
-// Route to send a message
-router.post('/send', sendMessage);
+// public chat routes
+router.post('/send', authMiddleware.requireAuth, sendMessage);
+router.get('/', authMiddleware.requireAuth, getAllMessages);
 
-// Route to fetch all messages
-router.get('/', getAllMessages);
+// admin‐only settings
+router.get('/settings', authMiddleware.requireAuth, getChatSettings);
+router.post('/settings', authMiddleware.requireAuth, updateChatSettings);
 
 module.exports = router;

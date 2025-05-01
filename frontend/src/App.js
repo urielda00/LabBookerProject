@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -36,6 +36,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy ";
 import TermsOfService from "./pages/TermsOfService";
 import AllIssues from "./pages/AllIssues";
 import ConfigManagement from "./pages/ConfigManagement";
+import ChatBox from "./components/ChatBox";
 
 // Page Transition Wrapper
 const PageTransition = ({ children }) => {
@@ -290,13 +291,29 @@ const AnimatedRoutes = () => {
   );
 };
 
+function AppContent() {
+  const location = useLocation();
+  // initialize from localStorage
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')));
+
+  // every time the URL changes, pull fresh user info
+  useEffect(() => {
+    setUser(JSON.parse(localStorage.getItem('user')));
+  }, [location]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <AnimatedRoutes />
+      {user && <ChatBox user={user} />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div style={{ position: "relative" }}>
-          <AnimatedRoutes />
-        </div>
+        <AppContent />
       </Router>
     </ThemeProvider>
   );

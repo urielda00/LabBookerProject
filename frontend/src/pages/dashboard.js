@@ -44,6 +44,17 @@ const DashBoard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState("");
+  const [chatEnabled, setChatEnabled] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (!stored) return navigate("/login");
+    const parsed = JSON.parse(stored);
+    setUserInfo({ id: parsed._id, email: parsed.email || "", username: parsed.username || "" });
+    // fetch chat settings
+    api.get('/message/settings').then(r => setChatEnabled(r.data.enabled));
+  }, [navigate]);
+
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -68,6 +79,14 @@ const DashBoard = () => {
     }
   }, [navigate]);
 
+  // Toggle chat on/off
+  const toggleChat = () => {
+    api.post('/message/settings', { requesterId: userInfo.id, enabled: !chatEnabled })
+      .then(r => setChatEnabled(r.data.enabled))
+      .catch(err => setErrors(err.response?.data?.message || 'Error toggling chat'));
+  };
+  
+
   const fetchIssues = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -91,6 +110,8 @@ const DashBoard = () => {
       setErrors(error?.response?.data?.message || "Error fetching issues");
     }
   };
+
+  
 
   const handleStatusUpdate = async (issueId, newStatus) => {
     try {
@@ -188,6 +209,21 @@ const DashBoard = () => {
       setErrors(error?.response?.data?.message || "Error fetching bookings");
     }
   };
+
+  useEffect(() => {
+    const loadAll = async () => {
+      setLoading(true);
+      setErrors("");
+      try {
+        await Promise.all([fetchDashboardStats(), fetchBookingCounts(), fetchIssues()]);
+      } catch (e) {
+        setErrors(e.message || "Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
+  }, []);
 
   const cards = [
     {
@@ -381,6 +417,26 @@ const DashBoard = () => {
                 <h3 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 mb-4">
                   Management Tools
                 </h3>
+                {/* Replace existing toggle button with this */}
+<div className="flex items-center gap-3 mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+  <span className="text-sm font-medium">Chat System</span>
+  <label className="relative inline-flex items-center cursor-pointer">
+    <input 
+      type="checkbox" 
+      checked={chatEnabled}
+      onChange={toggleChat}
+      className="sr-only" 
+    />
+    <div className={`w-11 h-6 rounded-full transition-colors ${
+      chatEnabled ? 'bg-green-500' : 'bg-gray-400'
+    }`}>
+      <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform transform ${
+        chatEnabled ? 'translate-x-5 bg-white' : 'bg-gray-200'
+      }`} />
+    </div>
+  </label>
+</div>
+
                 <div className="grid grid-cols-1 gap-2 sm:gap-3">
                   {[
                     {

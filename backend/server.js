@@ -56,8 +56,18 @@ const app = express();
 const http = require("http");
 const socketIo = require("socket.io");
 const server = http.createServer(app);
-const io = socketIo(server);
+// Prevent uncaught ECONNRESET from HTTP clients
+server.on('clientError', (err, socket) => {
+  console.warn('HTTP client error:', err.code);
+  // Close the socket cleanly
+  socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+});
 
+ const io = require('socket.io')(server, {
+     cors: { origin: 'http://localhost:3000', credentials: true, methods: ['GET','POST'] },
+     path: '/ws',
+     transports: ['websocket','polling']
+   });
 app.use(i18nMiddleware); // the ready‑made handler
 
 // Extensive Logging Middleware
@@ -302,7 +312,10 @@ console.log(
 // Socket.IO Logic for real-time communication
 io.on("connection", (socket) => {
   console.log("A user connected");
-
+    // catch any underlying transport errors and prevent crash
+    socket.on('error', (err) => {
+      console.warn(`Socket ${socket.id} error:`, err.code || err.message);
+    });
   // Example of emitting events
   socket.emit("welcome", { message: "Welcome to the server!" });
 
