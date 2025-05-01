@@ -304,20 +304,25 @@ export default function ChatBox({ user }) {
                     </span>
                   </div>
                   <p className="break-words text-sm" dir="auto">
-                    {msg.content.split(/(@[\\w\\d_]+)/g).map((part, idx) =>
-                      part.startsWith('@') ? (
-                        <span
-                          key={idx}
-                          className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1 rounded"
-                          style={{ direction: 'ltr', unicodeBidi: 'isolate', display: 'inline-block' }}
-                        >
-                          {part}
-                        </span>
-                      ) : (
-                        <React.Fragment key={idx}>{part}</React.Fragment>
-                      )
-                    )}
-                  </p>
+  {msg.content.split(/(@\w+)/g).map((part, idx) =>
+    part.startsWith('@') ? (
+      <span
+        key={idx}
+        className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1 rounded"
+        style={{
+          direction: 'ltr',
+          unicodeBidi: 'isolate',
+          display: 'inline-block',
+        }}
+      >
+        {part}
+      </span>
+    ) : (
+      <React.Fragment key={idx}>{part}</React.Fragment>
+    )
+  )}
+</p>
+
                 </div>
                 {/* Own avatar */}
                 {msg.sender._id === user._id && (
