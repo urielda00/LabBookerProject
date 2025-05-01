@@ -6,9 +6,15 @@ import { format } from 'date-fns';
 import Picker from 'emoji-picker-react';
 import { useTranslation } from 'react-i18next';
 
-const socket = io('http://localhost:5000', {
+// const socket = io('http://localhost:5000', { development
+//   path: '/ws',
+//   transports: ['websocket', 'polling'],
+// });
+
+// after: let browser decide the origin
+const socket = io({
   path: '/ws',
-  transports: ['websocket', 'polling'],
+  transports: ['websocket','polling'],
 });
 
 export default function ChatBox({ user }) {
