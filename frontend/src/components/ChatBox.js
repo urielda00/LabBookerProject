@@ -30,13 +30,13 @@ export default function ChatBox({ user }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [viewedChannels, setViewedChannels] = useState({ all: false, admin: false });
 
   // Refs
   const boxRef = useRef(null);
   const emojiRef = useRef(null);
   const chatBoxRef = useRef(null);
   const hasMounted = useRef(false);
-  const prevIsOpen = useRef(isOpen);
 
   const LIMIT = 50;
 
@@ -63,14 +63,14 @@ export default function ChatBox({ user }) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Load chatEnabled
+  // Load chatEnabled flag
   useEffect(() => {
     api.get('/message/settings')
       .then(res => setChatEnabled(res.data.enabled))
       .catch(() => setChatEnabled(false));
   }, []);
 
-  // Fetch messages
+  // Fetch messages when channel changes
   useEffect(() => {
     api.get('/message', { params: { channel, limit: LIMIT } })
       .then(res => {
@@ -80,52 +80,66 @@ export default function ChatBox({ user }) {
       .catch(console.error);
   }, [channel]);
 
-  // Mark read helper
-  const markRead = useCallback(() => {
-    api.post('/message/mark-read', { channel }).catch(console.error);
+  // Mark messages as read
+  const markRead = useCallback((ch = channel) => {
+    api.post('/message/mark-read', { channel: ch }).catch(console.error);
     setMessages(prev => ({
       ...prev,
-      [channel]: prev[channel].map(m => ({
+      [ch]: prev[ch].map(m => ({
         ...m,
-        readBy: m.readBy.includes(user._id)
-          ? m.readBy
-          : [...m.readBy, user._id],
+        readBy: m.readBy.includes(user._id) ? m.readBy : [...m.readBy, user._id],
       })),
     }));
   }, [channel, user._id]);
 
-  // Mark read on open/close
+  // Track viewed channels
+  useEffect(() => {
+    if (isOpen) {
+      setViewedChannels(prev => ({ ...prev, [channel]: true }));
+    }
+  }, [isOpen, channel]);
+
+  // Mark read when closing
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-      if (isOpen) markRead();
-    } else if (prevIsOpen.current && !isOpen) {
-      markRead();
+      return;
     }
-    prevIsOpen.current = isOpen;
-  }, [isOpen, channel, markRead]);
+    if (!isOpen) {
+      Object.entries(viewedChannels).forEach(([ch, seen]) => {
+        if (seen) markRead(ch);
+      });
+      if (viewedChannels.all || viewedChannels.admin) {
+        setViewedChannels({ all: false, admin: false });
+      }
+    }
+  }, [isOpen, viewedChannels]);
 
-  // Auto-scroll new messages if open
+  // Auto-scroll
   useEffect(() => {
     if (isOpen && boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
     }
   }, [messages[channel], isOpen]);
 
-  // Real-time incoming
+  // Socket handlers
   useEffect(() => {
     const handler = msg => {
       setMessages(prev => ({
         ...prev,
         [msg.channel]: [...prev[msg.channel], msg],
       }));
-      if (isOpen && msg.channel === channel) markRead();
+      if (isOpen && msg.channel === channel) {
+        markRead(channel);
+      } else {
+        setViewedChannels(prev => ({ ...prev, [msg.channel]: false }));
+      }
     };
     socket.on('chatMessage', handler);
     return () => socket.off('chatMessage', handler);
   }, [isOpen, channel, markRead]);
 
-  // Load more on scroll-top
+  // Load more messages
   const loadMore = useCallback(async () => {
     if (!hasMore) return;
     const list = messages[channel];
@@ -161,29 +175,27 @@ export default function ChatBox({ user }) {
     }
   }, [newMsg, user.role, chatEnabled, channel]);
 
-  // Emoji handler
+  // Emoji picker
   const onEmojiClick = useCallback(data => {
     setNewMsg(t => t + data.emoji);
     setShowEmoji(false);
   }, []);
 
-  // Derived counts
-  const unreadInAll   = messages.all.filter(m => !m.readBy.includes(user._id)).length;
+  // Unread counts
+  const unreadInAll = messages.all.filter(m => !m.readBy.includes(user._id)).length;
   const unreadInAdmin = messages.admin.filter(m => !m.readBy.includes(user._id)).length;
-  const totalUnread   = unreadInAll + unreadInAdmin;
+  const totalUnread = unreadInAll + unreadInAdmin;
+  const currentMessages = messages[channel];
+  const unreadInCurrent = channel === 'all' ? unreadInAll : unreadInAdmin;
+  const firstUnreadIdx = currentMessages.findIndex(m => !m.readBy.includes(user._id));
+  const canType = user.role === 'admin' || (chatEnabled && channel === 'all');
 
-  const currentMessages   = messages[channel];
-  const unreadInCurrent   = channel === 'all' ? unreadInAll : unreadInAdmin;
-  const firstUnreadIdx    = currentMessages.findIndex(m => !m.readBy.includes(user._id));
-  const canType           = user.role === 'admin' || (chatEnabled && channel === 'all');
-
-  // Scroll to separator on open
+  // Scroll to unread
   useEffect(() => {
     if (isOpen && firstUnreadIdx >= 0 && boxRef.current) {
       setTimeout(() => {
         const sep = boxRef.current.querySelector('.new-messages-separator');
-        if (sep) sep.scrollIntoView({ block: 'start' });
-        else boxRef.current.scrollTop = boxRef.current.scrollHeight;
+        sep ? sep.scrollIntoView({ block: 'start' }) : (boxRef.current.scrollTop = boxRef.current.scrollHeight);
       }, 0);
     }
   }, [isOpen, channel, firstUnreadIdx]);
@@ -195,12 +207,16 @@ export default function ChatBox({ user }) {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(o => !o)}
-        className={`fixed right-4 bottom-4 h-12 w-12 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full shadow-xl transition-all ${isOpen ? 'invisible' : 'visible'}`}
+        className={`fixed right-4 bottom-4 h-12 w-12 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full shadow-xl transition-all ${
+          isOpen ? 'invisible' : 'visible'
+        }`}
         aria-label={isOpen ? t('chat.close') : t('chat.open')}
       >
         <FiMessageCircle className="h-6 w-6" />
-        {!isOpen && totalUnread > 0 && (
-          <span className="absolute top-0 right-0 bg-red-500 rounded-full h-3 w-3 border-2 border-white" />
+        {!isOpen && ['all','admin'].some(ch => 
+          messages[ch].some(m => !m.readBy.includes(user._id)) && !viewedChannels[ch]
+        ) && (
+          <span className="absolute top-0 right-0 bg-red-500 rounded-full h-3 w-3 border-2 border-white dark:border-gray-800" />
         )}
       </button>
 
@@ -220,7 +236,7 @@ export default function ChatBox({ user }) {
             <div className="flex gap-2 bg-white/10 rounded-full p-1">
               {['all','admin'].map(ch => {
                 const unreadHere = ch === 'all' ? unreadInAll : unreadInAdmin;
-                const isActive    = channel === ch;
+                const isActive = channel === ch;
                 return (
                   <button
                     key={ch}
@@ -230,8 +246,8 @@ export default function ChatBox({ user }) {
                     }`}
                   >
                     {t(ch === 'all' ? 'chat.public' : 'chat.admin')}
-                    {unreadHere > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 rounded-full h-2 w-2 border-2 border-white" />
+                    {unreadHere > 0 && !viewedChannels[ch] && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 rounded-full h-2 w-2 border-2 border-white dark:border-gray-800" />
                     )}
                   </button>
                 );
@@ -247,7 +263,7 @@ export default function ChatBox({ user }) {
           </button>
         </div>
 
-        {/* Messages */}
+        {/* Messages List */}
         <div
           ref={boxRef}
           onScroll={() => boxRef.current && boxRef.current.scrollTop === 0 && hasMore && loadMore()}
@@ -255,7 +271,7 @@ export default function ChatBox({ user }) {
         >
           {currentMessages.map((msg, i) => (
             <React.Fragment key={msg._id}>
-              {/* Separator */}
+              {/* Unread separator */}
               {i === firstUnreadIdx && unreadInCurrent > 0 && (
                 <div className="new-messages-separator bg-gray-50 dark:bg-gray-900 text-center py-1">
                   <span className="px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 rounded-full shadow-sm">
@@ -264,40 +280,35 @@ export default function ChatBox({ user }) {
                 </div>
               )}
 
-              {/* Single message */}
-              <div
-                className={`flex ${
-                  msg.sender._id === user._id ? 'justify-end' : 'justify-start'
-                } items-start gap-3`}
-              >
-                {/* Avatar */}
+              {/* Message Bubble */}
+              <div className={`flex ${msg.sender._id === user._id ? 'justify-end' : 'justify-start'} items-start gap-3`}>
+                {/* Other's avatar */}
                 {msg.sender._id !== user._id && (
                   <div className="flex-shrink-0">
                     {msg.sender.profilePicture ? (
                       <img
                         src={msg.sender.profilePicture}
                         alt={msg.sender.username}
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow"
+                        className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow"
                         onError={e => { e.currentTarget.src = '/default-avatar.png'; }}
                       />
-                    ) : ( 
-                      <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center border-2 border-white shadow">
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center border-2 border-white dark:border-gray-800 shadow">
                         {msg.sender.username[0].toUpperCase()}
                       </div>
                     )}
                   </div>
                 )}
-                {/* Bubble */}
-                <div
-                  className={`max-w-[85%] p-3 rounded-xl relative ${
-                    msg.sender._id === user._id
-                      ? 'bg-blue-500 text-white rounded-br-none'
-                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-none'
-                  } shadow-sm`}
-                >
+
+                {/* Message Content */}
+                <div className={`max-w-[85%] p-3 rounded-xl relative ${
+                  msg.sender._id === user._id 
+                    ? 'bg-blue-500 text-white rounded-br-none dark:bg-blue-600' 
+                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-none'
+                } shadow-sm`}>
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">
+                      <span className="text-sm font-semibold dark:text-gray-100">
                         {msg.sender._id === user._id ? t('chat.you') : msg.sender.username}
                       </span>
                       {msg.sender.role === 'admin' && (
@@ -306,12 +317,12 @@ export default function ChatBox({ user }) {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs opacity-75 shrink-0">
+                    <span className="text-xs opacity-75 shrink-0 dark:text-gray-300">
                       {format(new Date(msg.createdAt), 'HH:mm')}
                     </span>
                   </div>
-                  <p className="break-words text-sm" dir="auto">
-                    {msg.content.split(/(@[\\w\\d_]+)/g).map((part, idx) =>
+                  <p className="break-words text-sm dark:text-gray-100" dir="auto">
+                    {msg.content.split(/(@\w+)/g).map((part, idx) =>
                       part.startsWith('@') ? (
                         <span
                           key={idx}
@@ -326,18 +337,19 @@ export default function ChatBox({ user }) {
                     )}
                   </p>
                 </div>
-                {/* Own avatar */}
+
+                {/* User's avatar */}
                 {msg.sender._id === user._id && (
                   <div className="flex-shrink-0">
                     {user.profilePicture ? (
                       <img
                         src={user.profilePicture}
                         alt={user.username}
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow"
+                        className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow"
                         onError={e => { e.currentTarget.src = '/default-avatar.png'; }}
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center border-2 border-white shadow">
+                      <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center border-2 border-white dark:border-gray-800 shadow">
                         {user.username[0].toUpperCase()}
                       </div>
                     )}
@@ -348,14 +360,14 @@ export default function ChatBox({ user }) {
           ))}
         </div>
 
-        {/* Input */}
+        {/* Input Area */}
         {(channel === 'all' || user.role === 'admin') && (
           <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
             <div className="relative flex items-center gap-2">
               <div ref={emojiRef}>
                 <button
                   onClick={() => setShowEmoji(v => !v)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300"
                   aria-label={t('chat.emojiPicker')}
                 >
                   😊
@@ -367,9 +379,12 @@ export default function ChatBox({ user }) {
                       pickerStyle={{
                         width: '100%',
                         maxWidth: '320px',
-                        boxShadow: 'none',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                         border: '1px solid #e5e7eb',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '0.75rem',
                       }}
+                      theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                     />
                   </div>
                 )}
@@ -380,18 +395,18 @@ export default function ChatBox({ user }) {
                 onKeyDown={e => e.key === 'Enter' && send()}
                 placeholder={channel === 'admin' ? t('chat.adminPlaceholder') : t('chat.publicPlaceholder')}
                 disabled={!canType}
-                className="flex-1 rounded-full px-4 py-2.5 border dark:border-gray-600 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                className="flex-1 rounded-full px-4 py-2.5 border dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 placeholder-gray-400 dark:placeholder-gray-500"
               />
               <button
                 onClick={send}
                 disabled={!canType}
-                className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full disabled:opacity-50 transition-colors"
+                className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full disabled:opacity-50 transition-colors dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 <FiMessageCircle className="h-5 w-5 rotate-45" />
               </button>
             </div>
             {errorMsg && (
-              <p className="mt-2 text-center text-red-500 text-xs">
+              <p className="mt-2 text-center text-red-500 dark:text-red-400 text-xs">
                 {t(`chat.errors.${errorMsg}`, { defaultValue: errorMsg })}
               </p>
             )}
