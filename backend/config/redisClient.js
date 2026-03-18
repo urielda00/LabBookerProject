@@ -1,7 +1,8 @@
 const redis = require("redis");
+require('dotenv').config();
 
 const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || "redis://red-cvdgc6d6l47c73941a3g:6379", // Adjust Redis URL if needed
+  url: process.env.REDIS_URL
 });
 
 redisClient.on("connect", () => console.log("Connected to Redis."));

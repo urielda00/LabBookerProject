@@ -1,4 +1,3 @@
-// src/utils/iconMapping.js
 import { FaWifi, FaTv, FaCoffee, FaChair, FaChalkboard } from "react-icons/fa";
 import { MdChargingStation } from "react-icons/md";
 import { BsFillProjectorFill } from "react-icons/bs";

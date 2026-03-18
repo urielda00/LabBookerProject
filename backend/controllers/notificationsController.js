@@ -1,118 +1,117 @@
-// controllers/notificationsController.js
-const mongoose      = require('mongoose');
-const Notification   = require('../models/Notification');
-const { isValidObjectId } = mongoose;
+const { param } = require('express-validator');
+const Notification = require('../models/Notification');
+const asyncHandler = require('../middleware/asyncHandler');
 
-/* -------------------------------------------------------------- */
-/* Helper — use from any other controller                          */
-/* -------------------------------------------------------------- */
+// Validators
+const validateNotificationId = [
+	param('id').isMongoId().withMessage('Invalid notification ID format'),
+];
+
+// helper for internal use (by other controllers)
+// * This is not an express middleware, so it does not use asyncHandler
 const createNotification = async (userId, key, params = {}, type = '') => {
-  return Notification.create({ user: userId, key, params, type, isRead: false });
+	try {
+		return await Notification.create({
+			user: userId,
+			key,
+			params,
+			type,
+			isRead: false,
+		});
+	} catch (error) {
+		console.error('Error creating internal notification:', error);
+		// We do not throw here to prevent blocking the main flow (e.g. message sending)
+	}
 };
 
-/* -------------------------------------------------------------- */
-/* Controller                                                      */
-/* -------------------------------------------------------------- */
-const notificationsController = {
-  /* keep helper available as notificationsController.createNotification */
-  createNotification,
+// Get all notifications for the current user
+const getNotifications = asyncHandler(async (req, res) => {
+	const notifications = await Notification.find({ user: req.user._id }).sort({ createdAt: -1 });
 
-  /* GET /notifications */
-  async getNotifications(req, res) {
-    try {
-      const notes = await Notification.find({ user: req.user._id })
-                                      .sort({ createdAt: -1 });
+	// Map to DTO
+	const result = notifications.map((n) => ({
+		id: n._id,
+		type: n.type,
+		createdAt: n.createdAt,
+		readAt: n.readAt,
+		isRead: n.isRead,
+		// Assuming req.t exists from i18n middleware
+		message: typeof req.t === 'function' ? req.t(n.key, n.params) : n.key,
+	}));
 
-      const out = notes.map(n => ({
-        id        : n._id,
-        type      : n.type,
-        createdAt : n.createdAt,
-        readAt    : n.readAt,
-        isRead    : n.isRead,
-        message   : req.t(n.key, n.params)      // translate here
-      }));
+	res.status(200).json(result);
+});
 
-      return res.status(200).json(out);
-    } catch (err) {
-      console.error('Get notifications error:', err);
-      return res.status(500).json({ message: 'Failed to get notifications' });
-    }
-  },
+// Mark a specific notification as read
+const markAsRead = asyncHandler(async (req, res) => {
+	const { id } = req.params;
 
-  /* PUT /notifications/:id/read */
-  async markAsRead(req, res) {
-    const id = req.params.id;
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid notification id' });
-    }
+	const notification = await Notification.findOneAndUpdate(
+		{ _id: id, user: req.user._id },
+		{ isRead: true, readAt: new Date() },
+		{ new: true }
+	);
 
-    try {
-      const n = await Notification.findOneAndUpdate(
-        { _id: id, user: req.user._id },
-        { isRead: true, readAt: new Date() },
-        { new: true }
-      );
-      if (!n) return res.status(404).json({ message: 'Notification not found' });
+	if (!notification) {
+		const error = new Error('Notification not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-      return res.status(200).json({
-        id        : n._id,
-        type      : n.type,
-        createdAt : n.createdAt,
-        readAt    : n.readAt,
-        isRead    : n.isRead,
-        message   : req.t(n.key, n.params)
-      });
-    } catch (err) {
-      console.error('Mark as read error:', err);
-      return res.status(500).json({ message: 'Failed to mark as read' });
-    }
-  },
+	res.status(200).json({
+		id: notification._id,
+		type: notification.type,
+		createdAt: notification.createdAt,
+		readAt: notification.readAt,
+		isRead: notification.isRead,
+		message:
+			typeof req.t === 'function' ? req.t(notification.key, notification.params) : notification.key,
+	});
+});
 
-  /* PUT /notifications/read-all */
-  async markAllAsRead(req, res) {
-    try {
-      await Notification.updateMany(
-        { user: req.user._id, isRead: false },
-        { isRead: true, readAt: new Date() }
-      );
-      return res.status(200).json({ message: 'All notifications marked as read' });
-    } catch (err) {
-      console.error('Mark all as read error:', err);
-      return res.status(500).json({ message: 'Failed to mark all as read' });
-    }
-  },
+// Mark all notifications as read
+const markAllAsRead = asyncHandler(async (req, res) => {
+	await Notification.updateMany(
+		{ user: req.user._id, isRead: false },
+		{ isRead: true, readAt: new Date() }
+	);
 
-  /* DELETE /notifications/:id */
-  async deleteNotification(req, res) {
-    const id = req.params.id;
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid notification id' });
-    }
+	res.status(200).json({ message: 'All notifications marked as read' });
+});
 
-    try {
-      const n = await Notification.findOneAndDelete({
-        _id : id,
-        user: req.user._id
-      });
-      if (!n) return res.status(404).json({ message: 'Notification not found' });
+// Delete a specific notification
+const deleteNotification = asyncHandler(async (req, res) => {
+	const { id } = req.params;
 
-      return res.status(200).json({ message: 'Notification deleted.' });
-    } catch (err) {
-      console.error('Delete notification error:', err);
-      return res.status(500).json({ message: 'Failed to delete notification' });
-    }
-  },
+	const notification = await Notification.findOneAndDelete({
+		_id: id,
+		user: req.user._id,
+	});
 
-  /* DELETE /notifications/clear-all */
-  async deleteAllNotifications(req, res) {
-    try {
-      await Notification.deleteMany({ user: req.user._id });
-      return res.status(200).json({ message: 'All notifications deleted.' });
-    } catch (err) {
-      console.error('Delete all notifications error:', err);
-      return res.status(500).json({ message: 'Failed to delete notifications' });
-    }
-  }
+	if (!notification) {
+		const error = new Error('Notification not found');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	res.status(200).json({ message: 'Notification deleted.' });
+});
+
+// Delete all notifications for the user
+const deleteAllNotifications = asyncHandler(async (req, res) => {
+	await Notification.deleteMany({ user: req.user._id });
+	res.status(200).json({ message: 'All notifications deleted.' });
+});
+
+module.exports = {
+	// Utility
+	createNotification,
+	// Methods
+	getNotifications,
+	markAsRead,
+	markAllAsRead,
+	deleteNotification,
+	deleteAllNotifications,
+	// Validators
+	validateNotificationId,
 };
-
-module.exports = notificationsController;

@@ -1,11 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const {
-  submitContactForm,
-  validateContactForm,
-} = require("../controllers/contactController");
+const contactController = require('../controllers/contactController');
+const validateRequest = require('../middleware/validateRequest');
 
-router.post("/submit", validateContactForm, (req, res, next) => {
-  submitContactForm(req, res).catch(next);
-});
+router.post(
+	'/submit',
+	contactController.validateContactForm,
+	validateRequest,
+	contactController.submitContactForm
+);
+
 module.exports = router;

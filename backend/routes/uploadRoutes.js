@@ -1,16 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { upload } = require("../controllers/uploadController");
+const uploadController = require('../controllers/uploadController');
+const uploadMulter = require('../middleware/multer');
 
-router.post("/upload", async (req, res) => {
-  try {
-    const response = await upload(req, res);
-    res
-      .status(response.status)
-      .json({ message: response.message, url: response.url });
-  } catch (error) {
-    res.status(error.status || 500).json({ message: error.message });
-  }
-});
+// POST /api/upload/upload
+// Flow: Multer processes file -> Controller uploads to Cloudinary -> Response
+router.post(
+	'/upload',
+	uploadMulter, // Middleware runs first
+	uploadController.upload
+);
 
 module.exports = router;

@@ -1,83 +1,90 @@
-const nodemailer = require("nodemailer");
-const User = require("../models/User");
+const nodemailer = require('nodemailer');
 
+// Configuration for the email transporter
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
+	host: 'smtp.gmail.com',
+	port: 587,
+	secure: false, // true for 465, false for other ports
+	auth: {
+		user: process.env.EMAIL,
+		pass: process.env.PASSWORD,
+	},
 });
 
-// const transporter = nodemailer.createTransport({
-//   host: "localhost",
-//   port: 1025,
-//   ignoreTLS: true,
-// });
+// Helper function to sanitize user input in HTML to prevent XSS
+const sanitizeHTML = (str) => {
+	return String(str).replace(
+		/[&<>"'`=\/]/g,
+		(s) =>
+			({
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#39;',
+				'/': '&#x2F;',
+				'`': '&#x60;',
+				'=': '&#x3D;',
+			}[s])
+	);
+};
 
-
+// Base function to send emails
 const sendEmail = async (to, subject, html) => {
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to,
-      subject,
-      html,
-    });
-    console.log(`Email sent to: ${to}`);
-  } catch (error) {
-    console.error(`Failed to send email to ${to}:`, error);
-    throw new Error("Error sending email");
-  }
+  // --- DEV MODE: MOCK SENDING ---
+  console.log();
+  console.log("------------------------");
+  console.log(`[DEV-MOCK] Skipping SMTP. Email would be sent to: ${to}`);
+  console.log(`[DEV-MOCK] Subject: ${subject}`);
+  console.log("------------------------");
+  return; // <--- This stops the function here. It won't try to connect to Gmail.
+  // ------------------------------
+
+	try {
+		await transporter.sendMail({
+			from: process.env.EMAIL,
+			to,
+			subject,
+			html,
+		});
+		console.log(`Email sent to: ${to}`);
+	} catch (error) {
+		console.error(`Failed to send email to ${to}:`, error);
+		throw new Error('Error sending email');
+	}
 };
 
 const sendVerificationEmail = async (email, code) => {
-  try {
-    const subject ="🔑 Verify Your Email Address";
-    const html = `
+	console.log(`[DEV] Verification Code for ${email}: ${code}`);
+	try {
+		const subject = '🔑 Verify Your Email Address';
+		// Sanitize code just in case, though it is usually numeric
+		const safeCode = sanitizeHTML(code);
+
+		const html = `
       <html>
         <head>
           <style>
             @media (prefers-color-scheme: dark) {
-              .email-container {
-                background-color: #1e293b !important;
-              }
-              .email-header {
-                background: #ffffff !important; /* White background in dark mode */
-              }
-              .company-logo {
-                color: #1e293b !important; /* Dark text for white background */
-              }
-              .greeting, .verification-code {
-                color: #f8fafc !important;
-              }
-              .message, .verification-note, .footer-text {
-                color: #94a3b8 !important;
-              }
-              .verification-code-container {
-                background: #334155 !important;
-                border-color: #475569 !important;
-              }
-              .email-footer {
-                background-color: #1e293b !important;
-                border-color: #475569 !important;
-              }
+              .email-container { background-color: #1e293b !important; }
+              .email-header { background: #ffffff !important; }
+              .company-logo { color: #1e293b !important; }
+              .greeting, .verification-code { color: #f8fafc !important; }
+              .message, .verification-note, .footer-text { color: #94a3b8 !important; }
+              .verification-code-container { background: #334155 !important; border-color: #475569 !important; }
+              .email-footer { background-color: #1e293b !important; border-color: #475569 !important; }
             }
           </style>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f1f5f9;">
           <div class="email-container" style="max-width: 580px; margin: 24px auto; border-radius: 16px; background-color: #ffffff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
             
-            <!-- Header with white background in dark mode -->
             <div class="email-header" style="background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%); padding: 36px 0; text-align: center;">
               <div class="company-logo" style="font-size: 28px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 1.5px;">
                 LabBooker
               </div>
             </div>
             
-            <!-- Body -->
             <div class="email-body" style="padding: 48px 40px; color: #2d3748;">
               <h1 class="greeting" style="font-size: 26px; font-weight: 700; margin: 0 0 28px 0; color: #1a202c;">
                 Verify your email address
@@ -90,7 +97,7 @@ const sendVerificationEmail = async (email, code) => {
               
               <div class="verification-code-container" style="background: #f8fafc; border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 36px; border: 1px solid #e2e8f0;">
                 <p class="verification-code" style="font-family: 'Monaco', 'Courier New', monospace; font-size: 36px; font-weight: 700; color: #2d3748; letter-spacing: 6px; margin: 0;">
-                  ${code}
+                  ${safeCode}
                 </p>
                 <p class="verification-note" style="font-size: 14px; color: #718096; margin-top: 16px; font-weight: 500;">
                   This code will expire in 5 minutes
@@ -116,7 +123,6 @@ const sendVerificationEmail = async (email, code) => {
               </p>
             </div>
             
-            <!-- Footer -->
             <div class="email-footer" style="padding: 28px 40px; background-color: #f8fafc; text-align: center; border-top: 1px solid #edf2f7;">
               <p class="footer-text" style="font-size: 13px; color: #718096; margin: 0; line-height: 1.6;">
                 © ${new Date().getFullYear()} LabBooker. All rights reserved.
@@ -130,16 +136,16 @@ const sendVerificationEmail = async (email, code) => {
       </html>
     `;
 
-    await sendEmail(email, subject, html);
-  } catch (error) {
-    console.error("Error sending verification email:", error);
-  }
+		await sendEmail(email, subject, html);
+	} catch (error) {
+		console.error('Error sending verification email:', error);
+	}
 };
 
 const sendContactEmail = async (name, email, message) => {
-  try {
-    // Email to support
-    const supportEmailTemplate = `
+	try {
+		// Email to support
+		const supportEmailTemplate = `
       <html>
         <head>
           <meta name="color-scheme" content="light dark">
@@ -156,12 +162,10 @@ const sendContactEmail = async (name, email, message) => {
         <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Inter', Arial, sans-serif;">
           <div class="email-container" style="max-width: 580px; margin: 24px auto; border-radius: 16px; background-color: #ffffff;">
             
-            <!-- Header -->
             <div style="background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%); padding: 36px 40px; border-radius: 16px 16px 0 0;">
               <div style="font-size: 24px; font-weight: 700; color: #ffffff;">New Contact Submission</div>
             </div>
 
-            <!-- Body -->
             <div style="padding: 40px;">
               <div style="margin-bottom: 32px;">
                 <div style="font-size: 16px; color: #4a5568; margin-bottom: 8px;">
@@ -184,10 +188,11 @@ const sendContactEmail = async (name, email, message) => {
               </div>
             </div>
 
-            <!-- Footer -->
             <div class="footer" style="padding: 24px 40px; background-color: #f8fafc; border-top: 1px solid #edf2f7;">
               <div style="font-size: 12px; color: #718096;">
-                © ${new Date().getFullYear()} ${process.env.COMPANY_NAME || 'YourCompany'}. All rights reserved.
+                © ${new Date().getFullYear()} ${
+			process.env.COMPANY_NAME || 'YourCompany'
+		}. All rights reserved.
               </div>
             </div>
           </div>
@@ -195,8 +200,8 @@ const sendContactEmail = async (name, email, message) => {
       </html>
     `;
 
-    // Confirmation email to user
-    const confirmationTemplate = `
+		// Confirmation email to user
+		const confirmationTemplate = `
       <html>
         <head>
           <meta name="color-scheme" content="light dark">
@@ -213,15 +218,15 @@ const sendContactEmail = async (name, email, message) => {
         <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Inter', Arial, sans-serif;">
           <div class="email-container" style="max-width: 580px; margin: 24px auto; border-radius: 16px; background-color: #ffffff;">
             
-            <!-- Header -->
             <div style="background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%); padding: 36px 40px; border-radius: 16px 16px 0 0;">
               <div style="font-size: 24px; font-weight: 700; color: #ffffff;">Message Received</div>
             </div>
 
-            <!-- Body -->
             <div style="padding: 40px;">
               <div style="margin-bottom: 32px;">
-                <h2 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Thank you, ${sanitizeHTML(name)}</h2>
+                <h2 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Thank you, ${sanitizeHTML(
+									name
+								)}</h2>
                 <div style="font-size: 16px; color: #4a5568; margin-bottom: 24px;">
                   We've received your message and will respond within 24-48 hours.
                 </div>
@@ -238,12 +243,13 @@ const sendContactEmail = async (name, email, message) => {
                 <div style="margin-bottom: 8px;">Need urgent assistance?</div>
                 <div>
                   Contact us directly at 
-                  <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: #4299e1; text-decoration: none;">${process.env.SUPPORT_EMAIL}</a>
+                  <a href="mailto:${
+										process.env.SUPPORT_EMAIL
+									}" style="color: #4299e1; text-decoration: none;">${process.env.SUPPORT_EMAIL}</a>
                 </div>
               </div>
             </div>
 
-            <!-- Footer -->
             <div class="footer" style="padding: 24px 40px; background-color: #f8fafc; border-top: 1px solid #edf2f7;">
               <div style="font-size: 12px; color: #718096;">
                 ${process.env.COMPANY_ADDRESS || 'Azrieli College, Jerusalem, Israel'}
@@ -254,42 +260,23 @@ const sendContactEmail = async (name, email, message) => {
       </html>
     `;
 
-    // Send emails
-    await sendEmail(
-      process.env.SUPPORT_EMAIL,
-      `New Contact Submission: ${sanitizeHTML(name)}`,
-      supportEmailTemplate
-    );
+		// Send emails
+		await sendEmail(
+			process.env.SUPPORT_EMAIL,
+			`New Contact Submission: ${sanitizeHTML(name)}`,
+			supportEmailTemplate
+		);
 
-    await sendEmail(
-      email,
-      "We've Received Your Message",
-      confirmationTemplate
-    );
-
-  } catch (error) {
-    console.error("Error sending contact email:", error);
-    throw new Error("Failed to process contact request");
-  }
-};
-
-// Helper functions (implement these separately)
-const sanitizeHTML = (str) => {
-  return String(str).replace(/[&<>"'`=\/]/g, (s) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-    '/': '&#x2F;',
-    '`': '&#x60;',
-    '=': '&#x3D;'
-  })[s]);
+		await sendEmail(email, "We've Received Your Message", confirmationTemplate);
+	} catch (error) {
+		console.error('Error sending contact email:', error);
+		throw new Error('Failed to process contact request');
+	}
 };
 
 const sendBookingConfirmation = async (userEmail, userName, bookingDetails) => {
-  const subject = `Booking Confirmed 🎉 • ${process.env.COMPANY_NAME || 'LabBooker'}`;
-  const html = `
+	const subject = `Booking Confirmed 🎉 • ${process.env.COMPANY_NAME || 'LabBooker'}`;
+	const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -307,18 +294,28 @@ const sendBookingConfirmation = async (userEmail, userName, bookingDetails) => {
       <body style="margin: 0; padding: 24px; background-color: #f1f5f9; font-family: 'Inter', system-ui, sans-serif;">
         <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
           <div style="padding: 36px; background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);">
-            <div style="font-size: 24px; font-weight: 700; color: #ffffff;">${process.env.COMPANY_NAME || 'LabBooker'}</div>
+            <div style="font-size: 24px; font-weight: 700; color: #ffffff;">${
+							process.env.COMPANY_NAME || 'LabBooker'
+						}</div>
           </div>
           
           <div style="padding: 36px;">
-            <h1 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Hi ${sanitizeHTML(userName)},</h1>
+            <h1 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Hi ${sanitizeHTML(
+							userName
+						)},</h1>
             
             <div class="content-card" style="background-color: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
               <h2 style="font-size: 18px; color: #1a202c; margin: 0 0 16px 0;">Booking Confirmed</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.roomName)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.date)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.startTime)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.roomName
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.date
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.startTime
+								)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
               </table>
             </div>
 
@@ -333,8 +330,12 @@ const sendBookingConfirmation = async (userEmail, userName, bookingDetails) => {
           
           <div style="padding: 24px 36px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 12px; color: #718096; line-height: 1.5;">
-              <p style="margin: 4px 0;">${process.env.COMPANY_ADDRESS || 'Azrieli College Inc., Jerusalem, Israel'}</p>
-              <p style="margin: 4px 0;">Need help? <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: #2563eb; text-decoration: none;">Contact support</a></p>
+              <p style="margin: 4px 0;">${
+								process.env.COMPANY_ADDRESS || 'Azrieli College Inc., Jerusalem, Israel'
+							}</p>
+              <p style="margin: 4px 0;">Need help? <a href="mailto:${
+								process.env.SUPPORT_EMAIL
+							}" style="color: #2563eb; text-decoration: none;">Contact support</a></p>
             </div>
           </div>
         </div>
@@ -342,12 +343,12 @@ const sendBookingConfirmation = async (userEmail, userName, bookingDetails) => {
     </html>
   `;
 
-  await sendEmail(userEmail, subject, html);
+	await sendEmail(userEmail, subject, html);
 };
 
 const sendPendingConfirmation = async (userEmail, userName, bookingDetails) => {
-  const subject = `Booking Pending Review ⏳ • ${process.env.COMPANY_NAME || 'LabBooker'}`;
-  const html = `
+	const subject = `Booking Pending Review ⏳ • ${process.env.COMPANY_NAME || 'LabBooker'}`;
+	const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -364,31 +365,47 @@ const sendPendingConfirmation = async (userEmail, userName, bookingDetails) => {
       <body style="margin: 0; padding: 24px; background-color: #f1f5f9; font-family: 'Inter', system-ui, sans-serif;">
         <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
           <div style="padding: 36px; background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);">
-            <div style="font-size: 24px; font-weight: 700; color: #ffffff;">${process.env.COMPANY_NAME || 'LabBooker'}</div>
+            <div style="font-size: 24px; font-weight: 700; color: #ffffff;">${
+							process.env.COMPANY_NAME || 'LabBooker'
+						}</div>
           </div>
           
           <div style="padding: 36px;">
-            <h1 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Hi ${sanitizeHTML(userName)},</h1>
+            <h1 style="font-size: 20px; color: #1a202c; margin: 0 0 24px 0;">Hi ${sanitizeHTML(
+							userName
+						)},</h1>
             
             <div class="content-card" style="background-color: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
               <h2 style="font-size: 18px; color: #1a202c; margin: 0 0 16px 0;">Pending Request Details</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.roomName)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.date)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.startTime)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.roomName
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.date
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.startTime
+								)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
               </table>
             </div>
 
             <div style="color: #4a5568; margin-bottom: 32px;">
-              <p style="margin: 0 0 16px 0;">We're reviewing your request for the <strong>${sanitizeHTML(bookingDetails.roomName)}</strong> and will notify you once approved.</p>
+              <p style="margin: 0 0 16px 0;">We're reviewing your request for the <strong>${sanitizeHTML(
+								bookingDetails.roomName
+							)}</strong> and will notify you once approved.</p>
               <p style="margin: 0;">Average approval time: 1-2 business days</p>
             </div>
           </div>
           
           <div style="padding: 24px 36px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 12px; color: #718096; line-height: 1.5;">
-              <p style="margin: 4px 0;">${process.env.COMPANY_ADDRESS || 'Azrieli College Inc., Jerusalem, Israel'}</p>
-              <p style="margin: 4px 0;">Questions? <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: #2563eb; text-decoration: none;">Reply to this email</a></p>
+              <p style="margin: 4px 0;">${
+								process.env.COMPANY_ADDRESS || 'Azrieli College Inc., Jerusalem, Israel'
+							}</p>
+              <p style="margin: 4px 0;">Questions? <a href="mailto:${
+								process.env.SUPPORT_EMAIL
+							}" style="color: #2563eb; text-decoration: none;">Reply to this email</a></p>
             </div>
           </div>
         </div>
@@ -396,12 +413,14 @@ const sendPendingConfirmation = async (userEmail, userName, bookingDetails) => {
     </html>
   `;
 
-  await sendEmail(userEmail, subject, html);
+	await sendEmail(userEmail, subject, html);
 };
 
 const sendAdminApprovalRequest = async (bookingDetails, userDetails) => {
-  const subject = `Action Required: Large Seminar Room Request • ${process.env.COMPANY_NAME || 'LabBooker'}`;
-  const html = `
+	const subject = `Action Required: Large Seminar Room Request • ${
+		process.env.COMPANY_NAME || 'LabBooker'
+	}`;
+	const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -430,10 +449,18 @@ const sendAdminApprovalRequest = async (bookingDetails, userDetails) => {
             <div class="content-card" style="background-color: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
               <h2 style="font-size: 18px; color: #1a202c; margin: 0 0 16px 0;">Request Details</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">User:</td><td style="padding: 8px 0;">${sanitizeHTML(userDetails.name)} (${sanitizeHTML(userDetails.email)})</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.roomName)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.date)}</td></tr>
-                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(bookingDetails.startTime)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; width: 100px;">User:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									userDetails.name
+								)} (${sanitizeHTML(userDetails.email)})</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Room:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.roomName
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Date:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.date
+								)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568;">Time:</td><td style="padding: 8px 0;">${sanitizeHTML(
+									bookingDetails.startTime
+								)} - ${sanitizeHTML(bookingDetails.endTime)}</td></tr>
               </table>
             </div>
 
@@ -457,7 +484,14 @@ const sendAdminApprovalRequest = async (bookingDetails, userDetails) => {
     </html>
   `;
 
-  await sendEmail(process.env.SUPPORT_EMAIL, subject, html);
+	await sendEmail(process.env.SUPPORT_EMAIL, subject, html);
 };
 
-module.exports = { sendVerificationEmail, sendContactEmail, sendAdminApprovalRequest, sendBookingConfirmation, sendPendingConfirmation, sendEmail };
+module.exports = {
+	sendVerificationEmail,
+	sendContactEmail,
+	sendAdminApprovalRequest,
+	sendBookingConfirmation,
+	sendPendingConfirmation,
+	sendEmail,
+};

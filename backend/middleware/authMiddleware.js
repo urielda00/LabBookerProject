@@ -17,7 +17,7 @@ class AuthMiddleware {
           role: user.role,
         },
         process.env.JWT_ACCESS_SECRET,
-        { expiresIn: "24h" }, // 15 minutes
+        { expiresIn: "24h" }, // 24 hrs
       );
 
       const refreshToken = jwt.sign(

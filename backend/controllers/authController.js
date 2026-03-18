@@ -1,413 +1,350 @@
-const User = require("../models/User");
-const redisClient = require("../config/redisClient");
-const authMiddleware = require("../middleware/authMiddleware");
-const { sendVerificationEmail } = require("../utils/emailService");
+const User = require('../models/User');
+const { body } = require('express-validator');
+const redisClient = require('../config/redisClient');
+const asyncHandler = require('../middleware/asyncHandler');
+const authMiddleware = require('../middleware/authMiddleware');
+const { sendVerificationEmail } = require('../utils/emailService');
 
-// Helper function for email validation
-const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+// validates to be used in routes.
+const validateSignup = [
+	body('username') //
+		.trim()
+		.isLength({ min: 3, max: 30 })
+		.withMessage('Username must be between 3 and 30 characters'),
+	body('name') //
+		.trim()
+		.isLength({ min: 2, max: 50 })
+		.withMessage('Name must be between 2 and 50 characters'),
+	body('email').isEmail().withMessage('Invalid email format'),
+];
+
+const validateLogin = [
+	body('email') //
+		.isEmail()
+		.withMessage('Valid email is required'),
+];
+
+const validateVerify = [
+	body('email') //
+		.isEmail()
+		.withMessage('Valid email is required'),
+	body('code') //
+		.notEmpty()
+		.withMessage('Verification code is required'),
+];
+
+// controller logic:
 
 // Debug verification (remove in production)
-const debugVerification = async (req, res) => {
-  try {
-    const user = await User.findOne({ email: req.params.email });
-    const redisCode = await redisClient.get(`login:${req.params.email}`);
+const debugVerification = asyncHandler(async (req, res) => {
+	const email = req.params.email;
+	const user = await User.findOne({ email });
 
-    res.json({
-      userCode: user?.verificationCode,
-      redisCode,
-      expires: user?.verificationExpires,
-      now: new Date(),
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+	// 1. Try to find Login code (Stored as simple string)
+	let redisCode = await redisClient.get(`login:${email}`);
 
-// Signup request
-const signup = async (req, res) => {
-  const { username, name, email } = req.body;
+	// 2. If no login code, try to find Signup code (Stored as JSON string)
+	if (!redisCode) {
+		const signupDataRaw = await redisClient.get(`signup:${email}`);
+		if (signupDataRaw) {
+			try {
+				const signupData = JSON.parse(signupDataRaw);
+				redisCode = signupData.verificationCode;
+			} catch (e) {
+				console.error('Debug: Failed to parse signup redis data');
+			}
+		}
+	}
 
-  try {
-    console.log("Signup attempt:", { username, name, email });
+	res.json({
+		userCode: user?.verificationCode,
+		redisCode, // Will contain either login OR signup code
+		expires: user?.verificationExpires,
+		now: new Date(),
+	});
+});
 
-    // Input validation
-    if (!username || !name || !email) {
-      return res.status(400).json({
-        message: "Username, name, and email are required",
-      });
-    }
+// Signup
+const signup = asyncHandler(async (req, res) => {
+	const { username, name, email } = req.body;
 
-    // Validate username
-    if (username.length < 3 || username.length > 30) {
-      return res.status(400).json({
-        message: "Username must be between 3 and 30 characters",
-      });
-    }
+	// Normalize inputs
+	const normalizedEmail = email.trim().toLowerCase();
+	const normalizedUsername = username.trim();
+	const normalizedName = name.trim();
 
-    // Validate name
-    if (name.length < 2 || name.length > 50) {
-      return res.status(400).json({
-        message: "Name must be between 2 and 50 characters",
-      });
-    }
+	// Check if user already exists
+	const existingUser = await User.findOne({
+		$or: [{ email: normalizedEmail }, { username: normalizedUsername }],
+	});
 
-    // Validate email format
-    if (!isValidEmail(email)) {
-      return res.status(400).json({
-        message: "Invalid email format",
-      });
-    }
+	if (existingUser) {
+		const message =
+			existingUser.email === normalizedEmail
+				? 'Email already registered'
+				: 'Username already taken';
 
-    // Normalize inputs
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedUsername = username.trim();
-    const normalizedName = name.trim();
+		// Throw error with status code for errorHandler middleware
+		const error = new Error(message);
+		error.statusCode = 409;
+		throw error;
+	}
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
-    });
+	// Generate verification code
+	const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+	const verificationExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    if (existingUser) {
-      return res.status(409).json({
-        message:
-          existingUser.email === normalizedEmail
-            ? "Email already registered"
-            : "Username already taken",
-      });
-    }
+	await redisClient.set(
+		`signup:${normalizedEmail}`,
+		JSON.stringify({
+			username: normalizedUsername,
+			name: normalizedName,
+			email: normalizedEmail,
+			verificationCode,
+			verificationExpires,
+		}),
+		'EX',
+		300 // 5 minutes expiration
+	);
 
-    // Generate verification code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-    const verificationExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+	// Send verification email
+	await sendVerificationEmail(normalizedEmail, verificationCode);
 
-    console.log(verificationCode);
+	const response = {
+		message: 'Signup successful. Please check your email.',
+		userId: normalizedEmail, // fix-point : remove that later (insecure)
+	};
 
-    await redisClient.set(
-      `signup:${normalizedEmail}`,
-      JSON.stringify({
-        username: normalizedUsername,
-        name: normalizedName,
-        email: normalizedEmail,
-        verificationCode,
-        verificationExpires
-      }),
-      "EX", 300 // 5 minutes expiration
-    );
+	// Include verification code in development
+	if (process.env.NODE_ENV === 'development') {
+		response.verificationCode = verificationCode;
+	}
 
-    // Send verification email
-    await sendVerificationEmail(normalizedEmail, verificationCode);
+	res.status(201).json(response);
+});
 
-    const response = {
-      message: "Signup successful. Please check  your email.",
-      userId: normalizedEmail
-    };
+// Verify Signup
+const verifySignup = asyncHandler(async (req, res) => {
+	const { email, code } = req.body;
+	const normalizedEmail = email.trim().toLowerCase();
 
-    // Include verification code in development
-    if (process.env.NODE_ENV === "development") {
-      response.verificationCode = verificationCode;
-    }
-  
-    res.status(201).json(response);
+	// Get stored data from Redis
+	const redisData = await redisClient.get(`signup:${normalizedEmail}`);
+	if (!redisData) {
+		const error = new Error('Verification expired or invalid');
+		error.statusCode = 400;
+		throw error;
+	}
 
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({
-      message: "Failed to create account",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
+	const {
+		username,
+		name,
+		verificationCode: storedCode,
+		verificationExpires,
+	} = JSON.parse(redisData);
 
-// Login with email verification
-const login = async (req, res) => {
-  const { email } = req.body;
+	// Validate code and expiration
+	if (String(code) !== String(storedCode)) {
+		const error = new Error('Invalid verification code');
+		error.statusCode = 400;
+		throw error;
+	}
 
-  try {
-    console.log("Login attempt:", { email });
+	if (new Date(verificationExpires) < new Date()) {
+		const error = new Error('Verification code expired');
+		error.statusCode = 400;
+		throw error;
+	}
 
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ message: "Valid email is required" });
-    }
+	// Check if user exists (prevent race condition)
+	const existingUser = await User.findOne({
+		$or: [{ email: normalizedEmail }, { username }],
+	});
+	if (existingUser) {
+		const error = new Error('User already registered during verification process');
+		error.statusCode = 409;
+		throw error;
+	}
 
-    const normalizedEmail = email.trim().toLowerCase();
+	// Create user ONLY after successful verification
+	const newUser = await User.create({
+		username,
+		name,
+		email: normalizedEmail,
+		role: 'user',
+	});
 
-    // Find user
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      console.log("User not found:", normalizedEmail);
-      return res.status(404).json({ message: "User not found" });
-    }
+	// Cleanup Redis data
+	await redisClient.del(`signup:${normalizedEmail}`);
 
-    // Generate verification code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-    console.log("Generated code:", verificationCode);
+	// Generate tokens
+	const { accessToken, refreshToken } = await authMiddleware.generateTokens(newUser);
 
-    // Update user's verification code
-    user.verificationCode = verificationCode;
-    user.verificationExpires = new Date(Date.now() + 5 * 60 * 1000);
-    await user.save();
+	res.status(201).json({
+		message: 'Account activated successfully',
+		user: {
+			id: newUser._id,
+			username: newUser.username,
+			email: newUser.email,
+			role: newUser.role,
+		},
+		accessToken,
+		refreshToken,
+	});
+});
 
-    // Store code in Redis
-    await redisClient.set(
-      `login:${normalizedEmail}`,
-      verificationCode,
-      "EX",
-      300,
-    );
+// Login
+const login = asyncHandler(async (req, res) => {
+	const { email } = req.body;
+	const normalizedEmail = email.trim().toLowerCase();
 
-    // Send verification email
-    await sendVerificationEmail(normalizedEmail, verificationCode);
+	// Find user
+	const user = await User.findOne({ email: normalizedEmail });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-    const response = {
-      message: "Login verification code sent",
-      userId: user._id,
-    };
+	// Generate verification code
+	const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Include verification code in development
-    if (process.env.NODE_ENV === "development") {
-      response.verificationCode = verificationCode;
-    }
+	// Update user's verification code
+	user.verificationCode = verificationCode;
+	user.verificationExpires = new Date(Date.now() + 5 * 60 * 1000);
+	await user.save();
 
-    res.status(200).json(response);
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({
-      message: "Login failed",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
+	// Store code in Redis
+	await redisClient.set(`login:${normalizedEmail}`, verificationCode, 'EX', 300);
 
-const verifyLoginCode = async (req, res) => {
-  const { email, code } = req.body;
+	// Send verification email
+	await sendVerificationEmail(normalizedEmail, verificationCode);
 
-  try {
-    console.log("Verification attempt:", { email, code });
+	const response = {
+		message: 'Login verification code sent',
+		userId: user._id,
+	};
 
-    if (!email || !code) {
-      return res.status(400).json({
-        message: "Email and verification code are required",
-      });
-    }
+	if (process.env.NODE_ENV === 'development') {
+		response.verificationCode = verificationCode;
+	}
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+	res.status(200).json(response);
+});
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+// Verify Login
+const verifyLoginCode = asyncHandler(async (req, res) => {
+	const { email, code } = req.body;
+	const normalizedEmail = email.trim().toLowerCase();
 
-    // Verification checks...
-    if (user.verificationExpires < new Date()) {
-      return res.status(400).json({ message: "Verification code has expired" });
-    }
+	const user = await User.findOne({ email: normalizedEmail });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-    const providedCodeStr = String(code);
-    const storedCodeStr = String(user.verificationCode);
+	// Verification checks
+	if (!user.verificationExpires || user.verificationExpires < new Date()) {
+		const error = new Error('Verification code has expired');
+		error.statusCode = 400;
+		throw error;
+	}
 
-    if (providedCodeStr !== storedCodeStr) {
-      return res.status(400).json({ message: "Invalid verification code" });
-    }
+	const providedCodeStr = String(code);
+	const storedCodeStr = String(user.verificationCode);
 
-    // Generate tokens
-    let tokens;
-    try {
-      tokens = await authMiddleware.generateTokens(user);
-    } catch (tokenError) {
-      console.error("Token generation error:", tokenError);
-      return res.status(500).json({
-        message: "Error generating authentication tokens",
-        error:
-          process.env.NODE_ENV === "development"
-            ? tokenError.message
-            : undefined,
-      });
-    }
+	if (providedCodeStr !== storedCodeStr) {
+		const error = new Error('Invalid verification code');
+		error.statusCode = 400;
+		throw error;
+	}
 
-    // Clear verification data
-    user.verificationCode = null;
-    user.verificationExpires = null;
-    await user.save();
+	// Generate tokens
+	const tokens = await authMiddleware.generateTokens(user);
 
-    // Try to clean up Redis, but don't fail if it errors
-    try {
-      await redisClient.del(`login:${normalizedEmail}`);
-    } catch (redisError) {
-      console.error("Redis cleanup error:", redisError);
-    }
+	// Clear verification data
+	user.verificationCode = null;
+	user.verificationExpires = null;
+	await user.save();
 
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        name: user.name,
-        profilePicture: user.profilePicture || null, // Add this line
-      },
-      ...tokens,
-    });
-  } catch (error) {
-    console.error("Login verification error:", error);
-    res.status(500).json({
-      message: "Login verification failed",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
+	// Clean Redis silently
+	redisClient.del(`login:${normalizedEmail}`).catch(() => {});
+
+	res.status(200).json({
+		message: 'Login successful',
+		user: {
+			id: user._id,
+			username: user.username,
+			email: user.email,
+			role: user.role,
+			name: user.name,
+			profilePicture: user.profilePicture || null,
+		},
+		...tokens,
+	});
+});
+
 // Request a new verification code
-const requestCode = async (req, res) => {
-  const { email } = req.body;
+const requestCode = asyncHandler(async (req, res) => {
+	const { email } = req.body;
+	const normalizedEmail = email.trim().toLowerCase();
+	// Check rate limiting
+	const attempts = await redisClient.get(`${normalizedEmail}_attempts`);
+	if (attempts && parseInt(attempts) >= 3) {
+		const error = new Error('Too many attempts. Please try again later.');
+		error.statusCode = 429;
+		throw error;
+	}
 
-  try {
-    console.log("Code request:", { email });
+	// Find user
+	const user = await User.findOne({ email: normalizedEmail });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ message: "Valid email is required" });
-    }
+	// Generate new code
+	const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const normalizedEmail = email.trim().toLowerCase();
+	// Update user
+	user.verificationCode = verificationCode;
+	user.verificationExpires = new Date(Date.now() + 5 * 60 * 1000);
+	await user.save();
 
-    // Check rate limiting
-    const attempts = await redisClient.get(`${normalizedEmail}_attempts`);
-    if (attempts && parseInt(attempts) >= 3) {
-      return res.status(429).json({
-        message: "Too many attempts. Please try again later.",
-      });
-    }
+	// Update Redis
+	await Promise.all([
+		redisClient.set(normalizedEmail, verificationCode, 'EX', 300),
+		redisClient.incr(`${normalizedEmail}_attempts`),
+		redisClient.expire(`${normalizedEmail}_attempts`, 3600),
+	]);
 
-    // Find user
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+	// Send email
+	await sendVerificationEmail(normalizedEmail, verificationCode);
 
-    // Generate new code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
+	const response = {
+		message: 'New verification code sent',
+		expiresIn: '5 minutes',
+	};
 
-    // Update user
-    user.verificationCode = verificationCode;
-    user.verificationExpires = new Date(Date.now() + 5 * 60 * 1000);
-    await user.save();
+	if (process.env.NODE_ENV === 'development') {
+		response.verificationCode = verificationCode;
+	}
 
-    // Update Redis
-    await Promise.all([
-      redisClient.set(normalizedEmail, verificationCode, "EX", 300),
-      redisClient.incr(`${normalizedEmail}_attempts`),
-      redisClient.expire(`${normalizedEmail}_attempts`, 3600),
-    ]);
-
-    // Send email
-    await sendVerificationEmail(normalizedEmail, verificationCode);
-
-    const response = {
-      message: "New verification code sent",
-      expiresIn: "5 minutes",
-    };
-
-    if (process.env.NODE_ENV === "development") {
-      response.verificationCode = verificationCode;
-    }
-
-    res.status(200).json(response);
-  } catch (error) {
-    console.error("Request code error:", error);
-    res.status(500).json({
-      message: "Failed to send verification code",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
-// Add verifySignup method
-const verifySignup = async (req, res) => {
-  const { email, code } = req.body;
-
-  try {
-    console.log("Signup verification attempt:", { email, code });
-    const normalizedEmail = email.trim().toLowerCase();
-
-    // Get stored data from Redis
-    const redisData = await redisClient.get(`signup:${normalizedEmail}`);
-    if (!redisData) {
-      return res.status(400).json({ message: "Verification expired or invalid" });
-    }
-
-    const {
-      username,
-      name,
-      verificationCode: storedCode,
-      verificationExpires
-    } = JSON.parse(redisData);
-
-    // Validate code and expiration
-    if (code !== storedCode) {
-      return res.status(400).json({ message: "Invalid verification code" });
-    }
-
-    if (new Date(verificationExpires) < new Date()) {
-      return res.status(400).json({ message: "Verification code expired" });
-    }
-
-    // Check if user exists (prevent race condition)
-    const existingUser = await User.findOne({
-      $or: [{ email: normalizedEmail }, { username }]
-    });
-    if (existingUser) {
-      return res.status(409).json({
-        message: "User already registered during verification process"
-      });
-    }
-
-    // Create user ONLY after successful verification
-    const newUser = await User.create({
-      username,
-      name,
-      email: normalizedEmail,
-      role: "user"
-    });
-
-    // Cleanup Redis data
-    await redisClient.del(`signup:${normalizedEmail}`);
-
-    // Generate tokens
-    const { accessToken, refreshToken } = await authMiddleware.generateTokens(newUser);
-
-    res.status(201).json({
-      message: "Account activated successfully",
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role
-      },
-      accessToken,
-      refreshToken
-    });
-  } catch (error) {
-    console.error("Signup verification error:", error);
-    res.status(500).json({
-      message: "Verification failed",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
+	res.status(200).json(response);
+});
 
 module.exports = {
-  debugVerification,
-  signup,
-  login,
-  verifyLoginCode,
-  requestCode,
-  verifySignup,
+	// Methods
+	debugVerification,
+	signup,
+	login,
+	verifyLoginCode,
+	requestCode,
+	verifySignup,
+	// Validators - to use in routes
+	validateSignup,
+	validateLogin,
+	validateVerify,
 };

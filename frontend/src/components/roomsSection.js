@@ -1,141 +1,93 @@
-// RoomsSection.jsx
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import MoreAboutRoomPopup from "./amenitiesPopup";
-import RoomCard from "./roomCard";
-import { BookOpen } from "lucide-react";
-import api from "../utils/axiosConfig"; // Import the centralized Axios instance
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import RoomDetailsModal from './modals/RoomDetailsModal';
+import RoomCard from './roomCard';
+import { BookOpen } from 'lucide-react';
+import api from '../utils/axiosConfig';
 
 const RoomsSection = ({ userInfo }) => {
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [popupRoomDetails, setPopupRoomDetails] = useState(null);
-  const [popupAmenities, setPopupAmenities] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
-  const [activeRoom, setActiveRoom] = useState(null);
-  const navigate = useNavigate();
+	const [rooms, setRooms] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState('');
 
-  const handleRulesNavigation = () => {
-    navigate("/roomguidelines");
-  };
+	// Modal State
+	const [popupRoomDetails, setPopupRoomDetails] = useState(null);
+	const [showPopup, setShowPopup] = useState(false);
 
-  const containerRef = useRef(null);
+	// Booking State
+	const [activeRoom, setActiveRoom] = useState(null);
 
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const response = await api.get(
-          "/room/rooms",
-        );
-        setRooms(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load rooms. Please try again later.");
-        setLoading(false);
-      }
-    };
+	const navigate = useNavigate();
 
-    fetchRooms();
-  }, []);
+	useEffect(() => {
+		const fetchRooms = async () => {
+			try {
+				const response = await api.get('/room/rooms');
+				setRooms(response.data);
+			} catch (err) {
+				setError('Failed to load rooms. Please try again later.');
+			} finally {
+				setLoading(false);
+			}
+		};
 
-  const [visibleIconsCount, setVisibleIconsCount] = useState(0);
+		fetchRooms();
+	}, []);
 
-  const toggleDescription = (room) => {
-    setPopupRoomDetails(room);
-    setPopupAmenities(room.amenities);
-    setShowPopup(true);
-  };
+	const handleOpenDetails = (room) => {
+		setPopupRoomDetails(room);
+		setShowPopup(true);
+	};
 
-  return (
-    <div
-      className="
-      w-full 
-      flex flex-col 
-      px-4 sm:px-6 md:px-10 
-      py-6
-    "
-    >
-      {/* Loading and Error States */}
-      {loading && (
-        <div
-          className="
-          flex-grow 
-          flex justify-center items-center 
-          text-center text-lg text-gray-700
-        "
-        >
-          <BookOpen className="mr-2 animate-pulse" />
-          Loading rooms...
-        </div>
-      )}
+	const handleRulesNavigation = () => {
+		navigate('/roomguidelines');
+	};
 
-      {error && (
-        <div
-          className="
-          flex-grow 
-          flex justify-center items-center 
-          text-center text-lg text-red-500
-        "
-        >
-          {error}
-        </div>
-      )}
+	if (loading) {
+		return (
+			<div className='flex-grow flex justify-center items-center text-center text-lg text-gray-700 py-10'>
+				<BookOpen className='mr-2 animate-pulse' /> Loading rooms...
+			</div>
+		);
+	}
 
-      {/* Rooms Grid */}
-      <div
-        className="
-        grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 
-        gap-6 
-        w-full
-        max-w-screen-xl 
-        mx-auto
-      "
-      >
-        {rooms.length > 0 ? (
-          rooms.map((room) => {
-            const extraCount = Math.max(
-              0,
-              room.amenities.length - visibleIconsCount,
-            );
-            return (
-              <RoomCard
-                key={room._id}
-                room={room}
-                userInfo={userInfo}
-                extraCount={extraCount}
-                containerRef={containerRef}
-                visibleIconsCount={visibleIconsCount}
-                toggleDescription={() => toggleDescription(room)}
-                setVisibleIconsCount={setVisibleIconsCount}
-                activeRoom={activeRoom}
-                setActiveRoom={setActiveRoom}
-              />
-            );
-          })
-        ) : (
-          <div
-            className="
-            text-center text-lg text-gray-700 
-            col-span-full 
-            flex justify-center items-center
-          "
-          >
-            <BookOpen className="mr-2" />
-            No rooms available.
-          </div>
-        )}
-      </div>
+	if (error) {
+		return (
+			<div className='flex-grow flex justify-center items-center text-center text-lg text-red-500 py-10'>
+				{error}
+			</div>
+		);
+	}
 
-      <MoreAboutRoomPopup
-        showPopup={showPopup}
-        setShowPopup={setShowPopup}
-        roomDetails={popupRoomDetails}
-        amenities={popupAmenities}
-        handleRulesNavigation={handleRulesNavigation}
-      />
-    </div>
-  );
+	return (
+		<div className='w-full flex flex-col px-4 sm:px-6 md:px-10 py-6'>
+			<div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6 w-full max-w-screen-xl mx-auto'>
+				{rooms.length > 0 ? (
+					rooms.map((room) => (
+						<RoomCard
+							key={room._id}
+							room={room}
+							userInfo={userInfo}
+							activeRoom={activeRoom}
+							setActiveRoom={setActiveRoom}
+							toggleDescription={() => handleOpenDetails(room)}
+						/>
+					))
+				) : (
+					<div className='text-center text-lg text-gray-700 col-span-full flex justify-center items-center'>
+						<BookOpen className='mr-2' /> No rooms available.
+					</div>
+				)}
+			</div>
+
+			<RoomDetailsModal
+				isOpen={showPopup}
+				onClose={() => setShowPopup(false)}
+				room={popupRoomDetails}
+				onRulesClick={handleRulesNavigation}
+			/>
+		</div>
+	);
 };
 
 export default RoomsSection;

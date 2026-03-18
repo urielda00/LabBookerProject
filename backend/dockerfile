@@ -1,23 +1,20 @@
-# Use an official Node.js runtime as a parent image
-FROM node:16
+FROM node:22-alpine
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Use legacy-peer-deps to prevent install errors in old projects
+RUN npm install --legacy-peer-deps
 
-# Copy the rest of the application code
+# Optional: Install nodemon globally if you use it for dev
+RUN npm install -g nodemon
+
 COPY . .
 
-# Ensure we have an /app/uploads folder inside the container:
+# Ensure upload directory exists
 RUN mkdir -p /app/uploads
 
-# Expose the port the app runs on
 EXPOSE 5000
 
-# Run the app
 CMD ["npm", "start"]

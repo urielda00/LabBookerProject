@@ -1,695 +1,545 @@
-// controllers/userController.js
-const redisClient = require("../utils/redisClient");
-const User = require("../models/User");
-const authMiddleware = require("../middleware/authMiddleware");
-const uploadMulter = require("../middleware/multer");
-const cloudinary = require("../utils/cloudinary");
-const fs = require("fs");
-const crypto = require("crypto");
-const { sendVerificationEmail } = require("../utils/emailService");
-const R = require("../utils/response");
+const fs = require('fs');
+const crypto = require('crypto');
+const { body, query, param } = require('express-validator');
+const User = require('../models/User');
+const cloudinary = require('../utils/cloudinary');
+const redisClient = require('../utils/redisClient');
+const authMiddleware = require('../middleware/authMiddleware');
+const { sendVerificationEmail } = require('../utils/emailService');
+const notificationsController = require('../controllers/notificationsController');
+const asyncHandler = require('../middleware/asyncHandler');
 
+// --- Validators ---
 
-// Import notifications controller
-const notificationsController = require("../controllers/notificationsController");
+const validateEmailRequired = [body('email').isEmail().withMessage('Valid email is required')];
 
-class UserController {
-  constructor() {
-    // Bind methods to ensure proper 'this' context
-    this.sendVerificationCode = this.sendVerificationCode.bind(this);
-    this.verifyCodeAndLogin = this.verifyCodeAndLogin.bind(this);
-    this.resendVerificationCode = this.resendVerificationCode.bind(this);
-    this.fetchUsers = this.fetchUsers.bind(this);
-    this.getUserCount = this.getUserCount.bind(this);
-    this.getUserProfile = this.getUserProfile.bind(this);
+const validateLoginVerification = [
+	body('email').isEmail().withMessage('Valid email is required'),
+	body('verificationCode').notEmpty().withMessage('Verification code is required'),
+];
 
-    this.updateUserProfile = this.updateUserProfile.bind(this);
-    this.checkEmailAvailability = this.checkEmailAvailability.bind(this);
-    this.initiateEmailChange = this.initiateEmailChange.bind(this);
-    this.verifyEmailChange = this.verifyEmailChange.bind(this);
-    this.cancelEmailChange = this.cancelEmailChange.bind(this);
+const validateEmailChangeInit = [
+	body('newEmail')
+		.isEmail()
+		.withMessage('Valid new email is required')
+		.custom((value, { req }) => {
+			if (value === req.user.email) {
+				throw new Error('New email must be different from current email');
+			}
+			return true;
+		}),
+];
 
-    this.getAllUsers = this.getAllUsers.bind(this);
-    this.updateUserRole = this.updateUserRole.bind(this);
-    this.blockUser = this.blockUser.bind(this);
-    this.unblockUser = this.unblockUser.bind(this);
-    this.deleteUser = this.deleteUser.bind(this);
-  }
+const validateEmailChangeVerify = [
+	body('verificationCode').notEmpty().withMessage('Verification code is required'),
+];
 
-  // Send verification code
-  async sendVerificationCode(req, res) {
-    try {
-      const { email } = req.body;
-      if (!email) {
-        return R.send(req, res, 400, "user.errors.emailRequired");
-      }
-      const user = await User.findOne({ email });
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
-      // Generate verification code
-      const verificationCode = crypto.randomInt(100000, 999999).toString();
-      const codeExpiration = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-      // Update user with verification code
-      user.verificationCode = verificationCode;
-      user.verificationExpires = codeExpiration;
-      await user.save();
-      // For testing, return code; remove in production
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.verificationSent",
-        {},
-        { verificationCode, codeExpiration: codeExpiration.toISOString() }
-      );
-    } catch (error) {
-      console.error("Send verification code error:", error);
-      return R.send(req, res, 500, "user.errors.sendVerificationFailed");
-    }
-  }
+const validateUpdateRole = [
+	param('userId').isMongoId().withMessage('Invalid User ID'),
+	body('role')
+		.isIn(['user', 'admin', 'manager'])
+		.withMessage('Role must be one of: user, admin, manager'),
+];
 
-  // Verify code and login
-  async verifyCodeAndLogin(req, res) {
-    try {
-      const { email, verificationCode } = req.body;
-      if (!email || !verificationCode) {
-        return R.send(req, res, 400, "user.errors.emailCodeRequired");
-      }
-      const user = await User.findOne({
-        email,
-        verificationCode,
-        verificationExpires: { $gt: new Date() },
-      });
-      if (!user) {
-        return R.send(req, res, 401, "user.errors.invalidCode");
-      }
-      // Clear verification code and expiration
-      user.verificationCode = null;
-      user.verificationExpires = null;
-      await user.save();
-      // Generate tokens
-      const { accessToken, refreshToken } =
-        await authMiddleware.generateTokens(user);
-        return R.send(
-          req,
-          res,
-          200,
-          "user.success.loginSuccess",
-          {},
-          {
-            user: {
-              id: user._id,
-              username: user.username,
-              email: user.email,
-              role: user.role,
-            },
-            accessToken,
-            refreshToken,
-          }
-        );
-      } catch (error) {
-        console.error("Verify code error:", error);
-        return R.send(req, res, 500, "user.errors.verificationFailed");
-      }
-  }
+const validateBlockUser = [
+	param('userId').isMongoId().withMessage('Invalid User ID'),
+	body('blockDuration')
+		.isInt({ min: 1 })
+		.withMessage('Block duration must be a positive integer (hours)'),
+];
 
-  // Resend verification code
-  async resendVerificationCode(req, res) {
-    try {
-      const { email } = req.body;
-      if (!email) {
-        return R.send(req, res, 400, "user.errors.emailRequired");
-      }
-      const user = await User.findOne({ email });
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
-      // Generate new verification code
-      const verificationCode = crypto.randomInt(100000, 999999).toString();
-      const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
-      user.verificationCode = verificationCode;
-      user.verificationExpires = codeExpiration;
-      await user.save();
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.resendSuccess",
-        {},
-        { verificationCode, codeExpiration: codeExpiration.toISOString() }
-      );
-    } catch (error) {
-      console.error("Resend code error:", error);
-      return R.send(req, res, 500, "user.errors.resendFailed");
-    }
-  }
+const validateIdParam = [param('userId').isMongoId().withMessage('Invalid User ID')];
 
-  // Fetch users (protected route)
-  async fetchUsers(req, res) {
-    try {
-      const users = await User.find().select(
-        "-verificationCode -verificationExpires",
-      );
-       return R.send(
-      req,
-      res,
-      200,
-      "user.success.usersFetched",
-      {},
-      { users }
-    );
-  } catch (error) {
-    console.error("Fetch users error:", error);
-    return R.send(req, res, 500, "user.errors.fetchFailed");
-  }
-  }
+// --- Auth Functions ---
 
-  // Get user count
-  async getUserCount(req, res) {
-    try {
-      const count = await User.countDocuments();
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.countFetched",
-        {},
-        { count }
-      );
-    } catch (error) {
-      console.error("Get user count error:", error);
-      return R.send(req, res, 500, "user.errors.countFailed");
-    }
-  }
+const sendVerificationCode = asyncHandler(async (req, res) => {
+	const { email } = req.body;
 
-  // Get user profile
-  async getUserProfile(req, res) {
-    try {
-      const user = await User.findById(req.user._id).select(
-        "-verificationCode -verificationExpires",
-      );
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
-      return res.status(200).json(user);
+	const user = await User.findOne({ email });
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
 
-    } catch (error) {
-      console.error("Get profile error:", error);
-      return R.send(req, res, 500, "user.errors.profileFetchFailed");
-    }
-  }
+	const verificationCode = crypto.randomInt(100000, 999999).toString();
+	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-  // Update user profile and create notification on success
-  async updateUserProfile(req, res) {
-    return new Promise((resolve, reject) => {
-      uploadMulter(req, res, async (err) => {
-        if (err) {
-          console.error("Error uploading file:", err.message);
-          return R.send(req, res, 500, "user.errors.uploadFailed");
-        }
-        try {
-          const { name, removeImage } = req.body; // parse removeImage from form data
-          let profilePicture;
-          const user = await User.findById(req.user._id);
+	user.verificationCode = verificationCode;
+	user.verificationExpires = codeExpiration;
+	await user.save();
 
-          // Remove image if requested
-          if (removeImage === "true" || removeImage === true) {
-            if (user.profilePicture) {
-              try {
-                const publicId = user.profilePicture
-                  .split("/")
-                  .pop()
-                  .split(".")[0];
-                await cloudinary.uploader.destroy(
-                  `profile-pictures/${publicId}`,
-                );
-              } catch (err) {
-                console.error(
-                  "Error removing image from Cloudinary:",
-                  err.message,
-                );
-              }
-            }
-            user.profilePicture = null;
-          }
+	// In a real scenario, you'd send an email here.
+	// Returning code for dev/demo purposes as per original logic.
+	res.status(200).json({
+		message: 'user.success.verificationSent',
+		verificationCode, // Remove in production if sensitive
+		codeExpiration: codeExpiration.toISOString(),
+	});
+});
 
-          // Handle new file upload if present
-          if (req.file) {
-            if (user.profilePicture && !removeImage) {
-              try {
-                const publicId = user.profilePicture
-                  .split("/")
-                  .pop()
-                  .split(".")[0];
-                await cloudinary.uploader.destroy(
-                  `profile-pictures/${publicId}`,
-                );
-              } catch (uploadError) {
-                console.error("Error removing old image:", uploadError);
-              }
-            }
-            const result = await cloudinary.uploader.upload(req.file.path, {
-              folder: "profile-pictures",
-            });
-            fs.unlinkSync(req.file.path); // Remove temp file
-            profilePicture = result.secure_url;
-            user.profilePicture = profilePicture;
-          }
+const verifyCodeAndLogin = asyncHandler(async (req, res) => {
+	const { email, verificationCode } = req.body;
 
-          // Update name if provided
-          if (name) {
-            user.name = name;
-          }
+	const user = await User.findOne({
+		email,
+		verificationCode,
+		verificationExpires: { $gt: new Date() },
+	});
 
-          await user.save();
+	if (!user) {
+		const error = new Error('user.errors.invalidCode');
+		error.statusCode = 401;
+		throw error;
+	}
 
-          // Create a notification about the profile update
-          try {
-            await notificationsController.createNotification(
-              user._id,
-              "user.notify.profileUpdated",   // i18n key
-              {},                             // no params needed
-              "profileUpdate"
-            );
-            
-          } catch (notificationError) {
-            console.error(
-              "Notification creation error:",
-              notificationError.message,
-            );
-            // Continue even if notification creation fails
-          }
+	// Clear verification code
+	user.verificationCode = null;
+	user.verificationExpires = null;
+	await user.save();
 
-          const updatedUser = user.toObject();
-          delete updatedUser.verificationCode;
-          delete updatedUser.verificationExpires;
-          delete updatedUser.emailChangeRequest;
+	// Generate tokens
+	const { accessToken, refreshToken } = await authMiddleware.generateTokens(user);
 
-          return R.send(
-            req,
-            res,
-            200,
-            "user.success.profileUpdated",
-            {},
-            { user: updatedUser }
-          );
-  
-        } catch (error) {
-          console.error("Update error:", error);
-          return R.send(req, res, 500, "user.errors.profileUpdateFailed");
-        }
-      });
-    });
-  }
+	res.status(200).json({
+		message: 'user.success.loginSuccess',
+		user: {
+			id: user._id,
+			username: user.username,
+			email: user.email,
+			role: user.role,
+		},
+		accessToken,
+		refreshToken,
+	});
+});
 
-  // Check email availability
-  async checkEmailAvailability(req, res) {
-    try {
-      const { email } = req.body;
-      if (!email) {
-        return R.send(req, res, 400, "user.errors.emailRequired");
-      }
-      const existingUser = await User.findOne({
-        email,
-        _id: { $ne: req.user._id }, // Exclude current user
-      });
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.emailChecked",
-        {},
-        { available: !existingUser }
-      );
-    } catch (error) {
-      console.error("Check email error:", error);
-      return R.send(req, res, 500, "user.errors.emailCheckFailed");
-    }
-  }
+const resendVerificationCode = asyncHandler(async (req, res) => {
+	const { email } = req.body;
 
-  // Initiate email change
-  async initiateEmailChange(req, res) {
-    try {
-      const { newEmail } = req.body;
-      const userId = req.user._id;
-      if (!newEmail) {
-        return R.send(req, res, 400, "user.errors.emailRequired");
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) {
-        return R.send(req, res, 400, "user.errors.emailInvalid");
-      }
-      const existingUser = await User.findOne({
-        email: newEmail.toLowerCase(),
-        _id: { $ne: userId },
-      });
-      if (existingUser) {
-        return R.send(req, res, 409, "user.errors.emailInUse");
-      }
-      const verificationCode = Math.floor(
-        100000 + Math.random() * 900000,
-      ).toString();
-      const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
-      console.log(verificationCode);
-      // Store temporarily in Redis
-      await redisClient.set(
-        `changeEmail:${userId}`,
-        verificationCode,
-        "EX",
-        300,
-      );
-      await redisClient.set(
-        `changeEmail:newEmail:${userId}`,
-        newEmail,
-        "EX",
-        300,
-      );
-      // Persist the pending request in the user's document
-      const user = await User.findById(userId);
-      user.emailChangeRequest = {
-        newEmail: newEmail.toLowerCase(),
-        verificationCode,
-        expiresAt: codeExpiration,
-      };
-      await user.save();
-      await sendVerificationEmail(req.user.email, verificationCode);
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.emailChangeInitiated",
-        { email: newEmail }
-      );
-  
-    } catch (error) {
-      console.error("initiateEmailChange error:", error);
-      return R.send(req, res, 500, "user.errors.initiateEmailChangeFailed");
-    }
-  }
+	const user = await User.findOne({ email });
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
 
-  // Verify email change and create a notification
-  async verifyEmailChange(req, res) {
-    try {
-      const { verificationCode } = req.body;
-      const userId = req.user._id;
-      if (!verificationCode) {
-        return R.send(req, res, 400, "user.errors.codeRequired");
+	const verificationCode = crypto.randomInt(100000, 999999).toString();
+	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
 
-      }
-      // Retrieve code from Redis
-      const storedCode = await redisClient.get(`changeEmail:${userId}`);
-      if (!storedCode) {
-        return R.send(req, res, 400, "user.errors.noActiveRequest");
+	user.verificationCode = verificationCode;
+	user.verificationExpires = codeExpiration;
+	await user.save();
 
-      }
-      if (storedCode !== verificationCode) {
-        return R.send(req, res, 400, "user.errors.invalidCode");
-      }
-      const pendingNewEmail = await redisClient.get(
-        `changeEmail:newEmail:${userId}`,
-      );
-      if (!pendingNewEmail) {
-        return R.send(req, res, 400, "user.errors.emailNotFound");
+	res.status(200).json({
+		message: 'user.success.resendSuccess',
+		verificationCode,
+		codeExpiration: codeExpiration.toISOString(),
+	});
+});
 
-      }
-      const user = await User.findById(userId);
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
-      // Optional: Check if the new email is still available
-      const emailInUse = await User.findOne({
-        email: pendingNewEmail.toLowerCase(),
-        _id: { $ne: userId },
-      });
-      if (emailInUse) {
-        return R.send(req, res, 409, "user.errors.emailUnavailable");
+// --- Profile & User Data Functions ---
 
-      }
-      // Update user's email and clear the pending request
-      user.email = pendingNewEmail.toLowerCase();
-      user.emailChangeRequest = null;
-      await user.save();
-      // Cleanup Redis keys
-      await redisClient.del(`changeEmail:${userId}`);
-      await redisClient.del(`changeEmail:newEmail:${userId}`);
-      // Create a notification about the email update
-      try {
-        await notificationsController.createNotification(
-          user._id,
-          "user.notify.emailChanged",
-          {},
-          "emailChange"
-        );
-        
-      } catch (notificationError) {
-        console.error(
-          "Notification creation error:",
-          notificationError.message,
-        );
-      }
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.emailUpdated",
-        { email: pendingNewEmail },
-        {
-          user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-          }
-        }
-      );
-  
-    } catch (error) {
-      console.error("verifyEmailChange error:", error);
-      return R.send(req, res, 500, "user.errors.verifyEmailChangeFailed");
-    }
-  }
+const fetchUsers = asyncHandler(async (req, res) => {
+	const users = await User.find().select('-verificationCode -verificationExpires');
+	res.status(200).json({
+		message: 'user.success.usersFetched',
+		users,
+	});
+});
 
-  // Cancel email change request and (optionally) create a cancellation notification
-  async cancelEmailChange(req, res) {
-    try {
-      const userId = req.user._id;
-      const user = await User.findById(userId);
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
-      user.emailChangeRequest = null;
-      await user.save();
-      await redisClient.del(`changeEmail:${userId}`);
-      await redisClient.del(`changeEmail:newEmail:${userId}`);
-      // Optionally, create a notification informing the user that the request was canceled
-      try {
-        await notificationsController.createNotification(
-          user._id,
-          "user.notify.emailChangeCancelled",
-          {},
-          "emailChangeCancel"
-        );
-        
-      } catch (notificationError) {
-        console.error(
-          "Notification cancellation error:",
-          notificationError.message,
-        );
-      }
-      return R.send(req, res, 200, "user.success.emailChangeCancelled");
+const getUserCount = asyncHandler(async (req, res) => {
+	const count = await User.countDocuments();
+	res.status(200).json({
+		message: 'user.success.countFetched',
+		count,
+	});
+});
 
-  } catch (error) {
-    console.error("cancelEmailChange error:", error);
-    return R.send(req, res, 500, "user.errors.cancelEmailChangeFailed");
-  }
-  }
+const getUserProfile = asyncHandler(async (req, res) => {
+	const user = await User.findById(req.user._id).select('-verificationCode -verificationExpires');
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+	res.status(200).json(user);
+});
 
-  // Admin: Get all users with filters
-  // Fix getAllUsers method in UserController
-  async getAllUsers(req, res) {
-    try {
-      const { page = 1, limit = 10, role, search } = req.query;
-      const query = {};
+// Refactored to assume Multer Middleware runs BEFORE this controller
+const updateUserProfile = asyncHandler(async (req, res) => {
+	const { name, removeImage } = req.body;
+	const user = await User.findById(req.user._id);
 
-      if (role && role !== "all") query.role = role;
-      if (search) {
-        query.$or = [
-          { username: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-          { name: { $regex: search, $options: "i" } },
-        ];
-      }
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-      const options = {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        select:
-          "-verificationCode -verificationExpires -emailChangeRequest -__v",
-        sort: { createdAt: -1 },
-        collation: { locale: "en", strength: 2 }, // Case-insensitive sorting
-      };
+	// Logic 1: Remove Image
+	if (removeImage === 'true' || removeImage === true) {
+		if (user.profilePicture) {
+			const publicId = user.profilePicture.split('/').pop().split('.')[0];
+			await cloudinary.uploader.destroy(`profile-pictures/${publicId}`).catch(console.error);
+		}
+		user.profilePicture = null;
+	}
 
-      const result = await User.paginate(query, options);
+	// Logic 2: Upload New Image
+	if (req.file) {
+		try {
+			// If existing picture exists and we are not explicitly removing it,
+			// we should delete the old one to save space (Standard practice)
+			if (user.profilePicture && !removeImage) {
+				const publicId = user.profilePicture.split('/').pop().split('.')[0];
+				await cloudinary.uploader.destroy(`profile-pictures/${publicId}`).catch(console.error);
+			}
 
-      // Transform the result to match frontend expectations
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.usersFetched",
-        {},
-        {
-          docs: result.docs,
-          total: result.totalDocs,
-          limit: result.limit,
-          page: result.page,
-          totalPages: result.totalPages
-        }
-      );
-  
-    } catch (error) {
-      console.error("Get all users error:", error);
-      return R.send(req, res, 500, "user.errors.fetchFailed");
-    }
-  }
+			const result = await cloudinary.uploader.upload(req.file.path, {
+				folder: 'profile-pictures',
+			});
+			user.profilePicture = result.secure_url;
+		} catch (uploadError) {
+			console.error('Profile upload error:', uploadError);
+			const error = new Error('user.errors.uploadFailed');
+			error.statusCode = 500;
+			throw error;
+		} finally {
+			// Always clean up local file
+			if (fs.existsSync(req.file.path)) {
+				fs.unlinkSync(req.file.path);
+			}
+		}
+	}
 
-  // Admin: Update user role
-  async updateUserRole(req, res) {
-    try {
-      const { userId } = req.params;
-      const { role } = req.body;
+	// Logic 3: Update Name
+	if (name) user.name = name;
 
-      if (!["user", "admin", "manager"].includes(role)) {
-        return R.send(req, res, 400, "user.errors.invalidRole");
-      }
+	await user.save();
 
-      if (userId === req.user._id.toString()) {
-        return R.send(req, res, 400, "user.errors.selfAction");
-      }
+	// Notify
+	notificationsController
+		.createNotification(user._id, 'user.notify.profileUpdated', {}, 'profileUpdate')
+		.catch(console.error);
 
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { role },
-        { new: true, runValidators: true },
-      ).select("-verificationCode -verificationExpires");
+	// Return clean user object
+	const updatedUser = user.toObject();
+	delete updatedUser.verificationCode;
+	delete updatedUser.verificationExpires;
+	delete updatedUser.emailChangeRequest;
+	delete updatedUser.password;
 
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-      }
+	res.status(200).json({
+		message: 'user.success.profileUpdated',
+		user: updatedUser,
+	});
+});
 
-      // Create notification
-      await notificationsController.createNotification(
-        user._id,
-        "user.notify.roleUpdated",
-        { role },
-        "roleUpdate"
-      );
-      
+// --- Email Change Functions ---
 
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.roleUpdated",
-        { role },
-        { user }
-      );
-    } catch (error) {
-      console.error("Update role error:", error);
-      return R.send(req, res, 500, "user.errors.roleUpdateFailed");
-    }
-  }
+const checkEmailAvailability = asyncHandler(async (req, res) => {
+	const { email } = req.body;
+	const existingUser = await User.findOne({
+		email,
+		_id: { $ne: req.user._id },
+	});
 
-  // Admin: Block/unblock user
-  async blockUser(req, res) {
-    try {
-      const { userId } = req.params;
-      const { blockDuration } = req.body; // in hours
+	res.status(200).json({
+		message: 'user.success.emailChecked',
+		available: !existingUser,
+	});
+});
 
-      if (userId === req.user._id.toString()) {
-        return R.send(req, res, 400, "user.errors.selfAction");
-      }
+const initiateEmailChange = asyncHandler(async (req, res) => {
+	const { newEmail } = req.body;
+	const userId = req.user._id;
 
-      const user = await User.findById(userId);
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-            }
+	const existingUser = await User.findOne({
+		email: newEmail.toLowerCase(),
+		_id: { $ne: userId },
+	});
 
-      const blockUntil = new Date(Date.now() + blockDuration * 60 * 60 * 1000);
-      user.cancellationStats.blockedUntil = blockUntil;
-      await user.save();
+	if (existingUser) {
+		const error = new Error('user.errors.emailInUse');
+		error.statusCode = 409;
+		throw error;
+	}
 
-      // Create notification
-      await notificationsController.createNotification(
-        user._id,
-        "user.notify.accountBlocked",
-        { date: blockUntil.toLocaleDateString() },
-        "accountBlocked"
-      );
-      
+	const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
 
-      return R.send(
-        req,
-        res,
-        200,
-        "user.success.accountBlocked",
-        { date: blockUntil.toLocaleDateString("en-IL") }
-      );
-    } catch (error) {
-      console.error("Block user error:", error);
-      return R.send(req, res, 500, "user.errors.blockFailed");
-    }
-  }
+	await redisClient.set(`changeEmail:${userId}`, verificationCode, 'EX', 300);
+	await redisClient.set(`changeEmail:newEmail:${userId}`, newEmail, 'EX', 300);
 
-  // Admin: Unblock user
-  async unblockUser(req, res) {
-    try {
-      const { userId } = req.params;
-      const user = await User.findById(userId);
+	const user = await User.findById(userId);
+	user.emailChangeRequest = {
+		newEmail: newEmail.toLowerCase(),
+		verificationCode,
+		expiresAt: codeExpiration,
+	};
+	await user.save();
 
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");      }
+	await sendVerificationEmail(req.user.email, verificationCode);
 
-      user.cancellationStats.blockedUntil = null;
-      await user.save();
+	res.status(200).json({
+		message: 'user.success.emailChangeInitiated',
+		email: newEmail,
+	});
+});
 
-      // Create notification
-      await notificationsController.createNotification(
-        user._id,
-        "user.notify.accountUnblocked",
-        {},
-        "accountUnblocked"
-      );
-      
+const verifyEmailChange = asyncHandler(async (req, res) => {
+	const { verificationCode } = req.body;
+	const userId = req.user._id;
 
-      return R.send(req, res, 200, "user.success.accountUnblocked");
-  } catch (error) {
-    console.error("Unblock user error:", error);
-    return R.send(req, res, 500, "user.errors.unblockFailed");
-  }
-}
-  
+	const storedCode = await redisClient.get(`changeEmail:${userId}`);
+	if (!storedCode) {
+		const error = new Error('user.errors.noActiveRequest');
+		error.statusCode = 400;
+		throw error;
+	}
+	if (storedCode !== verificationCode) {
+		const error = new Error('user.errors.invalidCode');
+		error.statusCode = 400;
+		throw error;
+	}
 
-  // Admin: Delete user
-  async deleteUser(req, res) {
-    try {
-      const { userId } = req.params;
+	const pendingNewEmail = await redisClient.get(`changeEmail:newEmail:${userId}`);
+	if (!pendingNewEmail) {
+		const error = new Error('user.errors.emailNotFound');
+		error.statusCode = 400;
+		throw error;
+	}
 
-      if (userId === req.user._id.toString()) {
-        return R.send(req, res, 400, "user.errors.selfAction");
-      }
+	const user = await User.findById(userId);
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
 
-      const user = await User.findByIdAndDelete(userId);
-      if (!user) {
-        return R.send(req, res, 404, "user.errors.userNotFound");
-            }
+	// Double check availability before final commit
+	const emailInUse = await User.findOne({
+		email: pendingNewEmail.toLowerCase(),
+		_id: { $ne: userId },
+	});
+	if (emailInUse) {
+		const error = new Error('user.errors.emailUnavailable');
+		error.statusCode = 409;
+		throw error;
+	}
 
-            return R.send(req, res, 200, "user.success.userDeleted");
-          } catch (error) {
-            console.error("Delete user error:", error);
-            return R.send(req, res, 500, "user.errors.deleteFailed");
-          }
-  }
-}
+	// Update Email
+	user.email = pendingNewEmail.toLowerCase();
+	user.emailChangeRequest = null;
+	await user.save();
 
-module.exports = new UserController();
+	// Cleanup Redis
+	await redisClient.del(`changeEmail:${userId}`);
+	await redisClient.del(`changeEmail:newEmail:${userId}`);
+
+	// Notify
+	notificationsController
+		.createNotification(user._id, 'user.notify.emailChanged', {}, 'emailChange')
+		.catch(console.error);
+
+	res.status(200).json({
+		message: 'user.success.emailUpdated',
+		email: pendingNewEmail,
+		user: { id: user._id, username: user.username, email: user.email },
+	});
+});
+
+const cancelEmailChange = asyncHandler(async (req, res) => {
+	const userId = req.user._id;
+	const user = await User.findById(userId);
+
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	user.emailChangeRequest = null;
+	await user.save();
+
+	await redisClient.del(`changeEmail:${userId}`);
+	await redisClient.del(`changeEmail:newEmail:${userId}`);
+
+	notificationsController
+		.createNotification(user._id, 'user.notify.emailChangeCancelled', {}, 'emailChangeCancel')
+		.catch(console.error);
+
+	res.status(200).json({ message: 'user.success.emailChangeCancelled' });
+});
+
+// --- Admin Functions ---
+
+const getAllUsers = asyncHandler(async (req, res) => {
+	const { page = 1, limit = 10, role, search } = req.query;
+	const query = {};
+
+	if (role && role !== 'all') query.role = role;
+	if (search) {
+		query.$or = [
+			{ username: { $regex: search, $options: 'i' } },
+			{ email: { $regex: search, $options: 'i' } },
+			{ name: { $regex: search, $options: 'i' } },
+		];
+	}
+
+	const options = {
+		page: parseInt(page),
+		limit: parseInt(limit),
+		select: '-verificationCode -verificationExpires -emailChangeRequest -__v',
+		sort: { createdAt: -1 },
+		collation: { locale: 'en', strength: 2 },
+	};
+
+	const result = await User.paginate(query, options);
+
+	res.status(200).json({
+		message: 'user.success.usersFetched',
+		docs: result.docs,
+		total: result.totalDocs,
+		limit: result.limit,
+		page: result.page,
+		totalPages: result.totalPages,
+	});
+});
+
+const updateUserRole = asyncHandler(async (req, res) => {
+	const { userId } = req.params;
+	const { role } = req.body;
+
+	if (userId === req.user._id.toString()) {
+		const error = new Error('user.errors.selfAction');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	const user = await User.findByIdAndUpdate(
+		userId,
+		{ role },
+		{ new: true, runValidators: true }
+	).select('-verificationCode -verificationExpires');
+
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	notificationsController
+		.createNotification(user._id, 'user.notify.roleUpdated', { role }, 'roleUpdate')
+		.catch(console.error);
+
+	res.status(200).json({
+		message: 'user.success.roleUpdated',
+		role,
+		user,
+	});
+});
+
+const blockUser = asyncHandler(async (req, res) => {
+	const { userId } = req.params;
+	const { blockDuration } = req.body;
+
+	if (userId === req.user._id.toString()) {
+		const error = new Error('user.errors.selfAction');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	const user = await User.findById(userId);
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	const blockUntil = new Date(Date.now() + blockDuration * 60 * 60 * 1000);
+	user.cancellationStats.blockedUntil = blockUntil;
+	await user.save();
+
+	notificationsController
+		.createNotification(
+			user._id,
+			'user.notify.accountBlocked',
+			{ date: blockUntil.toLocaleDateString() },
+			'accountBlocked'
+		)
+		.catch(console.error);
+
+	res.status(200).json({
+		message: 'user.success.accountBlocked',
+		date: blockUntil.toLocaleDateString('en-IL'),
+	});
+});
+
+const unblockUser = asyncHandler(async (req, res) => {
+	const { userId } = req.params;
+	const user = await User.findById(userId);
+
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	user.cancellationStats.blockedUntil = null;
+	await user.save();
+
+	notificationsController
+		.createNotification(user._id, 'user.notify.accountUnblocked', {}, 'accountUnblocked')
+		.catch(console.error);
+
+	res.status(200).json({ message: 'user.success.accountUnblocked' });
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+	const { userId } = req.params;
+
+	if (userId === req.user._id.toString()) {
+		const error = new Error('user.errors.selfAction');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	const user = await User.findByIdAndDelete(userId);
+	if (!user) {
+		const error = new Error('user.errors.userNotFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	res.status(200).json({ message: 'user.success.userDeleted' });
+});
+
+module.exports = {
+	// Methods
+	blockUser,
+	fetchUsers,
+	deleteUser,
+	getAllUsers,
+	unblockUser,
+	getUserCount,
+	getUserProfile,
+	updateUserRole,
+	updateUserProfile,
+	verifyEmailChange,
+	cancelEmailChange,
+	verifyCodeAndLogin,
+	initiateEmailChange,
+	sendVerificationCode,
+	resendVerificationCode,
+	checkEmailAvailability,
+	// Validators
+	validateEmailRequired,
+	validateLoginVerification,
+	validateEmailChangeInit,
+	validateEmailChangeVerify,
+	validateUpdateRole,
+	validateBlockUser,
+	validateIdParam,
+};

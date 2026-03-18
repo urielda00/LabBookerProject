@@ -1,24 +1,45 @@
 const express = require('express');
 const router = express.Router();
-const {
-  sendMessage,
-  getAllMessages,
-  getChatSettings,
-  updateChatSettings,
-  markMessagesRead
-} = require('../controllers/messageController');
-const authMiddleware = require('../middleware/authMiddleware');  // <-- your JWT guard
+const messageController = require('../controllers/messageController');
+const authMiddleware = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
-// public chat routes
-router.post('/send', authMiddleware.requireAuth, sendMessage);
-router.get('/', authMiddleware.requireAuth, getAllMessages);
+// Public chat routes (require login)
+router.post(
+	'/send',
+	authMiddleware.requireAuth,
+	messageController.validateSendMessage,
+	validateRequest,
+	messageController.sendMessage
+);
 
+router.get(
+	'/',
+	authMiddleware.requireAuth,
+	messageController.validateGetMessages,
+	validateRequest,
+	messageController.getAllMessages
+);
 
-// admin‐only settings
-router.get('/settings', authMiddleware.requireAuth, getChatSettings);
-router.post('/settings', authMiddleware.requireAuth, updateChatSettings);
+router.post(
+	'/mark-read',
+	authMiddleware.requireAuth,
+	messageController.validateMarkRead,
+	validateRequest,
+	messageController.markMessagesRead
+);
 
-router.post('/mark-read', authMiddleware.requireAuth, markMessagesRead);
+// Admin-only settings
+// Added requireRole(['admin']) for better security at the route level
+router.get('/settings', authMiddleware.requireAuth, messageController.getChatSettings);
 
+router.post(
+	'/settings',
+	authMiddleware.requireAuth,
+	authMiddleware.requireRole(['admin']),
+	messageController.validateSettingsUpdate,
+	validateRequest,
+	messageController.updateChatSettings
+);
 
 module.exports = router;

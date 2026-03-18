@@ -1,41 +1,51 @@
-const uploadMulter = require("../middleware/multer");
-const cloudinary = require("../utils/cloudinary");
-const fs = require("fs");
+const fs = require('fs');
+const cloudinary = require('../utils/cloudinary');
+const asyncHandler = require('../middleware/asyncHandler');
 
-async function upload(req, res) {
-  return new Promise((resolve, reject) => {
-    uploadMulter(req, res, async (err) => {
-      if (err) {
-        console.error("Error uploading file:", err.message);
-        reject({ status: 500, message: "Failed to upload file" });
-      } else {
-        try {
-          // Validate if file exists
-          if (!req.file) {
-            reject({ status: 400, message: "No file provided" });
-            return;
-          }
+const uploadFile = asyncHandler(async (req, res) => {
+	if (!req.file) {
+		const error = new Error('No file provided');
+		error.statusCode = 400;
+		throw error;
+	}
 
-          // Upload to Cloudinary
-          const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: "uploads", // Optional: Save files in a specific folder
-          });
+	let result;
+	// Check if Cloudinary is configured
+	const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
 
-          // Cleanup local file
-          fs.unlinkSync(req.file.path);
+	try {
+		if (isCloudinaryConfigured) {
+			// Real Upload
+			result = await cloudinary.uploader.upload(req.file.path, {
+				folder: 'uploads',
+			});
+		} else {
+			// Mock Upload for Development/Testing
+			console.log('[UPLOAD] Cloudinary not configured, using mock response');
+			result = { secure_url: `http://localhost:5000/uploads/${req.file.filename}` };
+		}
+	} catch (error) {
+		console.error('Cloudinary upload error:', error);
+		const uploadError = new Error('Failed to upload file to cloud storage');
+		uploadError.statusCode = 500;
+		throw uploadError;
+	} finally {
+		// Cleanup local file
+		if (req.file && fs.existsSync(req.file.path)) {
+			try {
+				fs.unlinkSync(req.file.path);
+			} catch (unlinkError) {
+				console.error('Error deleting local file:', unlinkError);
+			}
+		}
+	}
 
-          resolve({
-            status: 200,
-            message: "File uploaded successfully",
-            url: result.secure_url, // Return the Cloudinary URL
-          });
-        } catch (error) {
-          console.error("Error uploading file to Cloudinary:", error.message);
-          reject({ status: 500, message: "Failed to upload file" });
-        }
-      }
-    });
-  });
-}
+	res.status(200).json({
+		message: isCloudinaryConfigured ? 'File uploaded successfully' : 'File processed (Mock Mode)',
+		url: result.secure_url,
+	});
+});
 
-module.exports = { upload };
+module.exports = {
+	upload: uploadFile,
+};

@@ -1,4 +1,3 @@
-// middleware/roleMiddleware.js
 const roleMiddleware = {
   checkRole: (allowedRoles) => {
     return (req, res, next) => {

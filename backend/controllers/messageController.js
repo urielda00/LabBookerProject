@@ -1,128 +1,177 @@
-// controllers/messageController.js
+const { body, query } = require('express-validator');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const ChatSetting = require('../models/ChatSetting');
 const notificationsController = require('./notificationsController');
+const asyncHandler = require('../middleware/asyncHandler');
 
-const sendMessage = async (req, res) => {
-  const { content, channel = 'all' } = req.body;
-  const io = req.app.get('io');
-  const sender = req.user;
-  if (!sender) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+// Validators
+const validateSendMessage = [
+	body('content')
+		.trim()
+		.notEmpty()
+		.withMessage('Message content is required')
+		.isLength({ max: 2000 })
+		.withMessage('Message content cannot exceed 2000 characters'),
+	body('channel').optional().trim().default('all'),
+];
 
-  // 1) check chat enabled
-  const { enabled } = (await ChatSetting.findOne()) || {};
-  if (!enabled && sender.role !== 'admin') {
-    return res.status(403).json({ message: 'Chat is currently disabled.' });
-  }
-  if (channel === 'admin' && sender.role !== 'admin') {
-    return res.status(403).json({ message: 'Only admins can post here.' });
-  }
+const validateGetMessages = [
+	query('limit')
+		.optional()
+		.isInt({ min: 1, max: 100 })
+		.withMessage('Limit must be between 1 and 100')
+		.toInt(),
+	query('channel').optional().trim().default('all'),
+];
 
-  // 2) create message with sender already in readBy
-  const raw = new Message({
-    sender: sender._id,
-    content,
-    channel,
-    readBy: [sender._id],
-  });
-  await raw.save();
+const validateSettingsUpdate = [
+	body('enabled').isBoolean().withMessage('Enabled status must be a boolean'),
+];
 
-  // 3) populate sender for the client
-  await raw.populate('sender', 'username role profilePicture');
-  const message = raw; // now populated
+const validateMarkRead = [body('channel').trim().notEmpty().withMessage('Channel is required')];
 
-  // 4) handle @-mentions
-  const mentionPattern = /@([A-Za-z0-9_]+)/g;
-  let match;
-  while ((match = mentionPattern.exec(content))) {
-    const username = match[1];
-    const userMentioned = await User.findOne({ username }).select('_id');
-    if (userMentioned) {
-      await notificationsController.createNotification(
-        userMentioned._id,               // recipient
-        'chat.notify.mention',           // i18n key
-        { from: sender.username, snippet: content.slice(0, 50) },
-        'mention',                       // type
-        message._id.toString()           // related ID
-      );
-    }
-  }
+// Send a new message
+const sendMessage = asyncHandler(async (req, res) => {
+	const { content, channel } = req.body;
+	const io = req.app.get('io');
+	const sender = req.user;
 
-  // 5) broadcast to all clients
-  io.emit('chatMessage', message);
-  return res.status(201).json({ message });
-};
+	// Check if chat is globally enabled (skip check for admins)
+	const settings = await ChatSetting.findOne();
+	const isChatEnabled = settings?.enabled ?? true;
 
+	if (!isChatEnabled && sender.role !== 'admin') {
+		const error = new Error('Chat is currently disabled.');
+		error.statusCode = 403;
+		throw error;
+	}
 
-const getAllMessages = async (req, res) => {
-  const { limit = 50, before, channel = 'all' } = req.query;
-  const query = { channel };
-  if (before) {
-    query.createdAt = { $lt: new Date(before) };
-  }
+	// Restrict posting in 'admin' channel
+	if (channel === 'admin' && sender.role !== 'admin') {
+		const error = new Error('Only admins can post in this channel.');
+		error.statusCode = 403;
+		throw error;
+	}
 
-  const raw = await Message.find(query)
-    .sort({ createdAt: -1 })
-    .limit(+limit)
-    .populate('sender', 'username role profilePicture');
+	// Create and save message
+	const messageDoc = new Message({
+		sender: sender._id,
+		content,
+		channel,
+		readBy: [sender._id], // Sender automatically reads their own message
+	});
+	await messageDoc.save();
 
-  const messages = raw.reverse(); // oldest → newest
-  return res.status(200).json({ messages });
-};
+	// Populate sender details for the frontend
+	await messageDoc.populate('sender', 'username role profilePicture');
 
+	// Handle @-mentions
+	const mentionPattern = /@([A-Za-z0-9_]+)/g;
+	let match;
+	const processedMentions = new Set();
 
-const getChatSettings = async (req, res) => {
-  const settings = await ChatSetting.findOne();
-  return res
-    .status(200)
-    .json({ enabled: settings?.enabled ?? true });
-};
+	while ((match = mentionPattern.exec(content))) {
+		const username = match[1];
 
+		// Avoid duplicate notifications for the same user in one message
+		if (processedMentions.has(username)) continue;
+		processedMentions.add(username);
 
-const updateChatSettings = async (req, res) => {
-  const { enabled } = req.body;
-  const user = req.user;
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  if (user.role !== 'admin') {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
+		const userMentioned = await User.findOne({ username }).select('_id');
 
-  const settings = await ChatSetting.findOneAndUpdate(
-    {}, { enabled },
-    { new: true, upsert: true }
-  );
-  return res.status(200).json({ enabled: settings.enabled });
-};
+		if (userMentioned) {
+			// Trigger notification asynchronously (non-blocking)
+			notificationsController
+				.createNotification(
+					userMentioned._id,
+					'chat.notify.mention',
+					{ from: sender.username, snippet: content.slice(0, 50) },
+					'mention',
+					messageDoc._id.toString()
+				)
+				.catch((err) => console.error('Notification error:', err));
+		}
+	}
 
+	// Broadcast via Socket.io
+	io.emit('chatMessage', messageDoc);
 
-// POST /message/mark-read
-const markMessagesRead = async (req, res) => {
-  const userId = req.user._id;
-  const { channel } = req.body;
+	res.status(201).json({ message: messageDoc });
+});
 
-  // Only update messages that are actually unread
-  await Message.updateMany(
-    { 
-      channel,
-      readBy: { $ne: userId },
-      createdAt: { $lte: new Date() } // Only existing messages
-    },
-    { $addToSet: { readBy: userId } }
-  );
+// Get messages with pagination
+const getAllMessages = asyncHandler(async (req, res) => {
+	const { limit = 50, before, channel } = req.query;
 
-  return res.sendStatus(204);
-};
+	const query = { channel };
+	if (before) {
+		query.createdAt = { $lt: new Date(before) };
+	}
 
+	const rawMessages = await Message.find(query)
+		.sort({ createdAt: -1 }) // Newest first
+		.limit(limit)
+		.populate('sender', 'username role profilePicture');
+
+	const messages = rawMessages.reverse(); // Return oldest -> newest for chat UI
+
+	res.status(200).json({ messages });
+});
+
+// Get global chat settings
+const getChatSettings = asyncHandler(async (req, res) => {
+	const settings = await ChatSetting.findOne();
+	res.status(200).json({ enabled: settings?.enabled ?? true });
+});
+
+// Update global chat settings (Admin only)
+const updateChatSettings = asyncHandler(async (req, res) => {
+	const { enabled } = req.body;
+
+	// Note: Role check is also handled in the route middleware for extra security
+	if (req.user.role !== 'admin') {
+		const error = new Error('Forbidden: Admin access required');
+		error.statusCode = 403;
+		throw error;
+	}
+
+	const settings = await ChatSetting.findOneAndUpdate(
+		{},
+		{ enabled },
+		{ new: true, upsert: true } // Create if doesn't exist
+	);
+
+	res.status(200).json({ enabled: settings.enabled });
+});
+
+// Mark messages as read for a specific channel
+const markMessagesRead = asyncHandler(async (req, res) => {
+	const userId = req.user._id;
+	const { channel } = req.body;
+
+	await Message.updateMany(
+		{
+			channel,
+			readBy: { $ne: userId },
+			createdAt: { $lte: new Date() },
+		},
+		{ $addToSet: { readBy: userId } }
+	);
+
+	res.sendStatus(204);
+});
 
 module.exports = {
-  sendMessage,
-  getAllMessages,
-  getChatSettings,
-  updateChatSettings,
-  markMessagesRead,
+	// Methods
+	sendMessage,
+	getAllMessages,
+	getChatSettings,
+	updateChatSettings,
+	markMessagesRead,
+	// Validators
+	validateSendMessage,
+	validateGetMessages,
+	validateSettingsUpdate,
+	validateMarkRead,
 };

@@ -1,30 +1,41 @@
-// routes/pageRoutes.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
-const pageController = require("../controllers/pageController");
+const pageController = require('../controllers/pageController');
+const authMiddleware = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
-// Public read access with caching headers
-router.get("/:slug", 
-  (req, res, next) => {
-    res.set("Cache-Control", "no-store");
-    next();
-  },
-  pageController.getPage
+// Middleware to prevent caching for dynamic CMS pages
+const noCache = (req, res, next) => {
+	res.set('Cache-Control', 'no-store');
+	next();
+};
+
+// Middleware to enforce JSON content type for updates
+const requireJsonContent = (req, res, next) => {
+	if (!req.is('application/json')) {
+		return res.status(415).json({ message: 'Unsupported Media Type: application/json required' });
+	}
+	next();
+};
+
+// GET /pages/:slug - Public read access
+router.get(
+	'/:slug',
+	noCache,
+	pageController.validateGetPage,
+	validateRequest,
+	pageController.getPage
 );
 
-// Protected update endpoint
-router.put("/:slug",
-  authMiddleware.requireAuth, // Verify authentication first
-  authMiddleware.requireRole("admin"), // Then verify role
-  (req, res, next) => {
-    // Validate content type before processing
-    if (!req.is("application/json")) {
-      return res.status(415).json({ message: "Unsupported Media Type" });
-    }
-    next();
-  },
-  pageController.updatePage
+// PUT /pages/:slug - Protected update/create endpoint
+router.put(
+	'/:slug',
+	authMiddleware.requireAuth,
+	authMiddleware.requireRole(['admin']), // Using the standard array format we established
+	requireJsonContent,
+	pageController.validateUpdatePage,
+	validateRequest,
+	pageController.updatePage
 );
 
 module.exports = router;

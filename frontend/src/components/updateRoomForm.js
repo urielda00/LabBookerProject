@@ -1,411 +1,162 @@
-import React, { useState, useEffect } from "react";
-import iconMapping from "../utils/iconMapping";
-import Message from "./Error_successMessage";
-import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import api from "../utils/axiosConfig";
-import { useTranslation } from "react-i18next";
-import i18n from "../i18n";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import Message from './common/Error_successMessage';
+import AmenitiesSelect from './common/AmenitiesSelect';
+import { useUpdateRoom } from '../hooks/useUpdateRoom';
 
-const UpdateRoomForm = ({
-  roomId,
-  roomDetails,
-  setRoomId,
-  setRoomDetails,
-  onSuccess,
-}) => {
-  const { t , i18n} = useTranslation();
-  const [roomsList, setRoomsList] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    capacity: "",
-    description: "",
-    amenities: [],
-    image: null,
-  });
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchingRoom, setFetchingRoom] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showAmenitiesDropdown, setShowAmenitiesDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showForm, setShowForm] = useState(false);
+const UpdateRoomForm = ({ roomId, roomDetails, setRoomId, setRoomDetails, onSuccess }) => {
+	const { t } = useTranslation();
+	const {
+		roomsList,
+		formData,
+		selectedAmenities,
+		showForm,
+		status,
+		handleRoomFetch,
+		handleInputChange,
+		handleImageChange,
+		handleAmenityToggle,
+		submitUpdate,
+		clearMessages,
+	} = useUpdateRoom(roomId, setRoomId, roomDetails, setRoomDetails, onSuccess);
 
-  const availableAmenities = Object.keys(iconMapping);
+	return (
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			className='bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 transition-colors'
+		>
+			<h2 className='text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6'>
+				{t('updateRoom.title')}
+			</h2>
 
-  useEffect(() => {
-    const fetchAllRooms = async () => {
-      try {
-        const response = await api.get("/room/rooms");
-        setRoomsList(response.data);
-      } catch (err) {
-        setError(t("updateRoom.validation.loadRoomsError"));
-      }
-    };
-    fetchAllRooms();
-  }, [t]);
+			{/* Room Selection */}
+			<div className='mb-8 p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600'>
+				<div className='flex flex-col sm:flex-row gap-4 items-end'>
+					<div className='flex-grow w-full'>
+						<label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+							{t('updateRoom.selectSection.label')}
+						</label>
+						<select
+							value={roomId}
+							onChange={(e) => setRoomId(e.target.value)}
+							className='input-field w-full'
+						>
+							<option value='' disabled>
+								{t('updateRoom.selectSection.placeholder')}
+							</option>
+							{roomsList.map((room) => (
+								<option key={room._id} value={room.name}>
+									{room.name}
+								</option>
+							))}
+						</select>
+					</div>
+					<button
+						type='button'
+						onClick={handleRoomFetch}
+						disabled={!roomId || status.fetchingRoom}
+						className='w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors'
+					>
+						{status.fetchingRoom ? t('common.loading') : t('updateRoom.selectSection.fetchBtn')}
+					</button>
+				</div>
+			</div>
 
-  const handleRoomFetch = async () => {
-    if (!roomId) {
-      setError(t("updateRoom.validation.noRoomSelected"));
-      return;
-    }
-    setFetchingRoom(true);
-    setError("");
-    setSuccessMessage("");
+			{/* Error/Success Messages (Global) */}
+			<div className='text-center mb-4'>
+				{status.error && !showForm && (
+					<Message message={status.error} type='error' onClose={clearMessages} />
+				)}
+				{status.success && !showForm && (
+					<Message message={status.success} type='success' onClose={clearMessages} />
+				)}
+			</div>
 
-    try {
-      const response = await api.get(`/room/rooms/${roomId}`);
-      const room = response.data;
+			{/* Edit Form */}
+			{showForm && (
+				<motion.form
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					onSubmit={submitUpdate}
+					className='space-y-6 border-t border-gray-200 dark:border-gray-700 pt-6'
+				>
+					<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+						<div>
+							<label className='label'>{t('updateRoom.fields.name')}</label>
+							<input
+								type='text'
+								name='name'
+								value={formData.name}
+								onChange={handleInputChange}
+								className='input-field'
+							/>
+						</div>
+						<div>
+							<label className='label'>{t('updateRoom.fields.type')}</label>
+							<select
+								name='type'
+								value={formData.type}
+								onChange={handleInputChange}
+								className='input-field'
+							>
+								<option value='Open'>Open</option>
+								<option value='Small Seminar'>Small Seminar</option>
+								<option value='Large Seminar'>Large Seminar</option>
+							</select>
+						</div>
+						<div>
+							<label className='label'>{t('updateRoom.fields.capacity')}</label>
+							<input
+								type='number'
+								name='capacity'
+								value={formData.capacity}
+								onChange={handleInputChange}
+								className='input-field'
+							/>
+						</div>
+						<div>
+							<label className='label'>{t('updateRoom.sections.upload')}</label>
+							<input type='file' onChange={handleImageChange} className='file-input w-full' />
+						</div>
+					</div>
 
-      setFormData({
-        name: room.name,
-        type: room.type,
-        capacity: room.capacity,
-        description: room.description,
-        amenities: room.amenities.map((a) => a.name),
-        image: room.imageUrl,
-      });
-      setSelectedAmenities(room.amenities.map((a) => a.name));
-      setRoomDetails(room);
-      setShowForm(true);
-    } catch (err) {
-      setError(t("updateRoom.validation.fetchRoomError"));
-    } finally {
-      setFetchingRoom(false);
-    }
-  };
+					<div>
+						<label className='label'>{t('updateRoom.fields.description')}</label>
+						<textarea
+							name='description'
+							value={formData.description}
+							onChange={handleInputChange}
+							className='input-field w-full'
+							rows='3'
+						/>
+					</div>
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+					<AmenitiesSelect selectedAmenities={selectedAmenities} onToggle={handleAmenityToggle} />
 
-  const handleAmenityToggle = (amenity) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity)
-        ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity]
-    );
-  };
+					<div className='text-center'>
+						{status.error && (
+							<Message message={status.error} type='error' onClose={clearMessages} />
+						)}
+						{status.success && (
+							<Message message={status.success} type='success' onClose={clearMessages} />
+						)}
+					</div>
 
-  const handleImageChange = (e) => {
-    setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccessMessage("");
-
-    if (!formData.name || !formData.type || !formData.capacity) {
-      setError(t("updateRoom.validation.requiredFields"));
-      setLoading(false);
-      return;
-    }
-
-    if (selectedAmenities.length < 3) {
-      setError(t("updateRoom.validation.minAmenities"));
-      setLoading(false);
-      return;
-    }
-
-    const amenities = selectedAmenities.map((name) => ({
-      name,
-      icon: name,
-    }));
-
-    const formPayload = new FormData();
-    formPayload.append("name", formData.name);
-    formPayload.append("originalName", roomDetails.name);
-    formPayload.append("type", formData.type);
-    formPayload.append("capacity", formData.capacity);
-    formPayload.append("description", formData.description);
-    formPayload.append("amenities", JSON.stringify(amenities));
-    if (formData.image) formPayload.append("image", formData.image);
-
-    try {
-      const response = await api.put(`/room/rooms/${roomId}`, formPayload, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (response.status === 200) {
-        const successMsg = t("updateRoom.messages.success");
-        setSuccessMessage(successMsg);
-        onSuccess(successMsg);
-        setFormData({
-          name: "",
-          type: "",
-          capacity: "",
-          description: "",
-          amenities: [],
-          image: null,
-        });
-        setSelectedAmenities([]);
-        setRoomId("");
-        setRoomDetails(null);
-        setShowForm(false);
-      }
-    } catch (err) {
-      setError(t("updateRoom.messages.error"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-950/50 p-4 sm:p-6 md:p-8 lg:p-10 transition-colors duration-300"
-    >
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6 sm:mb-8">
-        {t("updateRoom.title")}
-      </h2>
-
-      <div className="space-y-4 sm:space-y-6">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-          {t("updateRoom.selectSection.title")}
-        </h3>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            {t("updateRoom.selectSection.label")}
-          </label>
-          <select
-            // dir={i18n.dir()}
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="rtl:pr-8 w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-          >
-            <option value="" disabled className="dark:bg-gray-700 ltr:mr-2 ">
-              {t("updateRoom.selectSection.placeholder")}
-            </option>
-            {roomsList.map((room) => (
-              <option
-                key={room._id}
-                value={room.name}
-                className="dark:bg-gray-700 rtl:space-x-6"
-              >
-                {room.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="text-center">
-          {error && (
-            <Message
-              message={error}
-              type="error"
-              onClose={() => setError("")}
-            />
-          )}
-          {successMessage && (
-            <Message
-              message={successMessage}
-              type="success"
-              onClose={() => setSuccessMessage("")}
-            />
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleRoomFetch}
-          className="w-full py-2 sm:py-3 px-4 sm:px-6 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 text-sm sm:text-base rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white transition-all duration-300 focus:ring-2 focus:ring-blue-400 border border-gray-200 dark:border-gray-600"
-        >
-          {fetchingRoom
-            ? t("updateRoom.selectSection.fetching")
-            : t("updateRoom.selectSection.fetchBtn")}
-        </button>
-      </div>
-
-      {showForm && (
-        <motion.form
-          onSubmit={handleSubmit}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6 sm:space-y-8 mt-6 sm:mt-8"
-        >
-          <div className="space-y-4 sm:space-y-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              {t("updateRoom.sections.basic")}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  {t("updateRoom.fields.name")}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  {t("updateRoom.fields.type")}
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                >
-                  <option value="" disabled className="dark:bg-gray-700">
-                    {t("createRoom.fields.selectType")}
-                  </option>
-                  <option value="Open" className="dark:bg-gray-700">
-                    {t("createRoom.fields.types.open")}
-                  </option>
-                  <option value="Small Seminar" className="dark:bg-gray-700">
-                    {t("createRoom.fields.types.small")}
-                  </option>
-                  <option value="Large Seminar" className="dark:bg-gray-700">
-                    {t("createRoom.fields.types.large")}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  {t("updateRoom.fields.capacity")}
-                </label>
-                <input
-                  type="number"
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  {t("updateRoom.fields.description")}
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[80px] bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 sm:space-y-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              {t("updateRoom.sections.amenities")}
-            </h3>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowAmenitiesDropdown((prev) => !prev)}
-                className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              >
-                <span className="text-sm sm:text-base">
-                  {selectedAmenities.length > 0
-                    ? t("updateRoom.fields.selectedAmenities", {
-                        count: selectedAmenities.length,
-                      })
-                    : t("updateRoom.fields.selectAmenities")}
-                </span>
-                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-
-              {showAmenitiesDropdown && (
-                <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-950/50 p-3 sm:p-4 max-h-48 sm:max-h-60 overflow-y-auto">
-                  <input
-                    type="text"
-                    placeholder={t("updateRoom.fields.searchAmenities")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-2 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {availableAmenities
-                      .filter((amenity) =>
-                        amenity
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase())
-                      )
-                      .map((amenity) => (
-                        <label
-                          key={amenity}
-                          className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                        >
-                          <span className="w-5 h-5">
-                            {iconMapping[amenity]}
-                          </span>
-                          <span className="capitalize flex-1">{amenity}</span>
-                          <input
-                            type="checkbox"
-                            checked={selectedAmenities.includes(amenity)}
-                            onChange={() => handleAmenityToggle(amenity)}
-                            className="form-checkbox h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-500 rounded dark:bg-gray-600"
-                          />
-                        </label>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 dark:border-gray-600">
-              {t("updateRoom.sections.upload")}
-            </h3>
-            <input
-              type="file"
-              onChange={handleImageChange}
-              accept="image/*"
-              className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-            />
-          </div>
-
-          <div className="text-center">
-            {error && (
-              <Message
-                message={error}
-                type="error"
-                onClose={() => setError("")}
-              />
-            )}
-            {successMessage && (
-              <Message
-                message={successMessage}
-                type="success"
-                onClose={() => setSuccessMessage("")}
-              />
-            )}
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-gray-700 text-blue-500 dark:text-blue-400 rounded-lg shadow-md hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white focus:ring-2 focus:ring-blue-400 text-sm sm:text-base transition-all duration-300 border border-gray-200 dark:border-gray-600"
-            >
-              {loading
-                ? t("updateRoom.buttons.submitting")
-                : t("updateRoom.buttons.submit")}
-            </button>
-          </div>
-        </motion.form>
-      )}
-    </motion.div>
-  );
+					<div className='flex justify-end'>
+						<button
+							type='submit'
+							disabled={status.loading}
+							className='px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition-colors'
+						>
+							{status.loading ? t('common.saving') : t('updateRoom.buttons.submit')}
+						</button>
+					</div>
+				</motion.form>
+			)}
+		</motion.div>
+	);
 };
 
 export default UpdateRoomForm;

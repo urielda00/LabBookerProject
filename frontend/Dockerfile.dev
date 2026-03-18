@@ -1,0 +1,23 @@
+# Use Node.js environment for development
+FROM node:22-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Handle peer dependencies configurations
+RUN npm config set legacy-peer-deps true
+
+# Install dependencies
+RUN npm install
+RUN npm install ajv@8 --save-dev
+# Copy application code
+COPY . .
+
+# Expose port 3000 for React development server
+EXPOSE 3000
+
+# Start the development server
+CMD ["npm", "start"]

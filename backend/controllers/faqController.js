@@ -1,69 +1,87 @@
-const FAQ = require("../models/FAQ");
+const { body } = require('express-validator');
+const FAQ = require('../models/FAQ');
+const asyncHandler = require('../middleware/asyncHandler');
 
-exports.getFAQ = async (req, res) => {
-  try {
-    const faq = await FAQ.findOne().sort({ createdAt: -1 });
+// --- Validators ---
+const validateUpdateFAQ = [
+	body('sections').isObject().withMessage('Sections object is required'),
+	// Additional deep validation can be added here if needed
+];
 
-    if (!faq) {
-      return res.status(200).json({
-        sections: {
-          general: [],
-          support: [],
-          booking: [],
-          account: [],
-          privacy: [],
-          feedback: [],
-        },
-      });
-    }
-
-    const transformed = {};
-    faq.sections.forEach((section) => {
-      transformed[section.key] = section.questions.map((q, idx) => ({
-        id: `${section.key}-${idx}`,
-        question: q.question,
-        answer: q.answer,
-      }));
-    });
-
-    res.json({
-      sections: transformed,
-      lastUpdated: faq.updatedAt,
-      lastUpdatedBy: faq.lastUpdatedBy,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+// --- Helpers ---
+const transformToFrontend = (dbSections) => {
+	const transformed = {};
+	dbSections.forEach((section) => {
+		transformed[section.key] = section.questions.map((q, idx) => ({
+			id: `${section.key}-${idx}`,
+			question: q.question,
+			answer: q.answer,
+		}));
+	});
+	return transformed;
 };
 
-exports.updateFAQ = async (req, res) => {
-  try {
-    const { sections } = req.body;
-    const userId = req.user._id;
+const transformToDB = (frontendSections) => {
+	return Object.keys(frontendSections).map((key) => ({
+		key,
+		questions: frontendSections[key].map((q) => ({
+			question: q.question,
+			answer: q.answer,
+		})),
+	}));
+};
 
-    const updatedSections = Object.keys(sections).map((key) => ({
-      key,
-      questions: sections[key].map((q) => ({
-        question: q.question,
-        answer: q.answer,
-      })),
-    }));
+const getEmptyStructure = () => ({
+	sections: {
+		general: [],
+		support: [],
+		booking: [],
+		account: [],
+		privacy: [],
+		feedback: [],
+	},
+});
 
-    const faq = await FAQ.findOneAndUpdate(
-      {},
-      { sections: updatedSections, lastUpdatedBy: userId },
-      { new: true, upsert: true },
-    ).populate("lastUpdatedBy", "name email role");
+// --- Methods ---
 
-    res.json({
-      message: "FAQ updated successfully",
-      faq: {
-        sections: faq.sections,
-        lastUpdated: faq.updatedAt,
-        lastUpdatedBy: faq.lastUpdatedBy,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Update failed", error: error.message });
-  }
+const getFAQ = asyncHandler(async (req, res) => {
+	const faq = await FAQ.findOne().sort({ createdAt: -1 });
+
+	if (!faq) {
+		return res.status(200).json(getEmptyStructure());
+	}
+
+	res.json({
+		sections: transformToFrontend(faq.sections),
+		lastUpdated: faq.updatedAt,
+		lastUpdatedBy: faq.lastUpdatedBy,
+	});
+});
+
+const updateFAQ = asyncHandler(async (req, res) => {
+	const { sections } = req.body;
+	const userId = req.user._id;
+
+	const updatedSections = transformToDB(sections);
+
+	const faq = await FAQ.findOneAndUpdate(
+		{},
+		{ sections: updatedSections, lastUpdatedBy: userId },
+		{ new: true, upsert: true }
+	).populate('lastUpdatedBy', 'name email role');
+
+	res.json({
+		message: 'FAQ updated successfully',
+		faq: {
+			sections: faq.sections,
+			lastUpdated: faq.updatedAt,
+			lastUpdatedBy: faq.lastUpdatedBy,
+		},
+	});
+});
+
+module.exports = {
+	getFAQ,
+	updateFAQ,
+	validateUpdateFAQ,
 };

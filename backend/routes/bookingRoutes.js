@@ -1,102 +1,142 @@
-// routes/bookingRoutes.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const bookingController = require("../controllers/bookingController");
-const authMiddleware = require("../middleware/authMiddleware");
 
-// // Debugging middleware
-// const debugMiddleware = (req, res, next) => {
-//   console.log(`[DEBUG] Route called: ${req.method} ${req.path}`);
-//   next();
-// };
+// Controllers
+const bookingController = require('../controllers/bookingController');
+const adminBookingController = require('../controllers/adminBookingController');
 
-// Routes
-// Route to get the next upcoming booking for the logged-in user
-router.get(
-  "/booking/next",
-  authMiddleware.requireAuth,
-  bookingController.getNextUpcomingBooking,
-);
+// Middleware
+const authMiddleware = require('../middleware/authMiddleware');
+const bookingMiddleware = require('../middleware/bookingMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
-// router.get("/booking/missed", authMiddleware.requireAuth, bookingController.getMissedBooking);
+// --- User Booking Lists & Info ---
 
-// 2. System Maintenance Routes
-router.get(
-  "/booking/update-past",
-  authMiddleware.requireAuth,
-  bookingController.updatePastBookings,
-);
+// Get next upcoming booking
+router.get('/booking/next', authMiddleware.requireAuth, bookingController.getNextUpcomingBooking);
 
-router.get("/bookings", bookingController.getBookings);
+// Get my bookings
+router.get('/my-bookings', authMiddleware.requireAuth, bookingController.getMyBooking);
+
+// Get bookings stats
+router.get('/bookings/count', bookingController.getBookingCounts);
+
+// Get weekly overview
 router.get('/weekly', bookingController.getWeeklyBookings);
-router.get('/:id/transfer-requests', authMiddleware.requireAuth, bookingController.getTransferRequests);
-router.post('/:id/transfer-request', authMiddleware.requireAuth, bookingController.createTransferRequest);
-router.patch('/transfer-requests/:id/accept', authMiddleware.requireAuth, bookingController.acceptTransferRequest);
-router.patch('/transfer-requests/:id/decline', authMiddleware.requireAuth, bookingController.declineTransferRequest);
-router.get(
-  '/:id/has-declined-request', 
-  authMiddleware.requireAuth, 
-  bookingController.checkDeclinedRequest
-);
-router.get("/booking/:id", bookingController.getBookingById);
-router.post("/booking", bookingController.createBooking);
-router.get(
-  "/my-bookings",
-  authMiddleware.requireAuth,
-  bookingController.getMyBooking,
-);
-router.patch(
-  "/booking/:id/status",
-  authMiddleware.requireAuth,
-  bookingController.updateBookingStatus,
-);
-router.delete("/booking/:id", bookingController.deleteBooking);
-router.get("/bookings/count", bookingController.getBookingCounts);
 
-// moe added these three routes for testing
-router.get(
-  "/bookings/upcoming/:username",
-  bookingController.getUserUpcomingBookings,
+// Get general list (with filters)
+router.get('/bookings', bookingController.getBookings);
+
+// Get upcoming by username
+router.get('/bookings/upcoming/:username', bookingController.getUserUpcomingBookings);
+
+// Get all by username
+router.get('/bookings/all-by-username/:username', bookingController.getAllBookingsByUsername);
+
+// Get by room name
+router.get('/bookings/by-room/:roomName', bookingController.getAllBookingsByRoomName);
+
+// --- Operations ---
+
+// Create Booking
+router.post(
+	'/booking',
+	bookingController.validateCreateBooking,
+	validateRequest,
+	bookingController.createBooking
 );
 
-// PATCH /booking/:id/status/by-username?username=john_doe
+// Get Single Booking (with Middleware)
+router.get('/booking/:id', bookingMiddleware.loadBooking, bookingController.getBookingById);
+
+// Delete Booking
+router.delete(
+	'/booking/:id',
+	bookingController.validateBookingId,
+	validateRequest,
+	bookingController.deleteBooking
+);
+
+// Check-in
+router.post(
+	'/booking/:id/check-in',
+	authMiddleware.requireAuth,
+	bookingController.validateBookingId,
+	validateRequest,
+	bookingController.checkInToBooking
+);
+
+// Update Status
 router.patch(
-  "/booking/:id/status/by-username",
-  authMiddleware.requireAuth,
-  bookingController.updateBookingStatusByUsername,
+	'/booking/:id/status',
+	authMiddleware.requireAuth,
+	bookingController.validateUpdateStatus,
+	validateRequest,
+	bookingController.updateBookingStatus
+);
+
+// --- Admin Operations ---
+
+router.post(
+	'/booking/create-by-names',
+	authMiddleware.requireAuth,
+	adminBookingController.createBookingByNames
+);
+
+router.patch(
+	'/booking/:id/status/by-username',
+	authMiddleware.requireAuth,
+	adminBookingController.updateBookingStatusByUsername
 );
 
 router.delete(
-  "/booking/:id/by-username",
-  authMiddleware.requireAuth,
-  bookingController.deleteBookingByUsername,
+	'/booking/:id/by-username',
+	authMiddleware.requireAuth,
+	adminBookingController.deleteBookingByUsername
 );
 
-// e.g. GET /bookings/all-by-username/:username
+// --- System/Maintenance ---
+
 router.get(
-  "/bookings/all-by-username/:username",
-  bookingController.getAllBookingsByUsername,
+	'/booking/update-past',
+	authMiddleware.requireAuth,
+	bookingController.updatePastBookings
 );
 
-// e.g. POST /api/book/booking/by-names
-router.post(
-  "/booking/create-by-names",
-  authMiddleware.requireAuth,
-  bookingController.createBookingByNames,
-);
+// --- Transfer Requests ---
 
-// to delete bookings using room name
 router.get(
-  "/bookings/by-room/:roomName",
-  bookingController.getAllBookingsByRoomName,
+	'/:id/transfer-requests',
+	authMiddleware.requireAuth,
+	bookingController.validateBookingId,
+	validateRequest,
+	bookingController.getTransferRequests
 );
 
 router.post(
-  "/booking/:id/check-in",
-  authMiddleware.requireAuth,
-  bookingController.checkInToBooking,
+	'/:id/transfer-request',
+	authMiddleware.requireAuth,
+	bookingController.validateTransferRequest,
+	validateRequest,
+	bookingController.createTransferRequest
 );
 
-// router.post("/booking/:id/late-check-in", authMiddleware.requireAuth, bookingController.lateCheckIn);
+router.patch(
+	'/transfer-requests/:id/accept',
+	authMiddleware.requireAuth,
+	bookingController.acceptTransferRequest
+);
+
+router.patch(
+	'/transfer-requests/:id/decline',
+	authMiddleware.requireAuth,
+	bookingController.declineTransferRequest
+);
+
+router.get(
+	'/:id/has-declined-request',
+	authMiddleware.requireAuth,
+	bookingController.checkDeclinedRequest
+);
 
 module.exports = router;

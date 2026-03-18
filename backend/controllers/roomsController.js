@@ -1,356 +1,315 @@
-const Room = require("../models/Room"); // Import the Room model
-const Booking = require("../models/Booking"); // Import the Booking model
+const fs = require('fs');
+const { body, param } = require('express-validator');
+const Room = require('../models/Room');
+const Booking = require('../models/Booking');
+const cloudinary = require('../utils/cloudinary');
+const asyncHandler = require('../middleware/asyncHandler');
 
-const uploadMulter = require("../middleware/multer");
-const cloudinary = require("../utils/cloudinary");
-const fs = require("fs");
+// Validators
+const validateCreateRoom = [
+	body('name').trim().notEmpty().withMessage('Room name is required'),
+	body('type').trim().notEmpty().withMessage('Room type is required'),
+	body('capacity').isInt({ min: 1 }).withMessage('Valid capacity is required'),
+	// Note: Amenities and file validation happen in logic due to FormData structure
+];
 
-async function getRooms(name = null) {
-  try {
-    if (name) {
-      const room = await Room.findOne({ name });
-      if (!room) {
-        throw new Error("room.errors.notFound");
-      }
-      return room;
-    } else {
-      const rooms = await Room.find();
-      return rooms;
-    }
-  } catch (error) {
-    console.error("Error in getRooms:", error.message);
-    throw new Error("room.errors.fetchFailed");
-  }
-}
+const validateUpdateRoom = [
+	body('originalName').trim().notEmpty().withMessage('Original name is required for update'),
+];
 
-async function createRoom(req, res) {
-  return new Promise((resolve, reject) => {
-    uploadMulter(req, res, async (err) => {
-      if (err) {
-        console.error("Error uploading file:", err.message);
-        reject({ status: 500, message: "room.errors.uploadFailed" });
-      } else {
-        try {
-          // Extract fields from the request body
-          const { name, type, capacity, description, amenities } = req.body;
-          let imageUrl = "";
+const validateRoomNameParam = [
+	param('name').trim().notEmpty().withMessage('Room name parameter is required'),
+];
 
-          // Ensure amenities is an array if provided
-          let parsedAmenities = [];
-          if (amenities) {
-            try {
-              // Check if amenities is an array, and ensure each object has the correct properties
-              if (Array.isArray(amenities)) {
-                // Ensure that each amenity object only contains 'name' and 'icon'
-                parsedAmenities = amenities.map((item) => {
-                  if (item.name && item.icon) {
-                    return { name: item.name, icon: item.icon };
-                  }
-                  throw new Error("room.errors.invalidAmenities");
-                });
-              } else {
-                // If amenities is a stringified array, try to parse it
-                parsedAmenities = JSON.parse(amenities);
-              }
-            } catch (parseError) {
-              reject({ 
-                status: 400, 
-                message: "room.errors.invalidAmenities" 
-              });
-              return;
-            }
-          }
+const validateRoomIdParam = [param('roomId').isMongoId().withMessage('Invalid room ID')];
 
-          // Handle file upload if present
-          if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path); // Upload file to Cloudinary
-            fs.unlinkSync(req.file.path); // Remove file from server after upload
-            imageUrl = result.secure_url; // Save the Cloudinary URL
-          }
+// Helper: Parse Amenities from FormData (string or object)
+const parseAmenities = (amenitiesInput) => {
+	if (!amenitiesInput) return [];
+	let parsed = [];
+	try {
+		if (Array.isArray(amenitiesInput)) {
+			parsed = amenitiesInput;
+		} else {
+			parsed = JSON.parse(amenitiesInput);
+		}
 
-          // Check for required fields
-          if (!name || !type || !capacity) {
-            reject({ status: 400, message: "room.errors.missingFields" });
-            return;
-          }
+		// Validate structure
+		return parsed.map((item) => {
+			if (item.name && item.icon) {
+				return { name: item.name, icon: item.icon };
+			}
+			throw new Error('Invalid amenity structure');
+		});
+	} catch (error) {
+		throw new Error('room.errors.invalidAmenities');
+	}
+};
 
-          // Create a new Room object with amenities included
-          const newRoom = new Room({
-            name,
-            type,
-            capacity,
-            description, // Add description if provided
-            imageUrl, // Save the Cloudinary URL
-            amenities: parsedAmenities, // Add amenities as an array of objects
-          });
-
-          // Save the new room
-          await newRoom.save();
-
-          // Return response with the created room
-          resolve({
-            status: 201,
-            message: "room.success.created",
-            room: newRoom
-          });
-        } catch (error) {
-          reject({ 
-            status: 500, 
-            message: "room.errors.createFailed" 
-          });
-        }
-      }
-    });
-  });
-}
-
-async function updateRoom(req, res) {
-  return new Promise((resolve, reject) => {
-    uploadMulter(req, res, async (err) => {
-      if (err) {
-        reject({ status: 500, message: "room.errors.uploadFailed" });
-      } else {
-        try {
-          const { name, type, capacity, description, amenities } = req.body; // Original name passed in request body
-          const originalName = req.body.originalName; // Ensure the original name is passed for identification
-
-          if (!originalName) {
-            
-            return;
-          } reject({ 
-            status: 400, 
-            message: "room.errors.missingOriginalName" 
-          });
-
-          // Find the room by the original name
-          const room = await Room.findOne({ name: originalName });
-          if (!room) {
-            reject({ status: 404, message: "room.errors.notFound" });
-            return;
-          }
-
-          // Handle file upload if present
-          if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path);
-            fs.unlinkSync(req.file.path);
-            room.imageUrl = result.secure_url; // Update image URL directly
-          }
-
-          // Validate and parse amenities if provided
-          if (amenities) {
-            try {
-              room.amenities = JSON.parse(amenities).map((amenity) => {
-                if (!amenity.name || !amenity.icon) {
-                  throw new Error("room.errors.invalidAmenities");
-                }
-                return { name: amenity.name, icon: amenity.icon };
-              });
-            } catch (parseError) {
-              reject({
-                status: 400,
-                message: "room.errors.invalidAmenities"
-
-              });
-              return;
-            }
-          }
-
-          // Update fields with the provided data
-          if (name) room.name = name;
-          if (type) room.type = type;
-          if (capacity) room.capacity = capacity;
-          if (description) room.description = description;
-
-          // Save updated room (using the original name for identification)
-          await room.save();
-
-          await room.save();
-          resolve({
-            status: 200,
-            message: "room.success.updated",
-            room
-          });
-        } catch (error) {
-          reject({
-            status: 500,
-            message: "room.errors.updateFailed"
-          });
-        }
-      }
-    });
-  });
-}
-
-async function deleteRoom(name) {
-  try {
-    // Search for room by name
-    const room = await Room.findOne({ name });
-
-    if (!room) {
-      return {
-        status: 404,
-        message: "room.errors.notFound",
-      };
-    }
-
-    // Delete associated image from Cloudinary if exists
-    const imageUrl = room.imageUrl;
-    if (imageUrl) {
-      const publicId = imageUrl.split("/").slice(-1)[0].split(".")[0];
-      await cloudinary.uploader.destroy(publicId);
-    }
-
-    // Delete all bookings associated with this room
-    const deletedBookings = await Booking.deleteMany({ roomId: room._id });
-
-    // Delete the room
-    await Room.findByIdAndDelete(room._id);
-
-    return {
-      status: 200,
-      message: "room.success.deleted",
-      data: {
-        roomName: room.name,
-        deletedBookingsCount: deletedBookings.deletedCount,
-      },
-    };
-  } catch (error) {
-    console.error("Error deleting room:", error.message);
-    return {
-      status: 500,
-      message: "room.errors.deleteFailed",
-      error: error.message,
-    };
-  }
-}
-
+// Helper: Generate next 7 days (excluding Fri/Sat)
 const generateNext7Days = () => {
-  const dates = [];
-  const currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0); // Normalize time to midnight
+	const dates = [];
+	const currentDate = new Date();
+	currentDate.setHours(0, 0, 0, 0);
 
-  // Loop until we collect 7 valid dates (excluding Friday/Saturday)
-  while (dates.length < 7) {
-    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
-    
-    // Only add if not Friday (5) or Saturday (6)
-    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-      const day = String(currentDate.getDate()).padStart(2, "0");
-      dates.push(`${year}-${month}-${day}`);
-    }
-    
-    // Move to next day regardless of weekend status
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dates;
+	while (dates.length < 7) {
+		const dayOfWeek = currentDate.getDay();
+		// 0 = Sunday, 5 = Friday, 6 = Saturday
+		if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+			const year = currentDate.getFullYear();
+			const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+			const day = String(currentDate.getDate()).padStart(2, '0');
+			dates.push(`${year}-${month}-${day}`);
+		}
+		currentDate.setDate(currentDate.getDate() + 1);
+	}
+	return dates;
 };
 
+// Helper: Generate 2-hour slots
 function generateTwoHourSlots() {
-  const slots = [];
-  for (let hour = 8; hour <= 20; hour += 2) { // 8 AM to 8 PM (20:00)
-    const startTime = `${String(hour).padStart(2, "0")}:00`;
-    const endHour = hour + 2; // Next even hour
-    const endTime = `${String(endHour - 1).padStart(2, "0")}:59`; // Ends at HH-1:59
-    slots.push({ startTime, endTime });
-  }
-  return slots;
+	const slots = [];
+	for (let hour = 8; hour <= 20; hour += 2) {
+		const startTime = `${String(hour).padStart(2, '0')}:00`;
+		const endHour = hour + 2;
+		const endTime = `${String(endHour - 1).padStart(2, '0')}:59`;
+		slots.push({ startTime, endTime });
+	}
+	return slots;
 }
 
-const getRoomAvailabilityForWeek = async (roomId) => {
-  const room = await Room.findById(roomId);
-  if (!room) throw new Error("room.errors.notFound");
+// Controller Methods
 
+const getAllRooms = asyncHandler(async (req, res) => {
+	const rooms = await Room.find();
+	res.status(200).json(rooms);
+});
 
-  const dates = generateNext7Days();
-  const bookings = await Booking.find({
-    roomId,
-    date: { $in: dates },
-    status: { $in: ["Pending", "Confirmed", "Active"] },
-  });
+const getRoomByName = asyncHandler(async (req, res) => {
+	const { name } = req.params;
+	const room = await Room.findOne({ name });
 
-  const availability = dates.map((date) => {
-    const timeSlots = generateTwoHourSlots();
-    const slots = timeSlots.map((slot) => {
-      const isOccupied = bookings.some(b => {
-        if (b.date !== date) return false;
-        
-        // Convert all times to minutes since midnight for comparison
-        const toMinutes = (time) => {
-          const [hours, minutes] = time.split(':').map(Number);
-          return hours * 60 + minutes;
-        };
+	if (!room) {
+		const error = new Error('room.errors.notFound');
+		error.statusCode = 404;
+		throw error;
+	}
 
-        const slotStart = toMinutes(slot.startTime);
-        const slotEnd = toMinutes(slot.endTime);
-        const bookingStart = toMinutes(b.startTime);
-        const bookingEnd = toMinutes(b.endTime);
+	res.status(200).json(room);
+});
 
-        return (
-          (slotStart < bookingEnd && slotEnd > bookingStart) ||
-          (slotStart >= bookingStart && slotStart < bookingEnd) ||
-          (slotEnd > bookingStart && slotEnd <= bookingEnd)
-        );
-      });
-      
-      return { ...slot, status: isOccupied ? "Occupied" : "Available" };
-    });
-    return { date, slots };
-  });
+const createRoom = asyncHandler(async (req, res) => {
+	const { name, type, capacity, description, amenities } = req.body;
+	let imageUrl = '';
 
-  return { room: room.name, availability };
+	// 1. Handle File Upload (Multer middleware handled the file placement)
+	if (req.file) {
+		try {
+			const result = await cloudinary.uploader.upload(req.file.path);
+			imageUrl = result.secure_url;
+		} finally {
+			// Always clean up local file
+			if (fs.existsSync(req.file.path)) {
+				fs.unlinkSync(req.file.path);
+			}
+		}
+	}
+
+	// 2. Parse Amenities
+	let parsedAmenities = [];
+	try {
+		parsedAmenities = parseAmenities(amenities);
+	} catch (err) {
+		const error = new Error('room.errors.invalidAmenities');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	// 3. Create and Save
+	const newRoom = new Room({
+		name,
+		type,
+		capacity,
+		description,
+		imageUrl,
+		amenities: parsedAmenities,
+	});
+
+	await newRoom.save();
+
+	res.status(201).json({
+		message: 'room.success.created',
+		room: newRoom,
+	});
+});
+
+const updateRoom = asyncHandler(async (req, res) => {
+	const { name, type, capacity, description, amenities, originalName } = req.body;
+
+	// Find by originalName (maintaining existing logic)
+	const room = await Room.findOne({ name: originalName });
+	if (!room) {
+		const error = new Error('room.errors.notFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	// Handle Image Update
+	if (req.file) {
+		try {
+			const result = await cloudinary.uploader.upload(req.file.path);
+			room.imageUrl = result.secure_url;
+		} finally {
+			if (fs.existsSync(req.file.path)) {
+				fs.unlinkSync(req.file.path);
+			}
+		}
+	}
+
+	// Handle Amenities Update
+	if (amenities) {
+		try {
+			room.amenities = parseAmenities(amenities);
+		} catch (err) {
+			const error = new Error('room.errors.invalidAmenities');
+			error.statusCode = 400;
+			throw error;
+		}
+	}
+
+	// Update Fields
+	if (name) room.name = name;
+	if (type) room.type = type;
+	if (capacity) room.capacity = capacity;
+	if (description) room.description = description;
+
+	await room.save();
+
+	res.status(200).json({
+		message: 'room.success.updated',
+		room,
+	});
+});
+
+const deleteRoom = asyncHandler(async (req, res) => {
+	const { name } = req.params;
+
+	const room = await Room.findOne({ name });
+	if (!room) {
+		const error = new Error('room.errors.notFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	// Delete image from Cloudinary
+	if (room.imageUrl) {
+		const publicId = room.imageUrl.split('/').slice(-1)[0].split('.')[0];
+		await cloudinary.uploader.destroy(publicId).catch((err) => {
+			console.error('Cloudinary delete error:', err);
+		});
+	}
+
+	// Delete associated bookings
+	const deletedBookings = await Booking.deleteMany({ roomId: room._id });
+
+	// Delete room
+	await Room.findByIdAndDelete(room._id);
+
+	res.status(200).json({
+		message: 'room.success.deleted',
+		data: {
+			roomName: room.name,
+			deletedBookingsCount: deletedBookings.deletedCount,
+		},
+	});
+});
+
+const getRoomAvailabilityForWeek = asyncHandler(async (req, res) => {
+	const { roomId } = req.params;
+
+	const room = await Room.findById(roomId);
+	if (!room) {
+		const error = new Error('room.errors.notFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	const dates = generateNext7Days();
+	const bookings = await Booking.find({
+		roomId,
+		date: { $in: dates },
+		status: { $in: ['Pending', 'Confirmed', 'Active'] },
+	});
+
+	const availability = processAvailability(dates, bookings);
+
+	res.status(200).json({ room: room.name, availability });
+});
+
+const getRoomAvailabilityForWeekByName = asyncHandler(async (req, res) => {
+	const { name } = req.params;
+
+	const room = await Room.findOne({ name });
+	if (!room) {
+		const error = new Error('room.errors.notFound');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	const dates = generateNext7Days();
+	const bookings = await Booking.find({
+		roomId: room._id,
+		date: { $in: dates },
+		status: { $in: ['Pending', 'Confirmed', 'Active'] },
+	});
+
+	const availability = processAvailability(dates, bookings);
+
+	res.status(200).json({ room: room.name, availability });
+});
+
+// Helper Logic for processing availability (Shared by both functions)
+const processAvailability = (dates, bookings) => {
+	return dates.map((date) => {
+		const timeSlots = generateTwoHourSlots();
+		const slots = timeSlots.map((slot) => {
+			const isOccupied = bookings.some((b) => {
+				if (b.date !== date) return false;
+
+				const toMinutes = (time) => {
+					const [hours, minutes] = time.split(':').map(Number);
+					return hours * 60 + minutes;
+				};
+
+				const slotStart = toMinutes(slot.startTime);
+				const slotEnd = toMinutes(slot.endTime);
+				const bookingStart = toMinutes(b.startTime);
+				const bookingEnd = toMinutes(b.endTime);
+
+				return (
+					(slotStart < bookingEnd && slotEnd > bookingStart) ||
+					(slotStart >= bookingStart && slotStart < bookingEnd) ||
+					(slotEnd > bookingStart && slotEnd <= bookingEnd)
+				);
+			});
+
+			return { ...slot, status: isOccupied ? 'Occupied' : 'Available' };
+		});
+		return { date, slots };
+	});
 };
-
-// Make the same time comparison changes to getRoomAvailabilityForWeekByName
-async function getRoomAvailabilityForWeekByName(roomName) {
-  const room = await Room.findOne({ name: roomName });
-  if (!room) throw new Error("room.errors.notFound");
-
-  const dates = generateNext7Days();
-  const bookings = await Booking.find({
-    roomId: room._id,
-    date: { $in: dates },
-    status: { $in: ["Pending", "Confirmed"] },
-  });
-
-  const availability = dates.map((date) => {
-    const timeSlots = generateTwoHourSlots();
-    const slots = timeSlots.map((slot) => {
-      const isOccupied = bookings.some(b => {
-        if (b.date !== date) return false;
-
-        const toMinutes = (time) => {
-          const [hours, minutes] = time.split(':').map(Number);
-          return hours * 60 + minutes;
-        };
-
-        const slotStart = toMinutes(slot.startTime);
-        const slotEnd = toMinutes(slot.endTime);
-        const bookingStart = toMinutes(b.startTime);
-        const bookingEnd = toMinutes(b.endTime);
-
-        return (
-          (slotStart < bookingEnd && slotEnd > bookingStart) ||
-          (slotStart >= bookingStart && slotStart < bookingEnd) ||
-          (slotEnd > bookingStart && slotEnd <= bookingEnd)
-        );
-      });
-      
-      return { ...slot, status: isOccupied ? "Occupied" : "Available" };
-    });
-    return { date, slots };
-  });
-
-  return { room: room.name, availability };
-}
 
 module.exports = {
-  getRooms,
-  createRoom,
-  updateRoom,
-  deleteRoom,
-  getRoomAvailabilityForWeek, // Updated function name
-  getRoomAvailabilityForWeekByName, // Updated function name
+	getAllRooms,
+	getRoomByName,
+	createRoom,
+	updateRoom,
+	deleteRoom,
+	getRoomAvailabilityForWeek,
+	getRoomAvailabilityForWeekByName,
+	// Validators
+	validateCreateRoom,
+	validateUpdateRoom,
+	validateRoomNameParam,
+	validateRoomIdParam,
 };

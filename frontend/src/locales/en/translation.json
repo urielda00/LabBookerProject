@@ -1,729 +1,729 @@
 {
-  "common": {
-    "labBooker": "LabBooker",
-    "collegeName": "Azrieli College of Engineering"
-  },
-  "signup": {
-    "createAccount": "Create Account",
-    "fillDetails": "Fill in your details to get started",
-    "username": "Username",
-    "name": "Full Name",
-    "email": "Email",
-    "usernamePlaceholder": "Enter your username",
-    "namePlaceholder": "Enter your full name",
-    "emailPlaceholder": "Enter your email",
-    "continue": "Continue",
-    "verifyEmail": "Verify Your Email",
-    "codeSentTo": "Enter the code sent to",
-    "verificationCode": "Verification Code",
-    "verificationCodePlaceholder": "Enter 6-digit code",
-    "verify": "Verify",
-    "backToDetails": "← Back to Details",
-    "alreadyHaveAccount": "Already have an account?",
-    "login": "Log in",
-    "errors": {
-      "invalidEmail": "Please enter a valid email address",
-      "invalidCode": "Invalid verification code",
-      "unexpected": "An error occurred"
-    }
-  },
-  "login": {
-    "welcomeBack": "Welcome Back",
-    "signInToAccount": "Sign in to your account",
-    "emailLabel": "Email",
-    "emailPlaceholder": "Enter your email",
-    "continue": "Continue",
-    "enterVerificationCode": "Enter Verification Code",
-    "codeSentTo": "Enter the code sent to",
-    "codeLabel": "Verification Code",
-    "codePlaceholder": "Enter 6-digit code",
-    "verify": "Verify",
-    "backToEmail": "← Back to Email",
-    "resendCode": "Resend code",
-    "resendCodeIn": "Resend code in {{seconds}}s",
-    "newCodeSent": "New verification code sent!",
-    "dontHaveAccount": "Don't have an account?",
-    "signup": "Sign up",
-    "errors": {
-      "invalidCode": "Invalid verification code",
-      "emailNotFound": "Email not found",
-      "tooManyAttempts": "Too many attempts. Please try again later",
-      "network": "Network error. Please check your connection.",
-      "unexpected": "An unexpected error occurred",
-      "invalidEmailFormat": "Please enter a valid email address"
-    }
-  },
-  "hero": {
-    "headline": "Revolutionizing Study Spaces",
-    "description": "Simplify your lab room booking experience with our intuitive platform designed for Azrieli College of Engineering students.",
-    "createAccount": "Create Account",
-    "login": "Login",
-    "features": {
-      "easyBooking": {
-        "title": "Easy Booking",
-        "description": "Seamless room reservation in just a few clicks"
-      },
-      "collaborativeSpaces": {
-        "title": "Collaborative Spaces",
-        "description": "Find the perfect study environment"
-      },
-      "secureAccess": {
-        "title": "Secure Access",
-        "description": "Verified and controlled room management"
-      }
-    }
-  },
-  "homepage": {
-    "welcome": "Welcome, {{username}}",
-    "description": "Manage your lab bookings and explore available rooms with real-time status updates.",
-    "labRoomStatus": "Lab Room Status",
-    "occupied": "Occupied",
-    "available": "Available",
-    "until": "Until",
-    "bookARoom": "Book a Room",
-    "bookARoomDesc": "Reserve available lab spaces in real-time",
-    "myBookings": "My Bookings",
-    "myBookingsDesc": "Manage existing reservations and history"
-  },
+	"common": {
+		"labBooker": "LabBooker",
+		"collegeName": "Azrieli College of Engineering"
+	},
+	"signup": {
+		"createAccount": "Create Account",
+		"fillDetails": "Fill in your details to get started",
+		"username": "Username",
+		"name": "Full Name",
+		"email": "Email",
+		"usernamePlaceholder": "Enter your username",
+		"namePlaceholder": "Enter your full name",
+		"emailPlaceholder": "Enter your email",
+		"continue": "Continue",
+		"verifyEmail": "Verify Your Email",
+		"codeSentTo": "Enter the code sent to",
+		"verificationCode": "Verification Code",
+		"verificationCodePlaceholder": "Enter 6-digit code",
+		"verify": "Verify",
+		"backToDetails": "← Back to Details",
+		"alreadyHaveAccount": "Already have an account?",
+		"login": "Log in",
+		"errors": {
+			"invalidEmail": "Please enter a valid email address",
+			"invalidCode": "Invalid verification code",
+			"unexpected": "An error occurred",
+			"fillAllFields": "All fields are required"
+		}
+	},
+	"login": {
+		"welcomeBack": "Welcome Back",
+		"signInToAccount": "Sign in to your account",
+		"emailLabel": "Email",
+		"emailPlaceholder": "Enter your email",
+		"continue": "Continue",
+		"enterVerificationCode": "Enter Verification Code",
+		"codeSentTo": "Enter the code sent to",
+		"codeLabel": "Verification Code",
+		"codePlaceholder": "Enter 6-digit code",
+		"verify": "Verify",
+		"backToEmail": "← Back to Email",
+		"resendCode": "Resend code",
+		"resendCodeIn": "Resend code in {{seconds}}s",
+		"newCodeSent": "New verification code sent!",
+		"dontHaveAccount": "Don't have an account?",
+		"signup": "Sign up",
+		"errors": {
+			"invalidCode": "Invalid verification code",
+			"emailNotFound": "Email not found",
+			"tooManyAttempts": "Too many attempts. Please try again later",
+			"network": "Network error. Please check your connection.",
+			"unexpected": "An unexpected error occurred",
+			"invalidEmailFormat": "Please enter a valid email address"
+		}
+	},
+	"hero": {
+		"headline": "Revolutionizing Study Spaces",
+		"description": "Simplify your lab room booking experience with our intuitive platform designed for Azrieli College of Engineering students.",
+		"createAccount": "Create Account",
+		"login": "Login",
+		"features": {
+			"easyBooking": {
+				"title": "Easy Booking",
+				"description": "Seamless room reservation in just a few clicks"
+			},
+			"collaborativeSpaces": {
+				"title": "Collaborative Spaces",
+				"description": "Find the perfect study environment"
+			},
+			"secureAccess": {
+				"title": "Secure Access",
+				"description": "Verified and controlled room management"
+			}
+		}
+	},
+	"homepage": {
+		"welcome": "Welcome, {{username}}",
+		"description": "Manage your lab bookings and explore available rooms with real-time status updates.",
+		"labRoomStatus": "Lab Room Status",
+		"occupied": "Occupied",
+		"available": "Available",
+		"until": "Until",
+		"bookARoom": "Book a Room",
+		"bookARoomDesc": "Reserve available lab spaces in real-time",
+		"myBookings": "My Bookings",
+		"myBookingsDesc": "Manage existing reservations and history"
+	},
 
-  "nav": {
-    "home": "Home",
-    "labRooms": "Lab Rooms",
-    "collegeWebsite": "College Website",
-    "dashboard": "Dashboard",
-    "profileSettings": "Profile & Settings",
-    "logout": "Logout",
-    "login": "Log In",
-    "notifications": "Notifications",
-    "clearAllNotifications": "Clear all notifications",
-    "markAllAsRead": "Mark all as read",
-    "markAsRead": "Mark as read",
-    "delete": "Delete",
-    "allCaughtUp": "All caught up!",
-    "noNewNotifications": "You have no new notifications",
-    "today": "Today",
-    "yesterday": "Yesterday",
-    "language": "English"
-  },
-  "nextBooking": {
-    "confirmText": "Confirm Cancellation",
-    "cancelText": "Keep Booking",
-    "confirmation": "Are you sure you want to cancel this booking? This action cannot be undone.",
-    "detailsHeader": "Booking Details",
-    "loadingTitle": "Loading your booking",
-    "loadingMessage": "Please wait while we fetch your details",
-    "noneTitle": "No Upcoming Bookings",
-    "noneMessage": "You don't have any upcoming reservations",
-    "overviewTitle": "Booking Overview",
-    "currentSession": "Current Session",
-    "upcomingReservation": "Upcoming Reservation",
-    "pendingApproval": "Pending Approval",
-    "awaitingConfirmation": "Awaiting Confirmation",
-    "requests": "Requests",
-    "requestsLoading": "Loading requests...",
-    "timeRemaining": "Time Remaining",
-    "timeUntilStart": "Time Until Start",
-    "activeNow": "Active Now",
-    "endsAt": "Ends at",
-    "startsAt": "Starts at",
-    "warning15": "Your booking will end in less than 15 minutes. Please prepare to leave the room.",
-    "warning3": "Your booking ends in less than 3 minutes! Please leave the room immediately.",
-    "pendingMessage": "This booking is pending approval. You'll receive a confirmation email once it's approved. Cancellation may not be available during this stage.",
-    "cancelBooking": "Cancel Booking",
-    "cancelHeading": "Confirm Booking Cancellation",
-    "cancelMessage": "Are you sure you want to cancel this booking? This action cannot be undone.",
-    "cancelBookingSuccess": "Booking cancelled successfully",
-    "cancelBookingFail": "Failed to cancel booking",
-    "cancelUnavailable": "Cancel Unavailable",
-    "labels": {
-      "date": "Date",
-      "room": "Room",
-      "time": "Time",
-      "status": "Status"
-    },
-    "checkInUnavailable": "Check In Unavailable",
-    "confirmArrival": "Confirm Arrival",
-    "successCheckIn": "Successfully checked in to the room",
-    "failCheckIn": "Failed to check in",
-    "downloadIcs": "Download .ICS",
-    "googleCalendar": "Google Calendar"
-  },
-  "footer": {
-    "brandTitle": "LabBooker",
-    "brandSubtitle": "Revolutionizing lab room bookings and management for educational institutions worldwide.",
+	"nav": {
+		"home": "Home",
+		"labRooms": "Lab Rooms",
+		"collegeWebsite": "College Website",
+		"dashboard": "Dashboard",
+		"profileSettings": "Profile & Settings",
+		"logout": "Logout",
+		"login": "Log In",
+		"notifications": "Notifications",
+		"clearAllNotifications": "Clear all notifications",
+		"markAllAsRead": "Mark all as read",
+		"markAsRead": "Mark as read",
+		"delete": "Delete",
+		"allCaughtUp": "All caught up!",
+		"noNewNotifications": "You have no new notifications",
+		"today": "Today",
+		"yesterday": "Yesterday",
+		"language": "English"
+	},
+	"nextBooking": {
+		"confirmText": "Confirm Cancellation",
+		"cancelText": "Keep Booking",
+		"confirmation": "Are you sure you want to cancel this booking? This action cannot be undone.",
+		"detailsHeader": "Booking Details",
+		"loadingTitle": "Loading your booking",
+		"loadingMessage": "Please wait while we fetch your details",
+		"noneTitle": "No Upcoming Bookings",
+		"noneMessage": "You don't have any upcoming reservations",
+		"overviewTitle": "Booking Overview",
+		"currentSession": "Current Session",
+		"upcomingReservation": "Upcoming Reservation",
+		"pendingApproval": "Pending Approval",
+		"awaitingConfirmation": "Awaiting Confirmation",
+		"requests": "Requests",
+		"requestsLoading": "Loading requests...",
+		"timeRemaining": "Time Remaining",
+		"timeUntilStart": "Time Until Start",
+		"activeNow": "Active Now",
+		"endsAt": "Ends at",
+		"startsAt": "Starts at",
+		"warning15": "Your booking will end in less than 15 minutes. Please prepare to leave the room.",
+		"warning3": "Your booking ends in less than 3 minutes! Please leave the room immediately.",
+		"pendingMessage": "This booking is pending approval. You'll receive a confirmation email once it's approved. Cancellation may not be available during this stage.",
+		"cancelBooking": "Cancel Booking",
+		"cancelHeading": "Confirm Booking Cancellation",
+		"cancelMessage": "Are you sure you want to cancel this booking? This action cannot be undone.",
+		"cancelBookingSuccess": "Booking cancelled successfully",
+		"cancelBookingFail": "Failed to cancel booking",
+		"cancelUnavailable": "Cancel Unavailable",
+		"labels": {
+			"date": "Date",
+			"room": "Room",
+			"time": "Time",
+			"status": "Status"
+		},
+		"checkInUnavailable": "Check In Unavailable",
+		"confirmArrival": "Confirm Arrival",
+		"successCheckIn": "Successfully checked in to the room",
+		"failCheckIn": "Failed to check in",
+		"downloadIcs": "Download .ICS",
+		"googleCalendar": "Google Calendar"
+	},
+	"footer": {
+		"brandTitle": "LabBooker",
+		"brandSubtitle": "Revolutionizing lab room bookings and management for educational institutions worldwide.",
 
-    "socialLinks": {
-      "instagram": "Instagram",
-      "twitter": "Twitter",
-      "linkedin": "LinkedIn"
-    },
+		"socialLinks": {
+			"instagram": "Instagram",
+			"twitter": "Twitter",
+			"linkedin": "LinkedIn"
+		},
 
-    "navigation": {
-      "title": "Navigation",
-      "about": "About",
-      "faq": "FAQs",
-      "contact": "Contact",
-      "reportIssue": "Report Issue"
-    },
+		"navigation": {
+			"title": "Navigation",
+			"about": "About",
+			"faq": "FAQs",
+			"contact": "Contact",
+			"reportIssue": "Report Issue"
+		},
 
-    "contact": {
-      "title": "Contact",
-      "location": "Azrieli College of Engineering, Jerusalem",
-      "email": "support@labbooker.com",
-      "phone": "+972 (0)2-123-4567"
-    },
+		"contact": {
+			"title": "Contact",
+			"location": "Azrieli College of Engineering, Jerusalem",
+			"email": "support@labbooker.com",
+			"phone": "+972 (0)2-123-4567"
+		},
 
-    "newsletter": {
-      "title": "Newsletter",
-      "placeholder": "Your email address",
-      "subscribeButton": "Subscribe Now",
-      "helpText": "Subscribe to get the latest updates and news"
-    },
+		"newsletter": {
+			"title": "Newsletter",
+			"placeholder": "Your email address",
+			"subscribeButton": "Subscribe Now",
+			"helpText": "Subscribe to get the latest updates and news"
+		},
 
-    "links": {
-      "termsOfService": "Terms of Service",
-      "privacyPolicy": "Privacy Policy"
-    },
+		"links": {
+			"termsOfService": "Terms of Service",
+			"privacyPolicy": "Privacy Policy"
+		},
 
-    "developedByAzrieli": "Developed by Azrieli College",
+		"developedByAzrieli": "Developed by Azrieli College",
 
-    "copyright": "© {{year}} LabBooker™. All rights reserved."
-  },
-  "labRooms": {
-    "title": "Lab Rooms",
-    "subtitle": "Browse and book available laboratory spaces"
-  },
-  "roomCard": {
-    "details": "Details",
-    "book": "Book",
-    "cancel": "Cancel",
+		"copyright": "© {{year}} LabBooker™. All rights reserved."
+	},
+	"labRooms": {
+		"title": "Lab Rooms",
+		"subtitle": "Browse and book available laboratory spaces"
+	},
+	"roomCard": {
+		"details": "Details",
+		"book": "Book",
+		"cancel": "Cancel",
 
-    "failedLoadBookings": "Failed to load bookings",
-    "noBookingsScheduled": "No bookings scheduled this week",
+		"failedLoadBookings": "Failed to load bookings",
+		"noBookingsScheduled": "No bookings scheduled this week",
 
-    "viewSchedule": "View Schedule",
-    "scheduleTitle": "Schedule",
+		"viewSchedule": "View Schedule",
+		"scheduleTitle": "Schedule",
 
-    "viewRequests": "View Requests",
-    "declined": "Declined",
-    "requestSent": "Request Sent ✓",
-    "requestTransfer": "Request Transfer",
-    "transferUnavailable": "Transfer unavailable",
+		"viewRequests": "View Requests",
+		"declined": "Declined",
+		"requestSent": "Request Sent ✓",
+		"requestTransfer": "Request Transfer",
+		"transferUnavailable": "Transfer unavailable",
 
-    "participants": "Participants:",
+		"participants": "Participants:",
 
-    "status": {
-      "Active": "Active",
-      "Confirmed": "Confirmed",
-      "Pending": "Pending"
-    }
-  },
-  "roomBooking": {
-    "bookingTitle": "Booking:",
-    "colleagueEmail": "Colleague",
-    "email": " Email",
-    "emailPlaceholder": "e.g., colleague@example.com",
-    "selectDate": "Select Date",
-    "chooseDatePlaceholder": "Choose a date",
-    "selectTimeSlot": "Select Time Slot",
-    "noTimeSlots": "No available time slots for this date.",
-    "selectDateFirst": "Please select a date first.",
-    "proceedButton": "Proceed with Booking",
-    "bookingInProgress": "Booking...",
-    "statusBooked": "Booked",
-    "statusPast": "Past",
-    "statusAvailable": "Available",
-    "close": "Close",
-    "timeRange": "{startTime} - {endTime}"
-  },
-  "errors": {
-    "invalidEmail": "Invalid email format for Colleague {number}.",
-    "missingEmail": "Please enter email for Colleague {number}.",
-    "chooseDate": "Please choose an available date.",
-    "selectTimeSlot": "Please select a time slot.",
-    "pastBooking": "Cannot book for past date and time.",
-    "businessHours": "Bookings are only available between {startHour}:00 and {endHour}:00.",
-    "advanceBooking": "Bookings must be made at least {minutes} minutes in advance.",
-    "generalError": "An error occurred while processing your booking.",
-    "fetchError": "Unable to fetch room availability. Please try again later."
-  },
-  "success": {
-    "bookingConfirmed": "Booking confirmed successfully!",
-    "bookingProcessed": "Your booking has been processed successfully."
-  },
-  "datepicker": {
-    "placeholder": "Select a date",
-    "monthNames": {
-      "january": "January",
-      "february": "February",
-      "march": "March",
-      "april": "April",
-      "may": "May",
-      "june": "June",
-      "july": "July",
-      "august": "August",
-      "september": "September",
-      "october": "October",
-      "november": "November",
-      "december": "December"
-    },
-    "weekDays": {
-      "sunday": "Sun",
-      "monday": "Mon",
-      "tuesday": "Tue",
-      "wednesday": "Wed",
-      "thursday": "Thu",
-      "friday": "Fri",
-      "saturday": "Sat"
-    },
-    "buttons": {
-      "today": "Today",
-      "cancel": "Cancel",
-      "apply": "Apply"
-    },
-    "accessibility": {
-      "previousMonth": "Previous month",
-      "nextMonth": "Next month",
-      "openCalendar": "Open calendar",
-      "closeCalendar": "Close calendar",
-      "selectDate": "Select date",
-      "selectedDate": "Selected date: {date}",
-      "unavailableDate": "This date is not available"
-    }
-  },
-  "rooms": {
-    "types": {
-      "computerLab": {
-        "name": "Computer Lab",
-        "description": "General purpose computer laboratory"
-      },
-      "chemistryLab": {
-        "name": "Chemistry Lab",
-        "description": "Chemistry research and experiments lab"
-      },
-      "physicsLab": {
-        "name": "Physics Lab",
-        "description": "Physics research and experiments lab"
-      },
-      "electronicsLab": {
-        "name": "Electronics Lab",
-        "description": "Electronics and circuits lab"
-      },
-      "largeSeminar": {
-        "name": "Large Seminar Room",
-        "description": "Large conference and seminar space"
-      },
-      "smallSeminar": {
-        "name": "Small Seminar Room",
-        "description": "Small meeting and seminar space"
-      }
-    },
-    "names": {
-      "room101": {
-        "name": "Room 101 - Computer Lab",
-        "shortName": "Room 101"
-      },
-      "room102": {
-        "name": "Room 102 - Chemistry Lab",
-        "shortName": "Room 102"
-      },
-      "room103": {
-        "name": "Room 103 - Physics Lab",
-        "shortName": "Room 103"
-      }
-    }
-  },
-  "sidebar": {
-    "labBooker": "LabBooker",
-    "dashboard": "Dashboard",
-    "overview": "Overview",
-    "manageUsers": "Manage Users",
-    "manageRooms": "Manage Rooms",
-    "manageBookings": "Manage Bookings",
-    "profile": "Profile",
-    "home": "Home",
-    "logout": "Log Out"
-  },
-  "profileSettings": {
-    "header": "Profile Settings",
-    "tabs": {
-      "profile": "Profile",
-      "appearance": "Appearance",
-      "notifications": "Notifications"
-    },
-    "profilePictureHeader": "Profile Picture",
-    "profilePictureAlt": "Profile picture",
-    "profilePictureHint": "Click the icon to choose a new profile picture",
-    "removeButton": "Remove",
-    "basicInformationHeader": "Basic Information",
-    "username": "Username",
-    "usernameInfo": "Username cannot be changed",
-    "name": "Name",
-    "email": "Email",
-    "errors": {
-      "loadProfileError": "Failed to load profile",
-      "invalidImageType": "Please upload a valid image file (JPEG, PNG)",
-      "invalidImageSize": "Image size should be less than 5MB",
-      "cropImageError": "Failed to crop image",
-      "invalidEmail": "Please enter a valid email address",
-      "emailInUse": "Email is already in use",
-      "initiateEmailChange": "Failed to initiate email change",
-      "cancelEmailChange": "Failed to cancel email change request",
-      "invalidVerificationCode": "Invalid verification code",
-      "invalidNameLength": "Name must be between 2 and 50 characters",
-      "noChanges": "No changes to save",
-      "updateProfile": "Failed to update profile"
-    },
-    "success": {
-      "emailChangeCancelled": "Email change request cancelled.",
-      "emailUpdated": "Email updated successfully",
-      "profileUpdated": "Profile updated successfully"
-    },
-    "saving": "Saving...",
-    "cancel": "Cancel",
-    "saveChanges": "Save Changes",
-    "editProfile": "Edit Profile",
-    "appearanceHeader": "Appearance Settings",
-    "darkMode": "Dark Mode",
-    "darkModeDescription": "Toggle between light and dark themes",
-    "notificationsHeader": "Notification Preferences",
-    "notificationsComingSoonTitle": "Coming Soon",
-    "notificationsComingSoonDescription": "Notification settings will be available in a future update.",
-    "cropperTitle": "Crop your photo",
-    "cropper": {
-      "cancel": "Cancel",
-      "confirm": "Confirm Crop"
-    }
-  },
-  "verificationModal": {
-    "title": "Verify Email Change",
-    "instruction": "Please enter the verification code sent to:",
-    "placeholder": "000000",
-    "cancel": "Cancel",
-    "verify": "Verify"
-  },
-  "userManagement": {
-    "header": "User Management",
-    "searchPlaceholder": "Search users...",
-    "searchButton": "Search",
-    "allRoles": "All Roles",
-    "user": "User",
-    "admin": "Admin",
-    "manager": "Manager",
-    "columns": {
-      "user": "User",
-      "email": "Email",
-      "role": "Role",
-      "status": "Status",
-      "actions": "Actions"
-    },
-    "status": {
-      "active": "Active",
-      "blocked": "Blocked"
-    },
-    "pagination": {
-      "page": "Page",
-      "prev": "Previous",
-      "next": "Next"
-    },
-    "modals": {
-      "unblock": {
-        "message": "Are you sure you want to unblock {{name}}?",
-        "confirm": "Unblock",
-        "cancel": "Cancel"
-      },
-      "delete": {
-        "message": "Are you sure you want to permanently delete",
-        "undon": "This action cannot be undone.",
-        "confirm": "Delete",
-        "cancel": "Cancel"
-      }
-    },
-    "toast": {
-      "fetchError": "Failed to fetch users",
-      "roleUpdated": "Role updated successfully",
-      "roleFailed": "Failed to update role",
-      "blockSuccess": "User blocked successfully",
-      "blockFailed": "Failed to block user",
-      "unblockSuccess": "User unblocked successfully",
-      "unblockFailed": "Failed to unblock user",
-      "deleteSuccess": "User deleted successfully",
-      "deleteFailed": "Failed to delete user"
-    }
-  },
-  "roomPage": {
-    "header": "Room Management",
-    "operations": {
-      "create": "Create Room",
-      "update": "Update Room",
-      "delete": "Delete Room",
-      "select": "Select Operation"
-    },
-    "forms": {
-      "createSuccess": "Room created successfully.",
-      "updateSuccess": "Room updated successfully.",
-      "deleteSuccess": "Room deleted successfully."
-    }
-  },
-  "createRoom": {
-    "title": "Create a New Room",
-    "sections": {
-      "basic": "Details",
-      "amenities": "Amenities",
-      "upload": "Upload Image"
-    },
-    "fields": {
-      "namePlaceHolder": "Enter room name",
-      "capacityPlaceHolder": "Enter room capacity",
-      "descriptionPlaceHolder": "Enter room description",
-      "name": "Room Name",
-      "type": "Room Type",
-      "capacity": "Capacity",
-      "description": "Description",
-      "selectType": "Select Room Type",
-      "types": {
-        "open": "Open",
-        "small": "Small Seminar",
-        "large": "Large Seminar"
-      },
-      "searchAmenities": "Search amenities...",
-      "selectAmenities": "Select Amenities",
-      "selectedAmenities": "amenities selected"
-    },
-    "validation": {
-      "requiredFields": "Please fill in the name, type, and capacity fields.",
-      "minAmenities": "Please select at least three amenities."
-    },
-    "messages": {
-      "success": "Room created successfully!",
-      "error": "An error occurred while creating the room"
-    },
-    "buttons": {
-      "submit": "Create Room",
-      "submitting": "Creating..."
-    }
-  },
-  "updateRoom": {
-    "title": "Update Room",
-    "selectSection": {
-      "title": "Select Room",
-      "label": "Available Rooms",
-      "placeholder": "Choose a Room",
-      "fetchBtn": "Get Room Details",
-      "fetching": "Fetching..."
-    },
-    "sections": {
-      "basic": "Basic Details",
-      "amenities": "Amenities",
-      "upload": "Update Image"
-    },
-    "fields": {
-      "name": "Room Name",
-      "type": "Room Type",
-      "capacity": "Capacity",
-      "description": "Description",
-      "selectType": "Select Room Type",
-      "types": {
-        "open": "Open",
-        "small": "Small Seminar",
-        "large": "Large Seminar"
-      },
-      "searchAmenities": "Search amenities...",
-      "selectAmenities": "Select Amenities",
-      "selectedAmenities": "{{count}} amenities selected"
-    },
-    "validation": {
-      "requiredFields": "Please fill in the name, type, and capacity fields.",
-      "minAmenities": "Please select at least three amenities.",
-      "noRoomSelected": "Please select a valid room.",
-      "loadRoomsError": "Failed to load rooms list.",
-      "fetchRoomError": "Error fetching room details. Please try again."
-    },
-    "messages": {
-      "success": "Room updated successfully!",
-      "error": "An error occurred while updating the room."
-    },
-    "buttons": {
-      "submit": "Update Room",
-      "submitting": "Updating..."
-    }
-  },
-  "deleteRoom": {
-    "date": "Date",
-    "header": "Delete Room",
-    "selectRoom": "Select Room",
-    "availableRooms": "Available Rooms",
-    "chooseRoom": "Choose a Room",
-    "selectedRoomDetails": "Selected Room Details",
-    "name": "Name",
-    "type": "Type",
-    "capacity": "Capacity",
-    "reset": "Reset",
-    "delete": "Delete Room",
-    "deleting": "Deleting...",
-    "pleaseSelectRoom": "Please select a room first.",
-    "confirmDeleteTitle": "Confirm Room Deletion",
-    "confirmDeleteText": "Are you sure you want to delete this room? This action cannot be undone.",
-    "roomDetails": "Room Details",
-    "associatedBookings": "Associated Bookings",
-    "bookedBy": "Booked by",
-    "with": "With",
-    "permanentDeleteWarning": "This will permanently delete the room and.",
-    "successMessage": {
-      "title": "Room and associated bookings successfully deleted!",
-      "details": "Deleted Room Details:",
-      "numBookings": "Number of deleted bookings:"
-    },
-    "errorLoadingRooms": "Failed to load rooms list.",
-    "errorDeleteRoom": "Error deleting room.",
-    "cancel": "Cancel"
-  },
-  "bookingPage": {
-    "title": "Booking Management"
-  },
-  "createBookingByNames": {
-    "added": "added",
-    "user": "user",
-    "required": "required",
-    "title": "Create a Booking",
-    "sectionDetails": "Booking Details",
-    "roomNameLabel": "Room Name",
-    "fetchDetails": "Fetch Details",
-    "usernameLabel": "Your Username",
-    "addUserLabel": "Add Additional User",
-    "exactlyUsersRequired": "(Exactly {{count}} user{{plural}} required)",
-    "additionalNotAllowed": "Additional users are not allowed for Open rooms.",
-    "enterEmailPlaceholder": "Enter user email",
-    "addUserBtn": "Add User",
-    "usersAdded": "{{count}}/{{required}} user{{plural}} added",
-    "moreUsersRequired": "{{remaining}} more user{{plural}} required",
-    "addedEmails": "Added emails:",
-    "checkAvailability": "Check Availability",
-    "fetchAvailability": "Fetch Availability",
-    "selectDate": "Select Date",
-    "selectTimeSlot": "Select Time Slot",
-    "noAvailableSlots": "No available slots for {{date}}",
-    "submitCreating": "Creating...",
-    "createBooking": "Create Booking",
-    "addMoreUsers": "Add {{count}} More User{{plural}}",
-    "errors": {
-      "roomRequired": "Please enter a room name.",
-      "usernameRequired": "Please enter your username.",
-      "dateRequired": "Please choose a date.",
-      "timeRequired": "Please select a time slot.",
-      "smallSeminarRequirement": "Small Seminar rooms require exactly 2 additional users.",
-      "largeSeminarRequirement": "Large Seminar rooms require exactly 3 additional users.",
-      "fetchRoomError": "Error fetching room details.",
-      "fetchAvailabilityError": "Unable to fetch availability for room: {{room}}",
-      "createBookingError": "Error creating booking by names.",
-      "invalidEmail": "Please enter a valid email address.",
-      "duplicateEmail": "This email has already been added.",
-      "maxUsers": "You can only add up to {{count}} additional user(s)."
-    },
-    "success": {
-      "roomFetched": "Room details fetched successfully!",
-      "availabilityFetched": "Availability fetched successfully!",
-      "colleagueAdded": "Colleague added successfully!",
-      "colleagueRemoved": "Colleague removed.",
-      "bookingCreated": "Booking created successfully!"
-    }
-  },
-  "updateBooking": {
-    "title": "Update Booking Status",
-    "sectionUser": "User Details",
-    "sectionSelect": "Select Booking",
-    "sectionUpdate": "Update Status",
-    "sectionSummary": "Selected Booking Details",
-    "username": "Username",
-    "usernamePlaceholder": "Enter username to fetch bookings",
-    "fetch": "Fetch Bookings",
-    "fetching": "Fetching...",
-    "noBookings": "No upcoming bookings found for username: \"{{username}}\"",
-    "foundBookings": "Found {{count}} upcoming booking(s)",
-    "fetchError": "Error fetching upcoming bookings for username: {{username}}",
-    "selectBooking": "-- Select a booking to update --",
-    "availableBookings": "Available Bookings",
-    "currentStatus": "Current Status",
-    "newStatus": "New Status",
-    "statusRequiredNote": "Please select a different status to update",
-    "room": "Room",
-    "date": "Date",
-    "time": "Time",
-    "bookingId": "Booking ID",
-    "reset": "Reset",
-    "update": "Update Booking",
-    "updating": "Updating...",
-    "successUpdate": "Booking status successfully updated from {{from}} to {{to}}",
-    "errors": {
-      "usernameRequired": "Please enter a username first.",
-      "bookingRequired": "Please select a booking to update.",
-      "sameStatus": "Please select a different status to update.",
-      "updateFailed": "Error updating booking status"
-    }
-  },
-  "deleteBooking": {
-    "title": "Delete Booking",
-    "sectionUser": "User Details",
-    "usernameLabel": "Username",
-    "usernamePlaceholder": "Enter username to fetch bookings",
-    "fetch": "Fetch Bookings",
-    "fetching": "Fetching...",
-    "sectionSelect": "Select Booking to Delete",
-    "availableBookings": "Available Bookings",
-    "selectPrompt": "-- Select a booking to delete --",
-    "sectionSummary": "Selected Booking Details",
-    "room": "Room",
-    "date": "Date",
-    "time": "Time",
-    "status": "Status",
-    "reset": "Reset",
-    "delete": "Delete Booking",
-    "deleting": "Deleting...",
-    "confirmTitle": "Confirm Deletion",
-    "confirmMessage": "Are you sure you want to delete this booking? This action cannot be undone.",
-    "cannotUndo": "This action cannot be undone",
-    "successTitle": "Booking successfully deleted!",
-    "successDetails": "Deleted Booking Details:",
-    "errors": {
-      "usernameRequired": "Please enter a username to fetch bookings.",
-      "noBookings": "No bookings found for username: \"{{username}}\"",
-      "fetchFailed": "Error fetching bookings for username: {{username}}",
-      "selectRequired": "Please select a booking to delete.",
-      "deleteFailed": "Error deleting booking"
-    }
-  },
-    "page": {
-      "edit": "Edit Page",
-      "title": "Title",
-      "contentPlaceholder": "Write your content here...",
-      "save": "Save Changes",
-      "cancel": "Cancel",
-      "lastUpdated": "Last updated",
-      "noUpdateDate": "No update date available",
-      "errors": {
-        "notFound": "No content available"
-      }
-    },
-    "chat": {
-  "adminChat": "Admin Chat",
-  "publicChat": "Public Chat",
-  "public": "Public",
-  "admin": "Admin",
-  "you": "You",
-  "open": "Open chat",
-  "close": "Close chat",
-  "emojiPicker": "Emoji picker",
-  "unreadMessages": "{{count}} new messages",
-  "adminPlaceholder": "Admin message...",
-  "publicPlaceholder": "Type message...",
-  
-  
-  "errors": {
-    "message_too_long": "Message too long (max 500 characters)",
-    "rate_limit": "Please wait before sending another message",
-    "channel_not_allowed": "You can't post in this channel",
-    "chat_disabled": "Public chat is currently disabled",
-    "empty_message": "Message cannot be empty"
-  }
-}
+		"status": {
+			"Active": "Active",
+			"Confirmed": "Confirmed",
+			"Pending": "Pending"
+		}
+	},
+	"roomBooking": {
+		"bookingTitle": "Booking:",
+		"colleagueEmail": "Colleague",
+		"email": " Email",
+		"emailPlaceholder": "e.g., colleague@example.com",
+		"selectDate": "Select Date",
+		"chooseDatePlaceholder": "Choose a date",
+		"selectTimeSlot": "Select Time Slot",
+		"noTimeSlots": "No available time slots for this date.",
+		"selectDateFirst": "Please select a date first.",
+		"proceedButton": "Proceed with Booking",
+		"bookingInProgress": "Booking...",
+		"statusBooked": "Booked",
+		"statusPast": "Past",
+		"statusAvailable": "Available",
+		"close": "Close",
+		"timeRange": "{startTime} - {endTime}"
+	},
+	"errors": {
+		"invalidEmail": "Invalid email format.",
+		"missingEmail": "Please enter email.",
+		"chooseDate": "Please choose an available date.",
+		"selectTimeSlot": "Please select a time slot.",
+		"pastBooking": "Cannot book for past date and time.",
+		"businessHours": "Bookings are only available between {startHour}:00 and {endHour}:00.",
+		"advanceBooking": "Bookings must be made at least {minutes} minutes in advance.",
+		"generalError": "An error occurred while processing your booking.",
+		"fetchError": "Unable to fetch room availability. Please try again later."
+	},
+	"success": {
+		"bookingConfirmed": "Booking confirmed successfully!",
+		"bookingProcessed": "Your booking has been processed successfully."
+	},
+	"datepicker": {
+		"placeholder": "Select a date",
+		"monthNames": {
+			"january": "January",
+			"february": "February",
+			"march": "March",
+			"april": "April",
+			"may": "May",
+			"june": "June",
+			"july": "July",
+			"august": "August",
+			"september": "September",
+			"october": "October",
+			"november": "November",
+			"december": "December"
+		},
+		"weekDays": {
+			"sunday": "Sun",
+			"monday": "Mon",
+			"tuesday": "Tue",
+			"wednesday": "Wed",
+			"thursday": "Thu",
+			"friday": "Fri",
+			"saturday": "Sat"
+		},
+		"buttons": {
+			"today": "Today",
+			"cancel": "Cancel",
+			"apply": "Apply"
+		},
+		"accessibility": {
+			"previousMonth": "Previous month",
+			"nextMonth": "Next month",
+			"openCalendar": "Open calendar",
+			"closeCalendar": "Close calendar",
+			"selectDate": "Select date",
+			"selectedDate": "Selected date: {date}",
+			"unavailableDate": "This date is not available"
+		}
+	},
+	"rooms": {
+		"types": {
+			"computerLab": {
+				"name": "Computer Lab",
+				"description": "General purpose computer laboratory"
+			},
+			"chemistryLab": {
+				"name": "Chemistry Lab",
+				"description": "Chemistry research and experiments lab"
+			},
+			"physicsLab": {
+				"name": "Physics Lab",
+				"description": "Physics research and experiments lab"
+			},
+			"electronicsLab": {
+				"name": "Electronics Lab",
+				"description": "Electronics and circuits lab"
+			},
+			"largeSeminar": {
+				"name": "Large Seminar Room",
+				"description": "Large conference and seminar space"
+			},
+			"smallSeminar": {
+				"name": "Small Seminar Room",
+				"description": "Small meeting and seminar space"
+			}
+		},
+		"names": {
+			"room101": {
+				"name": "Room 101 - Computer Lab",
+				"shortName": "Room 101"
+			},
+			"room102": {
+				"name": "Room 102 - Chemistry Lab",
+				"shortName": "Room 102"
+			},
+			"room103": {
+				"name": "Room 103 - Physics Lab",
+				"shortName": "Room 103"
+			}
+		}
+	},
+	"sidebar": {
+		"labBooker": "LabBooker",
+		"dashboard": "Dashboard",
+		"overview": "Overview",
+		"manageUsers": "Manage Users",
+		"manageRooms": "Manage Rooms",
+		"manageBookings": "Manage Bookings",
+		"profile": "Profile",
+		"home": "Home",
+		"logout": "Log Out"
+	},
+	"profileSettings": {
+		"header": "Profile Settings",
+		"tabs": {
+			"profile": "Profile",
+			"appearance": "Appearance",
+			"notifications": "Notifications"
+		},
+		"profilePictureHeader": "Profile Picture",
+		"profilePictureAlt": "Profile picture",
+		"profilePictureHint": "Click the icon to choose a new profile picture",
+		"removeButton": "Remove",
+		"basicInformationHeader": "Basic Information",
+		"username": "Username",
+		"usernameInfo": "Username cannot be changed",
+		"name": "Name",
+		"email": "Email",
+		"errors": {
+			"loadProfileError": "Failed to load profile",
+			"invalidImageType": "Please upload a valid image file (JPEG, PNG)",
+			"invalidImageSize": "Image size should be less than 5MB",
+			"cropImageError": "Failed to crop image",
+			"invalidEmail": "Please enter a valid email address",
+			"emailInUse": "Email is already in use",
+			"initiateEmailChange": "Failed to initiate email change",
+			"cancelEmailChange": "Failed to cancel email change request",
+			"invalidVerificationCode": "Invalid verification code",
+			"invalidNameLength": "Name must be between 2 and 50 characters",
+			"noChanges": "No changes to save",
+			"updateProfile": "Failed to update profile"
+		},
+		"success": {
+			"emailChangeCancelled": "Email change request cancelled.",
+			"emailUpdated": "Email updated successfully",
+			"profileUpdated": "Profile updated successfully"
+		},
+		"saving": "Saving...",
+		"cancel": "Cancel",
+		"saveChanges": "Save Changes",
+		"editProfile": "Edit Profile",
+		"appearanceHeader": "Appearance Settings",
+		"darkMode": "Dark Mode",
+		"darkModeDescription": "Toggle between light and dark themes",
+		"notificationsHeader": "Notification Preferences",
+		"notificationsComingSoonTitle": "Coming Soon",
+		"notificationsComingSoonDescription": "Notification settings will be available in a future update.",
+		"cropperTitle": "Crop your photo",
+		"cropper": {
+			"cancel": "Cancel",
+			"confirm": "Confirm Crop"
+		}
+	},
+	"verificationModal": {
+		"title": "Verify Email Change",
+		"instruction": "Please enter the verification code sent to:",
+		"placeholder": "000000",
+		"cancel": "Cancel",
+		"verify": "Verify"
+	},
+	"userManagement": {
+		"header": "User Management",
+		"searchPlaceholder": "Search users...",
+		"searchButton": "Search",
+		"allRoles": "All Roles",
+		"user": "User",
+		"admin": "Admin",
+		"manager": "Manager",
+		"columns": {
+			"user": "User",
+			"email": "Email",
+			"role": "Role",
+			"status": "Status",
+			"actions": "Actions"
+		},
+		"status": {
+			"active": "Active",
+			"blocked": "Blocked"
+		},
+		"pagination": {
+			"page": "Page",
+			"prev": "Previous",
+			"next": "Next"
+		},
+		"modals": {
+			"unblock": {
+				"message": "Are you sure you want to unblock {{name}}?",
+				"confirm": "Unblock",
+				"cancel": "Cancel"
+			},
+			"delete": {
+				"message": "Are you sure you want to permanently delete",
+				"undon": "This action cannot be undone.",
+				"confirm": "Delete",
+				"cancel": "Cancel"
+			}
+		},
+		"toast": {
+			"fetchError": "Failed to fetch users",
+			"roleUpdated": "Role updated successfully",
+			"roleFailed": "Failed to update role",
+			"blockSuccess": "User blocked successfully",
+			"blockFailed": "Failed to block user",
+			"unblockSuccess": "User unblocked successfully",
+			"unblockFailed": "Failed to unblock user",
+			"deleteSuccess": "User deleted successfully",
+			"deleteFailed": "Failed to delete user"
+		}
+	},
+	"roomPage": {
+		"header": "Room Management",
+		"operations": {
+			"create": "Create Room",
+			"update": "Update Room",
+			"delete": "Delete Room",
+			"select": "Select Operation"
+		},
+		"forms": {
+			"createSuccess": "Room created successfully.",
+			"updateSuccess": "Room updated successfully.",
+			"deleteSuccess": "Room deleted successfully."
+		}
+	},
+	"createRoom": {
+		"title": "Create a New Room",
+		"sections": {
+			"basic": "Details",
+			"amenities": "Amenities",
+			"upload": "Upload Image"
+		},
+		"fields": {
+			"namePlaceHolder": "Enter room name",
+			"capacityPlaceHolder": "Enter room capacity",
+			"descriptionPlaceHolder": "Enter room description",
+			"name": "Room Name",
+			"type": "Room Type",
+			"capacity": "Capacity",
+			"description": "Description",
+			"selectType": "Select Room Type",
+			"types": {
+				"open": "Open",
+				"small": "Small Seminar",
+				"large": "Large Seminar"
+			},
+			"searchAmenities": "Search amenities...",
+			"selectAmenities": "Select Amenities",
+			"selectedAmenities": "amenities selected"
+		},
+		"validation": {
+			"requiredFields": "Please fill in the name, type, and capacity fields.",
+			"minAmenities": "Please select at least three amenities."
+		},
+		"messages": {
+			"success": "Room created successfully!",
+			"error": "An error occurred while creating the room"
+		},
+		"buttons": {
+			"submit": "Create Room",
+			"submitting": "Creating..."
+		}
+	},
+	"updateRoom": {
+		"title": "Update Room",
+		"selectSection": {
+			"title": "Select Room",
+			"label": "Available Rooms",
+			"placeholder": "Choose a Room",
+			"fetchBtn": "Get Room Details",
+			"fetching": "Fetching..."
+		},
+		"sections": {
+			"basic": "Basic Details",
+			"amenities": "Amenities",
+			"upload": "Update Image"
+		},
+		"fields": {
+			"name": "Room Name",
+			"type": "Room Type",
+			"capacity": "Capacity",
+			"description": "Description",
+			"selectType": "Select Room Type",
+			"types": {
+				"open": "Open",
+				"small": "Small Seminar",
+				"large": "Large Seminar"
+			},
+			"searchAmenities": "Search amenities...",
+			"selectAmenities": "Select Amenities",
+			"selectedAmenities": "{{count}} amenities selected"
+		},
+		"validation": {
+			"requiredFields": "Please fill in the name, type, and capacity fields.",
+			"minAmenities": "Please select at least three amenities.",
+			"noRoomSelected": "Please select a valid room.",
+			"loadRoomsError": "Failed to load rooms list.",
+			"fetchRoomError": "Error fetching room details. Please try again."
+		},
+		"messages": {
+			"success": "Room updated successfully!",
+			"error": "An error occurred while updating the room."
+		},
+		"buttons": {
+			"submit": "Update Room",
+			"submitting": "Updating..."
+		}
+	},
+	"deleteRoom": {
+		"date": "Date",
+		"header": "Delete Room",
+		"selectRoom": "Select Room",
+		"availableRooms": "Available Rooms",
+		"chooseRoom": "Choose a Room",
+		"selectedRoomDetails": "Selected Room Details",
+		"name": "Name",
+		"type": "Type",
+		"capacity": "Capacity",
+		"reset": "Reset",
+		"delete": "Delete Room",
+		"deleting": "Deleting...",
+		"pleaseSelectRoom": "Please select a room first.",
+		"confirmDeleteTitle": "Confirm Room Deletion",
+		"confirmDeleteText": "Are you sure you want to delete this room? This action cannot be undone.",
+		"roomDetails": "Room Details",
+		"associatedBookings": "Associated Bookings",
+		"bookedBy": "Booked by",
+		"with": "With",
+		"permanentDeleteWarning": "This will permanently delete the room and.",
+		"successMessage": {
+			"title": "Room and associated bookings successfully deleted!",
+			"details": "Deleted Room Details:",
+			"numBookings": "Number of deleted bookings:"
+		},
+		"errorLoadingRooms": "Failed to load rooms list.",
+		"errorDeleteRoom": "Error deleting room.",
+		"cancel": "Cancel"
+	},
+	"bookingPage": {
+		"title": "Booking Management"
+	},
+	"createBookingByNames": {
+		"added": "added",
+		"user": "user",
+		"required": "required",
+		"title": "Create a Booking",
+		"sectionDetails": "Booking Details",
+		"roomNameLabel": "Room Name",
+		"fetchDetails": "Fetch Details",
+		"usernameLabel": "Your Username",
+		"addUserLabel": "Add Additional User",
+		"exactlyUsersRequired": "(Exactly {{count}} user{{plural}} required)",
+		"additionalNotAllowed": "Additional users are not allowed for Open rooms.",
+		"enterEmailPlaceholder": "Enter user email",
+		"addUserBtn": "Add User",
+		"usersAdded": "{{count}}/{{required}} user{{plural}} added",
+		"moreUsersRequired": "{{remaining}} more user{{plural}} required",
+		"addedEmails": "Added emails:",
+		"checkAvailability": "Check Availability",
+		"fetchAvailability": "Fetch Availability",
+		"selectDate": "Select Date",
+		"selectTimeSlot": "Select Time Slot",
+		"noAvailableSlots": "No available slots for {{date}}",
+		"submitCreating": "Creating...",
+		"createBooking": "Create Booking",
+		"addMoreUsers": "Add {{count}} More User{{plural}}",
+		"errors": {
+			"roomRequired": "Please enter a room name.",
+			"usernameRequired": "Please enter your username.",
+			"dateRequired": "Please choose a date.",
+			"timeRequired": "Please select a time slot.",
+			"smallSeminarRequirement": "Small Seminar rooms require exactly 2 additional users.",
+			"largeSeminarRequirement": "Large Seminar rooms require exactly 3 additional users.",
+			"fetchRoomError": "Error fetching room details.",
+			"fetchAvailabilityError": "Unable to fetch availability for room: {{room}}",
+			"createBookingError": "Error creating booking by names.",
+			"invalidEmail": "Please enter a valid email address.",
+			"duplicateEmail": "This email has already been added.",
+			"maxUsers": "You can only add up to {{count}} additional user(s)."
+		},
+		"success": {
+			"roomFetched": "Room details fetched successfully!",
+			"availabilityFetched": "Availability fetched successfully!",
+			"colleagueAdded": "Colleague added successfully!",
+			"colleagueRemoved": "Colleague removed.",
+			"bookingCreated": "Booking created successfully!"
+		}
+	},
+	"updateBooking": {
+		"title": "Update Booking Status",
+		"sectionUser": "User Details",
+		"sectionSelect": "Select Booking",
+		"sectionUpdate": "Update Status",
+		"sectionSummary": "Selected Booking Details",
+		"username": "Username",
+		"usernamePlaceholder": "Enter username to fetch bookings",
+		"fetch": "Fetch Bookings",
+		"fetching": "Fetching...",
+		"noBookings": "No upcoming bookings found for username: \"{{username}}\"",
+		"foundBookings": "Found {{count}} upcoming booking(s)",
+		"fetchError": "Error fetching upcoming bookings for username: {{username}}",
+		"selectBooking": "-- Select a booking to update --",
+		"availableBookings": "Available Bookings",
+		"currentStatus": "Current Status",
+		"newStatus": "New Status",
+		"statusRequiredNote": "Please select a different status to update",
+		"room": "Room",
+		"date": "Date",
+		"time": "Time",
+		"bookingId": "Booking ID",
+		"reset": "Reset",
+		"update": "Update Booking",
+		"updating": "Updating...",
+		"successUpdate": "Booking status successfully updated from {{from}} to {{to}}",
+		"errors": {
+			"usernameRequired": "Please enter a username first.",
+			"bookingRequired": "Please select a booking to update.",
+			"sameStatus": "Please select a different status to update.",
+			"updateFailed": "Error updating booking status"
+		}
+	},
+	"deleteBooking": {
+		"title": "Delete Booking",
+		"sectionUser": "User Details",
+		"usernameLabel": "Username",
+		"usernamePlaceholder": "Enter username to fetch bookings",
+		"fetch": "Fetch Bookings",
+		"fetching": "Fetching...",
+		"sectionSelect": "Select Booking to Delete",
+		"availableBookings": "Available Bookings",
+		"selectPrompt": "-- Select a booking to delete --",
+		"sectionSummary": "Selected Booking Details",
+		"room": "Room",
+		"date": "Date",
+		"time": "Time",
+		"status": "Status",
+		"reset": "Reset",
+		"delete": "Delete Booking",
+		"deleting": "Deleting...",
+		"confirmTitle": "Confirm Deletion",
+		"confirmMessage": "Are you sure you want to delete this booking? This action cannot be undone.",
+		"cannotUndo": "This action cannot be undone",
+		"successTitle": "Booking successfully deleted!",
+		"successDetails": "Deleted Booking Details:",
+		"errors": {
+			"usernameRequired": "Please enter a username to fetch bookings.",
+			"noBookings": "No bookings found for username: \"{{username}}\"",
+			"fetchFailed": "Error fetching bookings for username: {{username}}",
+			"selectRequired": "Please select a booking to delete.",
+			"deleteFailed": "Error deleting booking"
+		}
+	},
+	"page": {
+		"edit": "Edit Page",
+		"title": "Title",
+		"contentPlaceholder": "Write your content here...",
+		"save": "Save Changes",
+		"cancel": "Cancel",
+		"lastUpdated": "Last updated",
+		"noUpdateDate": "No update date available",
+		"errors": {
+			"notFound": "No content available"
+		}
+	},
+	"chat": {
+		"adminChat": "Admin Chat",
+		"publicChat": "Public Chat",
+		"public": "Public",
+		"admin": "Admin",
+		"you": "You",
+		"open": "Open chat",
+		"close": "Close chat",
+		"emojiPicker": "Emoji picker",
+		"unreadMessages": "{{count}} new messages",
+		"adminPlaceholder": "Admin message...",
+		"publicPlaceholder": "Type message...",
+
+		"errors": {
+			"message_too_long": "Message too long (max 500 characters)",
+			"rate_limit": "Please wait before sending another message",
+			"channel_not_allowed": "You can't post in this channel",
+			"chat_disabled": "Public chat is currently disabled",
+			"empty_message": "Message cannot be empty"
+		}
+	}
 }

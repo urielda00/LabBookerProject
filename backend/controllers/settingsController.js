@@ -1,188 +1,208 @@
-require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const UserCollection = require("../models/User");
-const nodemailer = require("nodemailer");
-const crypto = require("crypto");
-const uniqeId = crypto.randomBytes(3).toString("hex");
-const { validatePassword } = require("../utils/validatePassword");
-// Temporary in-memory storage for codes
-const verificationCodes = new Map();
+const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+const { body } = require('express-validator');
+const User = require('../models/User');
+const redisClient = require('../utils/redisClient');
+const asyncHandler = require('../middleware/asyncHandler');
+const { validatePassword } = require('../utils/validatePassword'); 
+require('dotenv').config();
 
-// Change password function
-async function changePassword(userData) {
-  const { email, currentPassword, newPassword } = userData;
-  if (!email || !currentPassword || !newPassword) {
-    return { status: 400, message: "All fields are required" };
-  }
-
-  try {
-    const user = await UserCollection.findOne({ email });
-
-    if (!user) {
-      return { status: 400, message: "User not found" };
-    }
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return { status: 400, message: "Incorrect Password, try again" };
-    }
-    validatePassword(newPassword);
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
-
-    return { status: 200, message: "Password changed successfully" };
-  } catch (error) {
-    return { status: 500, message: "Internal Server Error: " + error.message };
-  }
-}
-
-// Create a transporter for nodemailer
+// --- Email Configuration ---
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // Set to true for port 465
-  auth: {
-    user: process.env.EMAIL, // Your email address
-    pass: process.env.PASSWORD, // Your app password
-  },
+	host: process.env.EMAIL_HOST,
+	port: process.env.EMAIL_PORT,
+	secure: false,
+	auth: {
+		user: process.env.EMAIL_USER,
+		pass: process.env.EMAIL_PASS,
+	},
 });
 
-// Send email with verification code
-async function sendVerificationCode(email) {
-  const verificationCode = Math.floor(100000 + Math.random() * 900000); // Random 6-digit code
-  const expirationTime = Date.now() + 3 * 60 * 1000; // 3 minutes from now
+// Helper: Send Verification Email
+const sendCustomVerificationEmail = async (email, verificationCode) => {
+	const uniqueId = crypto.randomBytes(3).toString('hex');
 
-  // Store the code with the email
-  verificationCodes.set(email, { verificationCode, expirationTime });
-
-  const mailOptions = {
-    from: {
-      name: "Lab Booker",
-      address: process.env.EMAIL,
-    },
-    to: email,
-    subject: `${uniqeId}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+	const htmlContent = `
+    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
         <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
           <h1 style="margin: 0;">Lab Booker</h1>
         </div>
         <div style="padding: 20px;">
-          <p style="font-size: 16px; line-height: 1.5;">Hello,</p>
-          <p style="font-size: 16px; line-height: 1.5;">Your verification code is:</p>
+          <p>Hello,</p>
+          <p>Your verification code is:</p>
           <div style="font-size: 24px; font-weight: bold; color: #4CAF50; text-align: center; margin: 20px 0; border: 2px dashed #4CAF50; padding: 10px;">
             ${verificationCode}
           </div>
-          <p style="font-size: 16px; line-height: 1.5;">Please enter this code to verify your account. If you did not request this code, please ignore this email.</p>
-          <p style="font-size: 16px; line-height: 1.5;">Thank you for using Lab Booker!</p>
+          <p>Please enter this code to verify your account. If you did not request this code, please ignore this email.</p>
         </div>
         <div style="background-color: #f4f4f4; text-align: center; padding: 10px; font-size: 12px; color: #666;">
-          <p style="margin: 0;">© 2024 Lab Booker. All rights reserved.</p>
+          <p>© 2024 Lab Booker. All rights reserved.</p>
         </div>
-      </div>
-    `,
-  };
+    </div>`;
 
-  try {
-    await transporter.sendMail(mailOptions);
-    return { status: 200, message: "Verification code sent successfully!" };
-  } catch (error) {
-    return {
-      status: 500,
-      message: "Failed to send verification code: " + error.message,
-    };
-  }
-}
+	await transporter.sendMail({
+		from: { name: 'Lab Booker', address: process.env.EMAIL_USER },
+		to: email,
+		subject: `Verification Code: ${uniqueId}`,
+		html: htmlContent,
+	});
+};
 
-// Validate verification code
-function validateVerificationCode(email, code) {
-  const storedData = verificationCodes.get(email);
+// --- Validators ---
 
-  if (!storedData) {
-    return { status: 400, message: "Invalid or expired verification code" };
-  }
+const validateChangePassword = [
+	body('email').isEmail().withMessage('Valid email is required'),
+	body('currentPassword').notEmpty().withMessage('Current password is required'),
+	body('newPassword')
+		.notEmpty()
+		.withMessage('New password is required')
+		.custom((value) => {
+			const msg = validatePassword(value);
+			if (msg !== 'Valid') throw new Error(msg);
+			return true;
+		}),
+];
 
-  const { verificationCode, expirationTime } = storedData;
+const validateForgotPassword = [body('email').isEmail().withMessage('Valid email is required')];
 
-  if (Date.now() > expirationTime) {
-    verificationCodes.delete(email);
-    return { status: 400, message: "Verification code expired" };
-  }
+const validateVerifyCode = [
+	body('email').isEmail().withMessage('Valid email is required'),
+	body('code').notEmpty().withMessage('Verification code is required'),
+];
 
-  if (parseInt(code, 10) !== verificationCode) {
-    return { status: 400, message: "Incorrect verification code" };
-  }
+const validateResetPassword = [
+	body('email').isEmail().withMessage('Valid email is required'),
+	body('newPassword')
+		.notEmpty()
+		.withMessage('New password is required')
+		.custom((value) => {
+			const msg = validatePassword(value);
+			if (msg !== 'Valid') throw new Error(msg);
+			return true;
+		}),
+	body('confirmNewPassword')
+		.notEmpty()
+		.withMessage('Confirmation password is required')
+		.custom((value, { req }) => {
+			if (value !== req.body.newPassword) {
+				throw new Error('Passwords do not match');
+			}
+			return true;
+		}),
+];
 
-  // Code is valid; remove it from storage
-  verificationCodes.delete(email);
-  return { status: 200, message: "Verification successful" };
-}
+// --- Controller Methods ---
 
-// Forgot Password Function
-async function forgotPassword(userData) {
-  const { email } = userData;
+const changePassword = asyncHandler(async (req, res) => {
+	const { email, currentPassword, newPassword } = req.body;
 
-  if (!email) {
-    return { status: 400, message: "Email is required" };
-  }
+	const user = await User.findOne({ email });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-  try {
-    const user = await UserCollection.findOne({ email });
+	const isMatch = await bcrypt.compare(currentPassword, user.password);
+	if (!isMatch) {
+		const error = new Error('Incorrect Password');
+		error.statusCode = 401;
+		throw error;
+	}
 
-    if (!user) {
-      return { status: 400, message: "User not found" };
-    }
+	// Hash new password
+	const hashedPassword = await bcrypt.hash(newPassword, 10);
+	user.password = hashedPassword;
+	await user.save();
 
-    // Send the verification code
-    const response = await sendVerificationCode(email);
+	res.status(200).json({ message: 'Password changed successfully' });
+});
 
-    if (response.status !== 200) {
-      return { status: 500, message: "Failed to send verification email" };
-    }
+const forgotPassword = asyncHandler(async (req, res) => {
+	const { email } = req.body;
 
-    return { status: 200, message: "Verification code sent successfully" };
-  } catch (error) {
-    return { status: 500, message: "Internal Server Error: " + error.message };
-  }
-}
+	const user = await User.findOne({ email });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-// Reset Password Function
-async function resetPassword(userData) {
-  const { email, newPassword, confirmNewPassword } = userData;
+	// Generate 6-digit code
+	const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-  if (!email || !newPassword || !confirmNewPassword) {
-    return { status: 400, message: "All fields are required" };
-  }
+	// Log for development debugging
+	console.log(`[DEBUG] Verification Code for ${email}: ${verificationCode}`);
 
-  if (newPassword !== confirmNewPassword) {
-    return { status: 400, message: "Passwords do not match" };
-  }
+	// Store in Redis (Expires in 3 minutes = 180 seconds)
+	await redisClient.set(`resetCode:${email}`, verificationCode, 'EX', 180);
 
-  try {
-    const user = await UserCollection.findOne({ email });
+	try {
+		await sendCustomVerificationEmail(email, verificationCode);
+		res.status(200).json({ message: 'Verification code sent successfully' });
+	} catch (error) {
+		console.error('Email send error:', error.message);
 
-    if (!user) {
-      return { status: 400, message: "User not found" };
-    }
-    const isValid = validatePassword(newPassword);
-    if (isValid !== "Valid") {
-      return { status: 400, message: "Password is invalid " };
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
+		// In development, return the code if email fails
+		res.status(200).json({
+			message: 'Code generated (Email failed, check logs)',
+			devCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+		});
+	}
+});
 
-    return { status: 200, message: "Password reset successfully" };
-  } catch (error) {
-    console.error(error);
-    return { status: 500, message: "Internal Server Error: " + error.message };
-  }
-}
+const validateVerificationCode = asyncHandler(async (req, res) => {
+	const { email, code } = req.body;
+
+	const storedCode = await redisClient.get(`resetCode:${email}`);
+
+	if (!storedCode) {
+		const error = new Error('Invalid or expired verification code');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	if (String(code) !== String(storedCode)) {
+		const error = new Error('Incorrect verification code');
+		error.statusCode = 400;
+		throw error;
+	}
+
+	// Keep the code in Redis until password reset is actually performed,
+	// or delete it here if the flow requires a temporary token instead.
+	// Current logic: Delete it now.
+	await redisClient.del(`resetCode:${email}`);
+
+	res.status(200).json({ message: 'Verification successful' });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+	const { email, newPassword } = req.body;
+
+	const user = await User.findOne({ email });
+	if (!user) {
+		const error = new Error('User not found');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	const hashedPassword = await bcrypt.hash(newPassword, 10);
+	user.password = hashedPassword;
+	await user.save();
+
+	res.status(200).json({ message: 'Password reset successfully' });
+});
 
 module.exports = {
-  forgotPassword,
-  changePassword,
-  sendVerificationCode,
-  validateVerificationCode,
-  resetPassword,
+	// Methods
+	changePassword,
+	forgotPassword,
+	validateVerificationCode,
+	resetPassword,
+	// Validators
+	validateChangePassword,
+	validateForgotPassword,
+	validateVerifyCode,
+	validateResetPassword,
 };

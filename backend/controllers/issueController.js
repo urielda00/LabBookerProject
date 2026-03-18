@@ -1,123 +1,119 @@
-// controllers/issueController.js
-const Issue = require("../models/Issue");
+const { body, param } = require('express-validator');
+const Issue = require('../models/Issue');
+const asyncHandler = require('../middleware/asyncHandler');
 
-const issueController = {
-  createIssue: async (req, res) => {
-    try {
-      const { issueType, description, email, bookingReference } = req.body;
+// --- Validators ---
+const validateCreateIssue = [
+	body('issueType').trim().notEmpty().withMessage('Issue type is required'),
+	body('description').trim().notEmpty().withMessage('Description is required'),
+	body('email').isEmail().withMessage('Valid email is required'),
+	body('bookingReference').optional().trim(),
+];
 
-      const newIssue = new Issue({
-        issueType,
-        description,
-        email,
-        bookingReference,
-        status: "pending", // Set default status
-      });
+const validateUpdateStatus = [
+	param('id').isMongoId().withMessage('Invalid Issue ID'),
+	body('status')
+		.isIn(['pending', 'in-progress', 'resolved', 'closed'])
+		.withMessage('Invalid status'),
+];
 
-      await newIssue.save();
+const validateIssueId = [param('id').isMongoId().withMessage('Invalid Issue ID')];
 
-      res.json({
-        msg: "Issue created successfully",
-        issue: newIssue,
-      });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+// --- Methods ---
 
-  getAllIssues: async (req, res) => {
-    try {
-      const issues = await Issue.find().sort({ createdAt: -1 }); // Sort by newest first
-      res.json(issues);
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+const createIssue = asyncHandler(async (req, res) => {
+	const { issueType, description, email, bookingReference } = req.body;
 
-  getIssueById: async (req, res) => {
-    try {
-      const issue = await Issue.findById(req.params.id);
-      if (!issue) return res.status(404).json({ msg: "Issue not found" });
+	const newIssue = new Issue({
+		issueType,
+		description,
+		email,
+		bookingReference,
+		status: 'pending',
+	});
 
-      res.json(issue);
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+	await newIssue.save();
 
-  updateIssue: async (req, res) => {
-    try {
-      const { issueType, description, email, bookingReference, status } =
-        req.body;
+	res.status(201).json({
+		message: 'Issue created successfully',
+		issue: newIssue,
+	});
+});
 
-      const updatedIssue = await Issue.findByIdAndUpdate(
-        req.params.id,
-        {
-          issueType,
-          description,
-          email,
-          bookingReference,
-          status,
-        },
-        { new: true }, // Return the updated document
-      );
+const getAllIssues = asyncHandler(async (req, res) => {
+	const issues = await Issue.find().sort({ createdAt: -1 });
+	res.json(issues);
+});
 
-      if (!updatedIssue) {
-        return res.status(404).json({ msg: "Issue not found" });
-      }
+const getIssueById = asyncHandler(async (req, res) => {
+	const issue = await Issue.findById(req.params.id);
+	if (!issue) {
+		const error = new Error('Issue not found');
+		error.statusCode = 404;
+		throw error;
+	}
+	res.json(issue);
+});
 
-      res.json({
-        msg: "Issue updated successfully",
-        issue: updatedIssue,
-      });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+const updateIssue = asyncHandler(async (req, res) => {
+	const { issueType, description, email, bookingReference, status } = req.body;
 
-  // New method specifically for updating status
-  updateStatus: async (req, res) => {
-    try {
-      const { status } = req.body;
+	const updatedIssue = await Issue.findByIdAndUpdate(
+		req.params.id,
+		{ issueType, description, email, bookingReference, status },
+		{ new: true }
+	);
 
-      // Validate status
-      const validStatuses = ["pending", "in-progress", "resolved"];
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ msg: "Invalid status value" });
-      }
+	if (!updatedIssue) {
+		const error = new Error('Issue not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-      const updatedIssue = await Issue.findByIdAndUpdate(
-        req.params.id,
-        { status },
-        { new: true },
-      );
+	res.json({
+		message: 'Issue updated successfully',
+		issue: updatedIssue,
+	});
+});
 
-      if (!updatedIssue) {
-        return res.status(404).json({ msg: "Issue not found" });
-      }
+const updateStatus = asyncHandler(async (req, res) => {
+	const { status } = req.body;
 
-      res.json({
-        msg: "Status updated successfully",
-        issue: updatedIssue,
-      });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+	const updatedIssue = await Issue.findByIdAndUpdate(req.params.id, { status }, { new: true });
 
-  deleteIssue: async (req, res) => {
-    try {
-      const deletedIssue = await Issue.findByIdAndDelete(req.params.id);
+	if (!updatedIssue) {
+		const error = new Error('Issue not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-      if (!deletedIssue) {
-        return res.status(404).json({ msg: "Issue not found" });
-      }
+	res.json({
+		message: 'Status updated successfully',
+		issue: updatedIssue,
+	});
+});
 
-      res.json({ msg: "Issue deleted successfully" });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
+const deleteIssue = asyncHandler(async (req, res) => {
+	const deletedIssue = await Issue.findByIdAndDelete(req.params.id);
+
+	if (!deletedIssue) {
+		const error = new Error('Issue not found');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	res.json({ message: 'Issue deleted successfully' });
+});
+
+module.exports = {
+	createIssue,
+	getAllIssues,
+	getIssueById,
+	updateIssue,
+	updateStatus,
+	deleteIssue,
+	// Validators
+	validateCreateIssue,
+	validateUpdateStatus,
+	validateIssueId,
 };
-
-module.exports = issueController;

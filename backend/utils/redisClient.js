@@ -1,86 +1,84 @@
-const Redis = require("redis");
+const Redis = require('redis');
+require('dotenv').config();
 
 class RedisClient {
-  constructor() {
-    this.client = null;
-    this.connect();
-  }
+	constructor() {
+		this.client = null;
+		// Do not await in constructor, verify connection lazily or via init
+		this.connect();
+	}
 
-  async connect() {
-    try {
-      this.client = Redis.createClient({
-        url: process.env.REDIS_URL || "redis://red-cvdgc6d6l47c73941a3g:6379", // Make sure this points to the Redis service in Docker Compose
-      });
-      console.log("🔵 Redis URL from ENV:", process.env.REDIS_URL);
+	async connect() {
+		if (this.client && this.client.isOpen) return;
 
-      this.client.on("error", (err) => {
-        console.error("Redis Client Error:", err);
-      });
-      await this.client.connect();
-    } catch (error) {
-      console.error("Redis connection error:", error);
-    }
-  }
+		
+		// Ensure REDIS_URL is set in .env
+		const redisUrl = process.env.REDIS_URL;
 
-  // Ping check for Redis
-  async ping() {
-    try {
-      const start = process.hrtime.bigint();
-      const result = await this.client.ping();
-      const latency = Number(process.hrtime.bigint() - start) / 1_000_000;
-      return { success: result === "PONG", latency };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
+		if (!redisUrl) {
+			console.error('❌ Redis Error: REDIS_URL is not defined in environment variables.');
+			return;
+		}
 
-  async get(key) {
-    try {
-      if (!this.client.isOpen) {
-        await this.connect();
-      }
-      return await this.client.get(key);
-    } catch (error) {
-      console.error("Redis get error:", error);
-      throw error;
-    }
-  }
+		try {
+			this.client = Redis.createClient({
+				url: redisUrl,
+			});
 
-  async set(key, value, ...args) {
-    try {
-      if (!this.client.isOpen) {
-        await this.connect();
-      }
-      return await this.client.set(key, value, ...args);
-    } catch (error) {
-      console.error("Redis set error:", error);
-      throw error;
-    }
-  }
+			this.client.on('error', (err) => {
+				console.error('Redis Client Error:', err);
+			});
 
-  async del(key) {
-    try {
-      if (!this.client.isOpen) {
-        await this.connect();
-      }
-      return await this.client.del(key);
-    } catch (error) {
-      console.error("Redis del error:", error);
-      throw error;
-    }
-  }
+			this.client.on('connect', () => {
+				console.log('🔵 Connected to Redis');
+			});
 
-  async storeToken(userId, token, expiryTime) {
-    try {
-      if (!this.client.isOpen) {
-        await this.connect();
-      }
-      return await this.client.set(`token:${userId}`, token, "EX", expiryTime);
-    } catch (error) {
-      console.error("Redis store token error:", error);
-      throw error;
-    }
-  }
+			await this.client.connect();
+		} catch (error) {
+			console.error('Redis connection initial error:', error);
+		}
+	}
+
+	async ensureConnection() {
+		if (!this.client?.isOpen) {
+			await this.connect();
+		}
+	}
+
+	async ping() {
+		try {
+			await this.ensureConnection();
+			if (!this.client?.isOpen) return { success: false, error: 'Redis not connected' };
+
+			const start = process.hrtime.bigint();
+			const result = await this.client.ping();
+			const latency = Number(process.hrtime.bigint() - start) / 1_000_000;
+
+			return { success: result === 'PONG', latency };
+		} catch (error) {
+			return { success: false, error: error.message };
+		}
+	}
+
+	async get(key) {
+		await this.ensureConnection();
+		return await this.client.get(key);
+	}
+
+	async set(key, value, ...args) {
+		await this.ensureConnection();
+		return await this.client.set(key, value, ...args);
+	}
+
+	async del(key) {
+		await this.ensureConnection();
+		return await this.client.del(key);
+	}
+
+	async storeToken(userId, token, expiryTime) {
+		await this.ensureConnection();
+		return await this.client.set(`token:${userId}`, token, 'EX', expiryTime);
+	}
 }
 
 module.exports = new RedisClient();

@@ -1,157 +1,126 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import FormInput from "../components/FormInput";
-import AuthButton from "../components/AuthButton";
-import collegeBuilding from "../assets/collegeBuilding.jpg";
-import Message from "../components/Error_successMessage"; // Import the Message component
-import axios from "axios";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import FormInput from '../components/common/FormInput';
+import AuthButton from '../components/auth/AuthButton';
+import collegeBuilding from '../assets/collegeBuilding.jpg';
+import Message from "../components/common/Error_successMessage";
+import useAuth from '../hooks/useAuth';
 
 const ResetPasswordPage = () => {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(""); // Clear previous error
-    setSuccess(""); // Clear previous success
-    setIsSubmitting(true);
+	// Use custom hook
+	const { isLoading, error, successMessage, resetPassword, setError, setSuccessMessage } =
+		useAuth();
 
-    // Retrieve stored email from localStorage inside handleSubmit
-    const storedEmail = localStorage.getItem("email");
+	const [newPassword, setNewPassword] = useState('');
+	const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
-    if (!confirmNewPassword || !newPassword) {
-      setError("All fields are required");
-      setIsSubmitting(false);
-      return;
-    }
+	const handleSubmit = async (e) => {
+		e.preventDefault();
 
-    if (newPassword !== confirmNewPassword) {
-      setError("Passwords do not match");
-      setIsSubmitting(false);
-      return;
-    }
+		// Reset UI messages
+		if (error) setError('');
+		if (successMessage) setSuccessMessage('');
 
-    if (!storedEmail) {
-      setError("Unable to retrieve email. Please try again.");
-      setIsSubmitting(false);
-      return;
-    }
+		const storedEmail = localStorage.getItem('email');
 
-    try {
-      const response = await axios.put(
-        "http://localhost:5000/api/settings/reset-password",
-        {
-          email: storedEmail,
-          newPassword,
-          confirmNewPassword,
-        },
-      );
+		// Local Validation
+		if (!newPassword || !confirmNewPassword) {
+			setError('All fields are required');
+			return;
+		}
 
-      if (response.status === 200) {
-        setSuccess(response.data.message || "Password reset successfully");
-        localStorage.removeItem("email"); // Clear the email after resetting password
-        setTimeout(() => navigate("/login"), 2000); // Redirect after 2 seconds
-      }
-    } catch (error) {
-      console.error("API error:", error);
-      if (error.response) {
-        setError(
-          error.response.data.message ||
-            "Something went wrong. Please try again.",
-        );
-      } else {
-        setError("Network error. Please try again.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+		if (newPassword !== confirmNewPassword) {
+			setError('Passwords do not match');
+			return;
+		}
 
-  const handleCancel = () => {
-    localStorage.removeItem("email"); // Clear the email after resetting password
-    navigate("/homepage"); // Redirect to home or any other page you prefer
-  };
+		if (!storedEmail) {
+			setError('Unable to retrieve email. Please try again.');
+			return;
+		}
 
-  return (
-    <section
-      className="min-h-screen"
-      style={{
-        backgroundImage: `url(${collegeBuilding})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="w-full sm:w-[640px] p-10 bg-black bg-opacity-30 shadow-lg rounded-lg flex flex-col">
-          <div className="w-full p-6">
-            <div className="text-center">
-              <h4 className="mb-4 text-4xl font-extrabold text-white">
-                Reset Password
-              </h4>
-              <p className="mt-2 text-sm text-white">
-                Please enter your new password and confirm it to reset your
-                credentials.
-              </p>
-            </div>
+		// Call hook to reset password
+		// The hook handles the API call, success message, and redirection to login
+		await resetPassword(storedEmail, newPassword, confirmNewPassword);
 
-            <div className="mt-5">
-              <form onSubmit={handleSubmit}>
-                <FormInput
-                  type="password"
-                  name="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  label="New Password"
-                />
-                <FormInput
-                  type="password"
-                  name="confirmNewPassword"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  label="Confirm New Password"
-                />
+		// Optional: Clean up email from storage upon success
+		// Note: Logic continues in the hook with a timeout for redirection
+		if (!error) {
+			localStorage.removeItem('email');
+		}
+	};
 
-                <div className="text-center">
-                  {error && (
-                    <Message
-                      message={error}
-                      type="error"
-                      onClose={() => setError("")}
-                    />
-                  )}
-                  {success && (
-                    <Message
-                      message={success}
-                      type="success"
-                      onClose={() => setSuccess("")}
-                    />
-                  )}
-                </div>
+	const handleCancel = () => {
+		localStorage.removeItem('email'); // Clear the email
+		navigate('/homepage');
+	};
 
-                <div className="flex justify-between mt-4">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="mr-2 w-5/12 py-2 px-4 bg-gradient-grayToRight hover:bg-gradient-grayToLeft text-white rounded-md"
-                  >
-                    Cancel
-                  </button>
-                  <AuthButton
-                    isSubmitting={isSubmitting}
-                    label="Reset Password"
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+	return (
+		<section
+			className='min-h-screen'
+			style={{
+				backgroundImage: `url(${collegeBuilding})`,
+				backgroundSize: 'cover',
+				backgroundPosition: 'center',
+			}}
+		>
+			<div className='min-h-screen flex justify-center items-center'>
+				<div className='w-full sm:w-[640px] p-10 bg-black bg-opacity-30 shadow-lg rounded-lg flex flex-col'>
+					<div className='w-full p-6'>
+						<div className='text-center'>
+							<h4 className='mb-4 text-4xl font-extrabold text-white'>Reset Password</h4>
+							<p className='mt-2 text-sm text-white'>
+								Please enter your new password and confirm it to reset your credentials.
+							</p>
+						</div>
+
+						<div className='mt-5'>
+							<form onSubmit={handleSubmit}>
+								<FormInput
+									type='password'
+									name='newPassword'
+									value={newPassword}
+									onChange={(e) => setNewPassword(e.target.value)}
+									label='New Password'
+								/>
+								<FormInput
+									type='password'
+									name='confirmNewPassword'
+									value={confirmNewPassword}
+									onChange={(e) => setConfirmNewPassword(e.target.value)}
+									label='Confirm New Password'
+								/>
+
+								<div className='text-center'>
+									{error && <Message message={error} type='error' onClose={() => setError('')} />}
+									{successMessage && (
+										<Message
+											message={successMessage}
+											type='success'
+											onClose={() => setSuccessMessage('')}
+										/>
+									)}
+								</div>
+
+								<div className='flex justify-between mt-4'>
+									<button
+										type='button'
+										onClick={handleCancel}
+										className='mr-2 w-5/12 py-2 px-4 bg-gradient-grayToRight hover:bg-gradient-grayToLeft text-white rounded-md'
+									>
+										Cancel
+									</button>
+									<AuthButton isSubmitting={isLoading} label='Reset Password' />
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	);
 };
 
 export default ResetPasswordPage;

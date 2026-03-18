@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import FormInput from "../components/FormInput";
+import FormInput from '../components/common/FormInput';
 import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";

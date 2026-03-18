@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import HeroSection from "../components/HeroSection";
-import Footer from "../components/footer";
-import Navbar from "../components/Navbar";
+import HeroSection from "../components/layout/HeroSection";
+import Footer from '../components/layout/footer';
+import Navbar from '../components/layout/Navbar';
 
 const LandingPage = () => {
   const navigate = useNavigate();

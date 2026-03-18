@@ -1,91 +1,101 @@
-// controllers/pageController.js
-const Page = require("../models/Pages");
-const R    = require("../utils/response");
+const { body, param } = require('express-validator');
+const Page = require('../models/Pages');
+const asyncHandler = require('../middleware/asyncHandler');
 
-exports.getPage = async (req, res) => {
-  try {
-    const page = await Page.findOne({ slug: req.params.slug })
-      .select("slug title content updatedAt lastUpdatedBy")
-      .populate("lastUpdatedBy", "name email role");
+// Validators
+const validateGetPage = [
+	param('slug')
+		.trim()
+		.notEmpty()
+		.withMessage('Page slug is required')
+		.isSlug()
+		.withMessage('Invalid slug format'),
+];
 
-    if (!page) {
-      // 404 + i18n key
-      return R.send(req, res, 404, "page.errors.notFound");
-    }
+const validateUpdatePage = [
+	param('slug').trim().notEmpty().withMessage('Page slug is required'),
 
-    const lang = req.language || "en";
-    const payload = {
-      exists: true,
-      slug: page.slug,
-      translations: {
-        title:   page.title,
-        content: page.content,
-      },
-      lastUpdated:   page.updatedAt,
-      lastUpdatedBy: page.lastUpdatedBy,
-    };
+	// Validate Nested Objects for Multi-language support
+	body('title.en').trim().notEmpty().withMessage('English title is required'),
+	body('title.he').trim().notEmpty().withMessage('Hebrew title is required'),
+	body('content.en').trim().notEmpty().withMessage('English content is required'),
+	body('content.he').trim().notEmpty().withMessage('Hebrew content is required'),
+];
 
-    return R.send(req, res, 200, null, {}, payload);
-  } catch (error) {
-    console.error("getPage error:", error);
-    return R.send(req, res, 500, "page.errors.serverError", { error: error.message });
-  }
-};
+// Controller Methods
 
-exports.updatePage = async (req, res) => {
-  try {
-    const { title, content } = req.body;
+// Get a page by slug (Public)
+const getPage = asyncHandler(async (req, res) => {
+	const { slug } = req.params;
 
-    // require both EN & HE
-    if (
-      !title       ||
-      !content     ||
-      !title.en    ||
-      !title.he    ||
-      !content.en  ||
-      !content.he
-    ) {
-      return R.send(req, res, 400, "page.errors.missingTranslations");
-    }
+	const page = await Page.findOne({ slug })
+		.select('slug title content updatedAt lastUpdatedBy')
+		.populate('lastUpdatedBy', 'name email role');
 
-    const existingPage = await Page.findOne({ slug: req.params.slug });
+	if (!page) {
+		const error = new Error('Page not found');
+		error.statusCode = 404;
+		throw error;
+	}
 
-    const updateData = {
-      title: {
-        en: title.en,
-        he: title.he,
-      },
-      content: {
-        en: content.en,
-        he: content.he,
-      },
-      lastUpdatedBy: req.user._id,
-    };
+	// Prepare payload matching frontend expectations
+	const payload = {
+		exists: true,
+		slug: page.slug,
+		translations: {
+			title: page.title,
+			content: page.content,
+		},
+		lastUpdated: page.updatedAt,
+		lastUpdatedBy: page.lastUpdatedBy,
+	};
 
-    const page = await Page.findOneAndUpdate(
-      { slug: req.params.slug },
-      updateData,
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
-      }
-    ).populate("lastUpdatedBy", "name email role");
+	res.status(200).json(payload);
+});
 
-    const payload = {
-      slug: page.slug,
-      translations: {
-        title:   page.title,
-        content: page.content,
-      },
-      lastUpdated:   page.updatedAt,
-      lastUpdatedBy: page.lastUpdatedBy,
-    };
+// Create or Update a page (Admin only)
+const updatePage = asyncHandler(async (req, res) => {
+	const { slug } = req.params;
+	const { title, content } = req.body;
 
-    return R.send(req, res, 200, "page.success.updated", {}, payload);
-  } catch (error) {
-    console.error("updatePage error:", error);
-    return R.send(req, res, 500, "page.errors.updateFailed", { error: error.message });
-  }
+	const updateData = {
+		title: {
+			en: title.en,
+			he: title.he,
+		},
+		content: {
+			en: content.en,
+			he: content.he,
+		},
+		lastUpdatedBy: req.user._id,
+	};
+
+	// findOneAndUpdate with upsert: true handles both creation and updates
+	const page = await Page.findOneAndUpdate({ slug }, updateData, {
+		new: true,
+		upsert: true,
+		runValidators: true,
+		setDefaultsOnInsert: true,
+	}).populate('lastUpdatedBy', 'name email role');
+
+	const payload = {
+		slug: page.slug,
+		translations: {
+			title: page.title,
+			content: page.content,
+		},
+		lastUpdated: page.updatedAt,
+		lastUpdatedBy: page.lastUpdatedBy,
+	};
+
+	res.status(200).json(payload);
+});
+
+module.exports = {
+	// Methods
+	getPage,
+	updatePage,
+	// Validators
+	validateGetPage,
+	validateUpdatePage,
 };

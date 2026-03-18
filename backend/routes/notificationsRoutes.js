@@ -1,41 +1,37 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const notificationsController = require("../controllers/notificationsController");
-const authMiddleware = require("../middleware/authMiddleware");
+const notificationsController = require('../controllers/notificationsController');
+const authMiddleware = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
-// GET /api/notifications – get notifications for the authenticated user
-router.get(
-  "/",
-  authMiddleware.requireAuth,
-  notificationsController.getNotifications,
-);
+// Require authentication for all routes
+router.use(authMiddleware.requireAuth);
 
-// PUT /api/notifications/:id/read – mark a specific notification as read
+// GET /api/notifications - Get all
+router.get('/', notificationsController.getNotifications);
+
+// PUT /api/notifications/read-all - Mark all as read
+// Defined BEFORE /:id/read to prevent route conflict
+router.put('/read-all', notificationsController.markAllAsRead);
+
+// PUT /api/notifications/:id/read - Mark single as read
 router.put(
-  "/:id/read",
-  authMiddleware.requireAuth,
-  notificationsController.markAsRead,
+	'/:id/read',
+	notificationsController.validateNotificationId,
+	validateRequest,
+	notificationsController.markAsRead
 );
 
-// PUT /api/notifications/read-all – mark all notifications as read
-router.put(
-  "/read-all",
-  authMiddleware.requireAuth,
-  notificationsController.markAllAsRead,
-);
+// DELETE /api/notifications/clear-all - Delete all
+// Defined BEFORE /:id to prevent "clear-all" being interpreted as an ID
+router.delete('/clear-all', notificationsController.deleteAllNotifications);
 
-// DELETE /api/notifications/clear-all – delete all notifications
+// DELETE /api/notifications/:id - Delete single
 router.delete(
-  "/clear-all",
-  authMiddleware.requireAuth,
-  notificationsController.deleteAllNotifications,
-);
-
-// DELETE /api/notifications/:id – delete a single notification
-router.delete(
-  "/:id",
-  authMiddleware.requireAuth,
-  notificationsController.deleteNotification,
+	'/:id',
+	notificationsController.validateNotificationId,
+	validateRequest,
+	notificationsController.deleteNotification
 );
 
 module.exports = router;
