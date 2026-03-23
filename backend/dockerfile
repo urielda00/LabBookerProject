@@ -4,11 +4,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Use legacy-peer-deps to prevent install errors in old projects
+# Use legacy-peer-deps to prevent install errors
 RUN npm install --legacy-peer-deps
-
-# Optional: Install nodemon globally if you use it for dev
-RUN npm install -g nodemon
 
 COPY . .
 
@@ -17,4 +14,4 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
