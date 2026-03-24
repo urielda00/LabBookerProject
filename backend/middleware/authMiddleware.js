@@ -17,7 +17,7 @@ class AuthMiddleware {
           role: user.role,
         },
         process.env.JWT_ACCESS_SECRET,
-        { expiresIn: "24h" }, // 24 hrs
+        { expiresIn: "24h" },
       );
 
       const refreshToken = jwt.sign(
@@ -25,19 +25,17 @@ class AuthMiddleware {
           userId: user._id,
         },
         process.env.JWT_REFRESH_SECRET,
-        { expiresIn: "7d" }, // 7 days
+        { expiresIn: "7d" },
       );
 
-      // Store refresh token in Redis
       try {
         await redisClient.storeToken(
           user._id.toString(),
           refreshToken,
-          7 * 24 * 60 * 60, // 7 days in seconds
+          7 * 24 * 60 * 60,
         );
       } catch (redisError) {
         console.error("Redis token storage error:", redisError);
-        // Continue even if Redis storage fails
       }
 
       return { accessToken, refreshToken };
@@ -63,7 +61,6 @@ class AuthMiddleware {
       try {
         const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-        // Find user and attach to request
         const user = await User.findById(decoded.userId).select("-password");
         if (!user) {
           return res.status(401).json({ message: "User not found" });
@@ -84,21 +81,52 @@ class AuthMiddleware {
     }
   };
 
-  // Middleware to check user role
+  // Middleware to check user role with root bypass
   requireRole = (roles) => {
     return (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      if (!roles.includes(req.user.role)) {
+      // Root role automatically bypasses any role restriction
+      if (req.user.role === 'root' || roles.includes(req.user.role)) {
+        return next();
+      }
+
+      return res.status(403).json({
+        message: "You do not have permission to perform this action",
+      });
+    };
+  };
+
+  // Middleware to protect root user and prevent manual root role assignment
+  protectRoot = async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+
+      // Prevent any operation on an existing root user
+      if (userId) {
+        const targetUser = await User.findById(userId);
+        if (targetUser && targetUser.role === 'root') {
+          return res.status(403).json({
+            message: "The root user is immutable and cannot be modified or deleted",
+          });
+        }
+      }
+
+      // Prevent setting a user's role to root via API
+      if (role === 'root') {
         return res.status(403).json({
-          message: "You do not have permission to perform this action",
+          message: "Root role can only be assigned via system startup seeding",
         });
       }
 
       next();
-    };
+    } catch (error) {
+      console.error("Protect root middleware error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   };
 
   // Refresh token handler
@@ -111,25 +139,21 @@ class AuthMiddleware {
       }
 
       try {
-        // Verify refresh token
         const decoded = jwt.verify(
           refreshToken,
           process.env.JWT_REFRESH_SECRET,
         );
 
-        // Check if token exists in Redis
         const storedToken = await redisClient.get(`token:${decoded.userId}`);
         if (!storedToken || storedToken !== refreshToken) {
           return res.status(401).json({ message: "Invalid refresh token" });
         }
 
-        // Find user
         const user = await User.findById(decoded.userId);
         if (!user) {
           return res.status(401).json({ message: "User not found" });
         }
 
-        // Generate new tokens
         const tokens = await this.generateTokens(user);
 
         res.json(tokens);
@@ -160,13 +184,9 @@ class AuthMiddleware {
 
       try {
         const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-
-        // Remove refresh token from Redis
         await redisClient.del(`token:${decoded.userId}`);
-
         res.json({ message: "Logged out successfully" });
       } catch (error) {
-        // Even if token verification fails, we'll consider it a successful logout
         res.json({ message: "Logged out successfully" });
       }
     } catch (error) {
@@ -193,12 +213,11 @@ class AuthMiddleware {
         expiresIn: "1h",
       });
 
-      // Store token in Redis
       await redisClient.set(
         `reset:${userId}`,
         token,
         "EX",
-        3600, // 1 hour
+        3600,
       );
 
       return token;
@@ -213,7 +232,6 @@ class AuthMiddleware {
     try {
       const decoded = jwt.verify(token, process.env.JWT_RESET_SECRET);
 
-      // Check if token exists in Redis
       const storedToken = await redisClient.get(`reset:${decoded.userId}`);
       if (!storedToken || storedToken !== token) {
         throw new Error("Invalid or expired reset token");

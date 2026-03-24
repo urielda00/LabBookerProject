@@ -37,8 +37,8 @@ const validateEmailChangeVerify = [
 const validateUpdateRole = [
 	param('userId').isMongoId().withMessage('Invalid User ID'),
 	body('role')
-		.isIn(['user', 'admin', 'manager'])
-		.withMessage('Role must be one of: user, admin, manager'),
+		.isIn(['user', 'admin', 'manager','root'])
+		.withMessage('Role must be one of: user, admin, manager, root'),
 ];
 
 const validateBlockUser = [

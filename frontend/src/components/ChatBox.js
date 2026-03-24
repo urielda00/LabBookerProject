@@ -47,7 +47,9 @@ export default function ChatBox({ user }) {
 
   const currentMessages = messages[channel];
   const unreadInCurrent = channel === 'all' ? unreadInAll : unreadInAdmin;
-  const canType = user.role === 'admin' || (chatEnabled && channel === 'all');
+  
+  // Logical check for permission to type
+  const canType = ['admin', 'root'].includes(user.role) || (chatEnabled && channel === 'all');
 
   // --- Effects ---
 
@@ -126,9 +128,7 @@ export default function ChatBox({ user }) {
         className={`fixed right-4 bottom-4 h-12 w-12 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full shadow-xl transition-all ${
           isOpen ? 'invisible' : 'visible'
         }`}
-        // ARIA: Indicates if the controlled element is expanded
         aria-expanded={isOpen}
-        // ARIA: Connects this button to the chat window ID
         aria-controls='chat-window-container'
         aria-label={isOpen ? t('chat.close') : t('chat.open')}
       >
@@ -144,9 +144,7 @@ export default function ChatBox({ user }) {
       {/* Chat Container */}
       <div
         id='chat-window-container'
-        // ARIA: Defines this as a dialog window
         role='dialog'
-        // ARIA: Points to the title element for the accessible name
         aria-labelledby='chat-heading'
         aria-modal='false'
         className={`bg-white dark:bg-gray-800 shadow-2xl rounded-t-xl flex flex-col border border-gray-200 dark:border-gray-700 transition-all ${
@@ -170,7 +168,6 @@ export default function ChatBox({ user }) {
                   <button
                     key={ch}
                     onClick={() => setChannel(ch)}
-                    // ARIA: Indicates which tab is currently selected
                     role='tab'
                     aria-selected={isActive}
                     aria-controls={`panel-${ch}`}
@@ -200,9 +197,7 @@ export default function ChatBox({ user }) {
         <div
           ref={boxRef}
           onScroll={handleLoadMore}
-          // ARIA: 'log' role tells screen readers this is a dynamic feed (chat)
           role='log'
-          // ARIA: 'polite' means announce new messages when user is idle, don't interrupt
           aria-live='polite'
           id={`panel-${channel}`}
           className='flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900'
@@ -224,13 +219,12 @@ export default function ChatBox({ user }) {
 
                 {/* Message Bubble */}
                 <article className={`flex ${isMe ? 'justify-start' : 'justify-end'} items-start gap-3`}>
-                  {/* Other User Avatar */}
                   {!isMe && (
                     <div className='flex-shrink-0'>
                       {msg.sender.profilePicture ? (
                         <img
                           src={msg.sender.profilePicture}
-                          alt={msg.sender.username} // Keep alt for identification
+                          alt={msg.sender.username}
                           className='w-9 h-9 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow'
                           onError={(e) => {
                             e.currentTarget.src = '/default-avatar.png';
@@ -247,7 +241,6 @@ export default function ChatBox({ user }) {
                     </div>
                   )}
 
-                  {/* Message Content */}
                   <div
                     className={`max-w-[85%] p-3 rounded-xl relative ${
                       isMe
@@ -260,11 +253,11 @@ export default function ChatBox({ user }) {
                         <span className='text-sm font-semibold dark:text-gray-100'>
                           {isMe ? t('chat.you') : msg.sender.username}
                         </span>
-                        {msg.sender.role === 'admin' && (
-                          <span className='text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-200 rounded-full'>
-                            {t('chat.admin')}
-                          </span>
-                        )}
+                        {['admin', 'root'].includes(msg.sender.role) && (
+                       <span className='text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-200 rounded-full'>
+                        {t('chat.admin')}
+                        </span>
+                       )}
                       </div>
                       <time className='text-xs opacity-75 shrink-0 dark:text-gray-300'>
                         {format(new Date(msg.createdAt), 'HH:mm')}
@@ -291,7 +284,6 @@ export default function ChatBox({ user }) {
                     </p>
                   </div>
 
-                  {/* User's Own Avatar */}
                   {isMe && (
                     <div className='flex-shrink-0'>
                       {user.profilePicture ? (
@@ -316,8 +308,8 @@ export default function ChatBox({ user }) {
           })}
         </div>
 
-        {/* Input Area */}
-        {(channel === 'all' || user.role === 'admin') && (
+        {/* Updated Input Area Condition to include 'root' */}
+        {(channel === 'all' || ['admin', 'root'].includes(user.role)) && (
           <div className='p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700'>
             <div className='relative flex items-center gap-2'>
               <div ref={emojiRef}>
@@ -325,7 +317,6 @@ export default function ChatBox({ user }) {
                   onClick={() => setShowEmoji((v) => !v)}
                   className='p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300'
                   aria-label={t('chat.emojiPicker')}
-                  // ARIA: Indicates this button opens a popup
                   aria-haspopup='true'
                   aria-expanded={showEmoji}
                 >
@@ -356,7 +347,6 @@ export default function ChatBox({ user }) {
                 placeholder={
                   channel === 'admin' ? t('chat.adminPlaceholder') : t('chat.publicPlaceholder')
                 }
-                // ARIA: Provides a label for screen readers since there is no visible <label>
                 aria-label={t('chat.typeMessage', { defaultValue: 'Type a message' })}
                 disabled={!canType}
                 className='flex-1 rounded-full px-4 py-2.5 border dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 placeholder-gray-400 dark:placeholder-gray-500'

@@ -10,10 +10,8 @@ import useUserManagement from '../hooks/useUserManagement';
 
 const UserManagement = () => {
 	const { users, loading, pagination, filters, actions } = useUserManagement();
-
 	const { t } = useTranslation();
 
-	// Local state for debouncing
 	const [localSearch, setLocalSearch] = useState(filters.search || '');
 
 	useEffect(() => {
@@ -22,7 +20,6 @@ const UserManagement = () => {
 				actions.setSearch(localSearch);
 			}
 		}, 500);
-
 		return () => clearTimeout(timer);
 	}, [localSearch, actions, filters.search]);
 
@@ -57,7 +54,6 @@ const UserManagement = () => {
 		if (success) setShowDeleteModal(false);
 	};
 
-	// Determine if we are performing a background search (loading but data exists)
 	const isBackgroundLoading = loading && users.length > 0;
 
 	return (
@@ -69,7 +65,6 @@ const UserManagement = () => {
 				transition={{ duration: 0.3 }}
 				className='w-full p-4 sm:p-6 md:p-8 dark:bg-gray-900 transition-colors duration-300 min-h-screen overflow-x-hidden'
 			>
-				{/* Full Screen Loader - Only shows on initial load or empty state */}
 				{loading && users.length === 0 && (
 					<div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
 						<motion.div
@@ -106,7 +101,6 @@ const UserManagement = () => {
 									value={localSearch}
 									onChange={(e) => setLocalSearch(e.target.value)}
 								/>
-								{/* Small spinner inside input for background loading */}
 								{isBackgroundLoading && (
 									<div className='absolute right-2 top-1/2 -translate-y-1/2'>
 										<Loader2 className='w-4 h-4 animate-spin text-green-500' />
@@ -129,18 +123,19 @@ const UserManagement = () => {
 							<option value='user'>{t('userManagement.user')}</option>
 							<option value='admin'>{t('userManagement.admin')}</option>
 							<option value='manager'>{t('userManagement.manager')}</option>
+							<option value='root'>ROOT</option>
 						</select>
 					</motion.form>
 
-					{/* Users Table */}
+					{/* Users Table Container with min-height to prevent jumping */}
 					<motion.div
-						className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-full transition-opacity duration-200 ${
-							isBackgroundLoading ? 'opacity-60' : 'opacity-100'
+						className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-full transition-all duration-500 min-h-[400px] flex flex-col ${
+							isBackgroundLoading ? 'opacity-50 grayscale-[20%]' : 'opacity-100'
 						}`}
 					>
-						<div className='overflow-x-auto max-w-[calc(100vw-2rem)] sm:max-w-full'>
+						<div className='overflow-x-auto flex-grow max-w-[calc(100vw-2rem)] sm:max-w-full'>
 							<table className='w-full'>
-								<thead className='bg-gray-50 dark:bg-gray-700'>
+								<thead className='bg-gray-50 dark:bg-gray-700 sticky top-0 z-10'>
 									<tr>
 										{[
 											t('userManagement.columns.user'),
@@ -159,9 +154,14 @@ const UserManagement = () => {
 									</tr>
 								</thead>
 								<tbody className='divide-y divide-gray-100 dark:divide-gray-700'>
-									<AnimatePresence>
+									<AnimatePresence mode='popLayout'>
 										{users.map((user) => (
 											<motion.tr
+												layout
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+												transition={{ duration: 0.2 }}
 												key={user._id}
 												className='hover:bg-gray-50/50 dark:hover:bg-gray-700/30'
 											>
@@ -198,6 +198,8 @@ const UserManagement = () => {
 																? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
 																: user.role === 'manager'
 																? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+																: user.role === 'root'
+																? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
 																: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
 														}`}
 													>
@@ -205,80 +207,89 @@ const UserManagement = () => {
 													</span>
 												</td>
 												<td className='px-3 sm:px-5 py-2 sm:py-3'>
-													<button
-														onClick={() => {
-															setSelectedUser(user);
-															if (user.cancellationStats?.blockedUntil) {
-																setShowUnblockModal(true);
-															} else {
-																setShowBlockModal(true);
-															}
-														}}
-														className='flex items-center gap-1 text-xs sm:text-sm focus:outline-none'
-													>
-														{user.cancellationStats?.blockedUntil ? (
-															<span className='text-red-600 dark:text-red-400 flex items-center gap-1'>
-																<Ban size={14} className='shrink-0' />
-																<span>{t('userManagement.status.blocked')}</span>
-															</span>
-														) : (
-															<span className='text-emerald-600 dark:text-emerald-400 flex items-center gap-1'>
-																<CheckCircle2 size={14} className='shrink-0' />
-																<span>{t('userManagement.status.active')}</span>
-															</span>
-														)}
-													</button>
+													{user.role === 'root' ? (
+														<div className='flex items-center gap-1 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400'>
+															<CheckCircle2 size={14} className='shrink-0' />
+															<span>{t('userManagement.status.active')}</span>
+														</div>
+													) : (
+														<button
+															onClick={() => {
+																setSelectedUser(user);
+																if (user.cancellationStats?.blockedUntil) {
+																	setShowUnblockModal(true);
+																} else {
+																	setShowBlockModal(true);
+																}
+															}}
+															className='flex items-center gap-1 text-xs sm:text-sm focus:outline-none'
+														>
+															{user.cancellationStats?.blockedUntil ? (
+																<span className='text-red-600 dark:text-red-400 flex items-center gap-1'>
+																	<Ban size={14} className='shrink-0' />
+																	<span>{t('userManagement.status.blocked')}</span>
+																</span>
+															) : (
+																<span className='text-emerald-600 dark:text-emerald-400 flex items-center gap-1'>
+																	<CheckCircle2 size={14} className='shrink-0' />
+																	<span>{t('userManagement.status.active')}</span>
+																</span>
+															)}
+														</button>
+													)}
 												</td>
 												<td className='px-3 sm:px-5 py-2 sm:py-3'>
-													<div className='flex justify-center gap-1 sm:gap-2'>
-														<motion.button
-															whileHover={{ scale: 1.05 }}
-															whileTap={{ scale: 0.95 }}
-															className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-blue-600 dark:text-blue-400'
-															onClick={() => {
-																setSelectedUser(user);
-																setShowRoleModal(true);
-															}}
-														>
-															<Edit size={16} />
-														</motion.button>
-														{user.cancellationStats?.blockedUntil ? (
+													{user.role !== 'root' && (
+														<div className='flex justify-center gap-1 sm:gap-2'>
 															<motion.button
 																whileHover={{ scale: 1.05 }}
 																whileTap={{ scale: 0.95 }}
-																className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-emerald-600 dark:text-emerald-400'
+																className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-blue-600 dark:text-blue-400'
 																onClick={() => {
 																	setSelectedUser(user);
-																	setShowUnblockModal(true);
+																	setShowRoleModal(true);
 																}}
 															>
-																<CircleX size={16} />
+																<Edit size={16} />
 															</motion.button>
-														) : (
+															{user.cancellationStats?.blockedUntil ? (
+																<motion.button
+																	whileHover={{ scale: 1.05 }}
+																	whileTap={{ scale: 0.95 }}
+																	className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-emerald-600 dark:text-emerald-400'
+																	onClick={() => {
+																		setSelectedUser(user);
+																		setShowUnblockModal(true);
+																	}}
+																>
+																	<CircleX size={16} />
+																</motion.button>
+															) : (
+																<motion.button
+																	whileHover={{ scale: 1.05 }}
+																	whileTap={{ scale: 0.95 }}
+																	className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-amber-600 dark:text-amber-400'
+																	onClick={() => {
+																		setSelectedUser(user);
+																		setShowBlockModal(true);
+																	}}
+																>
+																	<Ban size={16} />
+																</motion.button>
+															)}
 															<motion.button
 																whileHover={{ scale: 1.05 }}
 																whileTap={{ scale: 0.95 }}
-																className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-amber-600 dark:text-amber-400'
+																className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-red-600 dark:text-red-400'
 																onClick={() => {
 																	setSelectedUser(user);
-																	setShowBlockModal(true);
+																	setShowDeleteModal(true);
 																}}
 															>
-																<Ban size={16} />
+																<Trash2 size={16} />
 															</motion.button>
-														)}
-														<motion.button
-															whileHover={{ scale: 1.05 }}
-															whileTap={{ scale: 0.95 }}
-															className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-red-600 dark:text-red-400'
-															onClick={() => {
-																setSelectedUser(user);
-																setShowDeleteModal(true);
-															}}
-														>
-															<Trash2 size={16} />
-														</motion.button>
-													</div>
+														</div>
+													)}
 												</td>
 											</motion.tr>
 										))}
@@ -288,6 +299,7 @@ const UserManagement = () => {
 						</div>
 					</motion.div>
 
+					{/* Pagination remains fixed because of min-h on the table container */}
 					<motion.div className='flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 gap-3 flex-shrink-0'>
 						<div className='text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
 							{t('userManagement.pagination.page')} {pagination.page} of {pagination.totalPages}
@@ -311,27 +323,14 @@ const UserManagement = () => {
 					</motion.div>
 				</div>
 
-				<RoleEditModal
-					isOpen={showRoleModal}
-					onClose={() => setShowRoleModal(false)}
-					user={selectedUser}
-					onSave={handleRoleUpdateWrapper}
-					className='z-[100]'
-				/>
-				<BlockUserModal
-					isOpen={showBlockModal}
-					onClose={() => setShowBlockModal(false)}
-					user={selectedUser}
-					onConfirm={handleBlockUserWrapper}
-					className='z-[100]'
-				/>
+				{/* Modals remain the same */}
+				<RoleEditModal isOpen={showRoleModal} onClose={() => setShowRoleModal(false)} user={selectedUser} onSave={handleRoleUpdateWrapper} className='z-[100]' />
+				<BlockUserModal isOpen={showBlockModal} onClose={() => setShowBlockModal(false)} user={selectedUser} onConfirm={handleBlockUserWrapper} className='z-[100]' />
 				<ConfirmationModal
 					isOpen={showUnblockModal}
 					onClose={() => setShowUnblockModal(false)}
 					onConfirm={handleUnblockWrapper}
-					message={`Are you sure you want to unblock ${
-						selectedUser?.name || selectedUser?.username
-					}?`}
+					message={`Are you sure you want to unblock ${selectedUser?.name || selectedUser?.username}?`}
 					confirmText='Unblock'
 					cancelText='Cancel'
 					className='z-[100]'
@@ -340,9 +339,7 @@ const UserManagement = () => {
 					isOpen={showDeleteModal}
 					onClose={() => setShowDeleteModal(false)}
 					onConfirm={handleDeleteWrapper}
-					message={`Are you sure you want to permanently delete ${
-						selectedUser?.name || selectedUser?.username
-					}? This action cannot be undone.`}
+					message={`Are you sure you want to permanently delete ${selectedUser?.name || selectedUser?.username}? This action cannot be undone.`}
 					confirmText='Delete'
 					cancelText='Cancel'
 					confirmColor='red'

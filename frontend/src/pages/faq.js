@@ -92,7 +92,7 @@ const FAQ = () => {
 		);
 	}
 
-	const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+	const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager'|| user?.role === 'root';
 
 	return (
 		<motion.section

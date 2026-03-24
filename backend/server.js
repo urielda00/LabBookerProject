@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 
 // Custom Modules
 const connectDB = require('./config/db');
+const seedRootUser = require('./startup/seed');
 const errorHandler = require('./middleware/errorHandler');
 require('./utils/cron');
 
@@ -19,7 +20,10 @@ const app = express();
 const server = http.createServer(app);
 
 // 2. Database
-connectDB();
+connectDB().then(() => {
+  // 3. Seed Root User
+  seedRootUser();
+});
 
 // 3. Socket.IO Configuration
 const io = socketIo(server, {

@@ -42,10 +42,10 @@ const PageEditor = ({ slug, onUpdate }) => {
 	}, []);
 
 	useEffect(() => {
-		if (user?.role === 'admin') {
-			fetchPage();
-		}
-	}, [slug, user]);
+  if (['admin', 'root'].includes(user?.role)) {
+    fetchPage();
+  }
+}, [slug, user]);
 
 	const fetchPage = async () => {
 		try {

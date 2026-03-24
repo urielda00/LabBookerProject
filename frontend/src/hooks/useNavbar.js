@@ -158,7 +158,7 @@ export const useNavbar = (userInfo, setUserInfo, enableTransparentOnScroll) => {
 			},
 		];
 
-		if (['admin', 'manager'].includes(userInfo?.role)) {
+		if (['admin', 'manager', 'root'].includes(userInfo?.role)) {
 			items.push({
 				label: t('nav.dashboard'),
 				path: '/dashboard',

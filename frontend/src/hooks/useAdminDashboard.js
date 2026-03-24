@@ -39,7 +39,7 @@ const useAdminDashboard = () => {
 
 		try {
 			const parsedUser = JSON.parse(storedUser);
-			if (!['admin', 'manager'].includes(parsedUser?.role)) {
+			if (!['admin', 'manager', 'root'].includes(parsedUser?.role)) {
 				navigate('/homepage');
 				return;
 			}

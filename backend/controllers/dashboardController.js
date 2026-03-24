@@ -87,7 +87,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
 	// Currently Admin and Manager share the same data logic,
 	// but we keep the structure ready for future divergence.
-	if (role === 'admin') {
+	if (role === 'admin' || role === 'root') {
 		stats = await fetchDashboardData();
 		message = 'Admin dashboard stats retrieved successfully';
 	} else if (role === 'manager') {

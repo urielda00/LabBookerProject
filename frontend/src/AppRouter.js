@@ -28,7 +28,7 @@ const RoomGuidelines = lazy(() => import('./pages/roomGuidelines'));
 const AccountSettingsPage = lazy(() => import('./pages/accountSettings'));
 const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage'));
 
-// Admin / Manager
+// Root/Admin / Manager
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const RoomOperationPage = lazy(() => import('./pages/roomOperationPage'));
@@ -75,7 +75,7 @@ const AppRouter = () => {
 		document.documentElement.setAttribute('dir', direction);
 		document.documentElement.setAttribute('lang', currentLang);
 	}, [location.pathname]);
-
+	const rolesArr = ['admin', 'manager','root'];
 	return (
 		// Suspense wraps the routes to handle the lazy loading state
 		<Suspense fallback={<LoadingFallback />}>
@@ -231,11 +231,11 @@ const AppRouter = () => {
 						}
 					/>
 
-					{/* --- Protected Admin/Manager Routes --- */}
+					{/* --- Protected Root/Admin/Manager Routes --- */}
 					<Route
 						path='/dashboard'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<Dashboard />
 								</PageTransition>
@@ -245,7 +245,7 @@ const AppRouter = () => {
 					<Route
 						path='/roomOperationpage'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<RoomOperationPage />
 								</PageTransition>
@@ -255,7 +255,7 @@ const AppRouter = () => {
 					<Route
 						path='/bookingOperationpage'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<BookingOperationPage />
 								</PageTransition>
@@ -265,7 +265,7 @@ const AppRouter = () => {
 					<Route
 						path='/UserManagement'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<UserManagement />
 								</PageTransition>
@@ -275,7 +275,7 @@ const AppRouter = () => {
 					<Route
 						path='/status-page'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<StatusHistoryPage />
 								</PageTransition>
@@ -285,7 +285,7 @@ const AppRouter = () => {
 					<Route
 						path='/configmanagement'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<ConfigManagement />
 								</PageTransition>
@@ -295,7 +295,7 @@ const AppRouter = () => {
 					<Route
 						path='/issue-report'
 						element={
-							<PrivateRoute allowedRoles={['admin', 'manager']}>
+							<PrivateRoute allowedRoles={rolesArr}>
 								<PageTransition>
 									<AllIssues />
 								</PageTransition>

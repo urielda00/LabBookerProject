@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { getDashboardStats } = require('../controllers/dashboardController');
-const authenticate = require('../middleware/authMiddleware'); //
-const roleMiddleware = require('../middleware/roleMiddleware'); //
+const authMiddleware = require('../middleware/authMiddleware');
 
 router.get(
 	'/stats',
-	authenticate.requireAuth,
-	roleMiddleware.checkRole(['admin', 'manager']),
+	authMiddleware.requireAuth,
+	authMiddleware.requireRole(['admin', 'manager']),
 	getDashboardStats
 );
 

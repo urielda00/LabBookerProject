@@ -1,5 +1,6 @@
 const { param } = require('express-validator');
 const Notification = require('../models/Notification');
+const User = require('../models/User'); // Added User model import
 const asyncHandler = require('../middleware/asyncHandler');
 
 // Validators
@@ -7,8 +8,7 @@ const validateNotificationId = [
 	param('id').isMongoId().withMessage('Invalid notification ID format'),
 ];
 
-// helper for internal use (by other controllers)
-// * This is not an express middleware, so it does not use asyncHandler
+// Helper for internal use (by other controllers)
 const createNotification = async (userId, key, params = {}, type = '') => {
 	try {
 		return await Notification.create({
@@ -20,7 +20,22 @@ const createNotification = async (userId, key, params = {}, type = '') => {
 		});
 	} catch (error) {
 		console.error('Error creating internal notification:', error);
-		// We do not throw here to prevent blocking the main flow (e.g. message sending)
+	}
+};
+
+// New helper: Notify all admins and the root user (Option 3)
+const notifyAdmins = async (key, params = {}, type = '') => {
+	try {
+		// Find all users with admin or root roles
+		const admins = await User.find({ role: { $in: ['admin', 'root'] } }).select('_id');
+		
+		const notificationPromises = admins.map(admin => 
+			createNotification(admin._id, key, params, type)
+		);
+		
+		await Promise.all(notificationPromises);
+	} catch (error) {
+		console.error('Error notifying all admins:', error);
 	}
 };
 
@@ -28,14 +43,12 @@ const createNotification = async (userId, key, params = {}, type = '') => {
 const getNotifications = asyncHandler(async (req, res) => {
 	const notifications = await Notification.find({ user: req.user._id }).sort({ createdAt: -1 });
 
-	// Map to DTO
 	const result = notifications.map((n) => ({
 		id: n._id,
 		type: n.type,
 		createdAt: n.createdAt,
 		readAt: n.readAt,
 		isRead: n.isRead,
-		// Assuming req.t exists from i18n middleware
 		message: typeof req.t === 'function' ? req.t(n.key, n.params) : n.key,
 	}));
 
@@ -104,14 +117,12 @@ const deleteAllNotifications = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-	// Utility
 	createNotification,
-	// Methods
+	notifyAdmins, // Export the new helper
 	getNotifications,
 	markAsRead,
 	markAllAsRead,
 	deleteNotification,
 	deleteAllNotifications,
-	// Validators
 	validateNotificationId,
 };

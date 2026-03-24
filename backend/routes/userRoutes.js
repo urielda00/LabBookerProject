@@ -76,14 +76,15 @@ router.post('/cancel-email-change', authMiddleware.requireAuth, userController.c
 router.get(
 	'/admin/users',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin']), // Ensure Array format
+	authMiddleware.requireRole(['admin','root']), // Ensure Array format
 	userController.getAllUsers
 );
 
 router.patch(
 	'/admin/users/:userId/role',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin']),
+	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.protectRoot, // Prevent role changes to/from root
 	userController.validateUpdateRole,
 	validateRequest,
 	userController.updateUserRole
@@ -92,7 +93,8 @@ router.patch(
 router.patch(
 	'/admin/users/:userId/block',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin']),
+	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.protectRoot, // Prevent blocking root user
 	userController.validateBlockUser,
 	validateRequest,
 	userController.blockUser
@@ -101,7 +103,8 @@ router.patch(
 router.patch(
 	'/admin/users/:userId/unblock',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin']),
+	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.protectRoot,
 	userController.validateIdParam,
 	validateRequest,
 	userController.unblockUser
@@ -110,7 +113,8 @@ router.patch(
 router.delete(
 	'/admin/users/:userId',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin']),
+	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.protectRoot, // Prevent deleting root user
 	userController.validateIdParam,
 	validateRequest,
 	userController.deleteUser

@@ -33,7 +33,7 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
 		}
 	}, []);
 
-	const isAdminOrManager = ['admin', 'manager'].includes(user?.role);
+	const isAdminOrManager = ['admin', 'manager', 'root'].includes(user?.role);
 	const [showDashboardSubmenu, setShowDashboardSubmenu] = useState(false);
 
 	// Auto-open submenu if current path is in DASHBOARD_PATHS
@@ -135,22 +135,22 @@ export function Sidebar({ isExpanded, toggleSidebar, isMobile }) {
 									<ProtectedMenuItem
 										path='/dashboard'
 										label={t('sidebar.overview')}
-										allowedRoles={['admin', 'manager']}
+										allowedRoles={['admin', 'manager','root']}
 									/>
 									<ProtectedMenuItem
 										path='/usermanagement'
 										label={t('sidebar.manageUsers')}
-										allowedRoles={['admin']}
+										allowedRoles={['admin','root']}
 									/>
 									<ProtectedMenuItem
 										path='/roomOperationpage'
 										label={t('sidebar.manageRooms')}
-										allowedRoles={['admin', 'manager']}
+										allowedRoles={['admin', 'manager','root']}
 									/>
 									<ProtectedMenuItem
 										path='/bookingOperationpage'
 										label={t('sidebar.manageBookings')}
-										allowedRoles={['admin', 'manager']}
+										allowedRoles={['admin', 'manager','root']}
 									/>
 								</ul>
 							)}

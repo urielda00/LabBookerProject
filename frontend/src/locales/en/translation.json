@@ -409,6 +409,7 @@
 		"searchButton": "Search",
 		"allRoles": "All Roles",
 		"user": "User",
+		"root": "Root",
 		"admin": "Admin",
 		"manager": "Manager",
 		"columns": {

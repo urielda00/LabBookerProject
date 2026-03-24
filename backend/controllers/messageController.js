@@ -37,18 +37,18 @@ const sendMessage = asyncHandler(async (req, res) => {
 	const io = req.app.get('io');
 	const sender = req.user;
 
-	// Check if chat is globally enabled (skip check for admins)
+	// Check if chat is globally enabled (skip check for admins and root)
 	const settings = await ChatSetting.findOne();
 	const isChatEnabled = settings?.enabled ?? true;
 
-	if (!isChatEnabled && sender.role !== 'admin') {
+	if (!isChatEnabled && !['admin', 'root'].includes(sender.role)) {
 		const error = new Error('Chat is currently disabled.');
 		error.statusCode = 403;
 		throw error;
 	}
 
-	// Restrict posting in 'admin' channel
-	if (channel === 'admin' && sender.role !== 'admin') {
+	// Restrict posting in 'admin' channel (Allow admin and root)
+	if (channel === 'admin' && !['admin', 'root'].includes(sender.role)) {
 		const error = new Error('Only admins can post in this channel.');
 		error.statusCode = 403;
 		throw error;
@@ -125,12 +125,12 @@ const getChatSettings = asyncHandler(async (req, res) => {
 	res.status(200).json({ enabled: settings?.enabled ?? true });
 });
 
-// Update global chat settings (Admin only)
+// Update global chat settings (Admin and Root only)
 const updateChatSettings = asyncHandler(async (req, res) => {
 	const { enabled } = req.body;
 
-	// Note: Role check is also handled in the route middleware for extra security
-	if (req.user.role !== 'admin') {
+	// Check permission for both admin and root
+	if (!['admin', 'root'].includes(req.user.role)) {
 		const error = new Error('Forbidden: Admin access required');
 		error.statusCode = 403;
 		throw error;
