@@ -60,7 +60,7 @@ services:
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://redis:6379
-      - MONGO_URL=mongodb://mongo:27017
+      - MONGO_URL=mongodb://mongo:27017/labbooker?replicaSet=rs0
       - MONGO_URI=mongodb://mongo:27017/labbooker?replicaSet=rs0
       - TIMEZONE=Asia/Jerusalem
     # Hot reload: mount source code + use nodemon
