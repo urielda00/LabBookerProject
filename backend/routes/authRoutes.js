@@ -4,12 +4,8 @@ const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
-// Debug route (remove in production)
-if (process.env.NODE_ENV === 'development') {
-	router.get('/debug-verification/:email', authController.debugVerification);
-}
-// Auth routes
 
+// Auth routes
 // signup
 router.post('/signup', authController.validateSignup, validateRequest, authController.signup);
 router.post(

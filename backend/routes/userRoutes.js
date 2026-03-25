@@ -1,31 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
-const asyncHandler = require('../middleware/asyncHandler');
 const validateRequest = require('../middleware/validateRequest');
-const uploadMulter = require('../middleware/multer'); // Import Multer
+const uploadMulter = require('../middleware/multer');
 
 // --- Authentication Routes ---
+// Pointing to authController to use the new Redis/SendGrid logic without breaking frontend paths
+
 router.post(
 	'/send-code',
-	userController.validateEmailRequired,
+	authController.validateLogin, // Use auth validator to match new logic
 	validateRequest,
-	userController.sendVerificationCode
+	authController.login // Redirect to unified login (sends OTP)
 );
 
 router.post(
 	'/verify',
-	userController.validateLoginVerification,
+	authController.validateVerify, // Use auth validator (expects 'email' and 'code')
 	validateRequest,
-	userController.verifyCodeAndLogin
+	authController.verifyLoginCode // Redirect to unified verification
 );
 
 router.post(
 	'/resend-code',
-	userController.validateEmailRequired,
+	authController.validateLogin,
 	validateRequest,
-	userController.resendVerificationCode
+	authController.requestCode // Redirect to unified request code with rate limiting
 );
 
 // --- Protected User Routes ---
@@ -40,7 +42,6 @@ router.get('/count', authMiddleware.requireAuth, userController.getUserCount);
 router.get('/profile', authMiddleware.requireAuth, userController.getUserProfile);
 
 // Update my profile (With File Upload)
-// Note: Multer middleware is added here to process the file BEFORE the controller
 router.put('/profile', authMiddleware.requireAuth, uploadMulter, userController.updateUserProfile);
 
 // --- Email Change Routes ---
@@ -76,15 +77,15 @@ router.post('/cancel-email-change', authMiddleware.requireAuth, userController.c
 router.get(
 	'/admin/users',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.requireRole(['admin','root']),
 	userController.getAllUsers
 );
 
 router.patch(
 	'/admin/users/:userId/role',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin','root']), // Ensure Array format
-	authMiddleware.protectRoot, // Prevent role changes to/from root
+	authMiddleware.requireRole(['admin','root']),
+	authMiddleware.protectRoot,
 	userController.validateUpdateRole,
 	validateRequest,
 	userController.updateUserRole
@@ -93,8 +94,8 @@ router.patch(
 router.patch(
 	'/admin/users/:userId/block',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin','root']), // Ensure Array format
-	authMiddleware.protectRoot, // Prevent blocking root user
+	authMiddleware.requireRole(['admin','root']),
+	authMiddleware.protectRoot,
 	userController.validateBlockUser,
 	validateRequest,
 	userController.blockUser
@@ -103,7 +104,7 @@ router.patch(
 router.patch(
 	'/admin/users/:userId/unblock',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.requireRole(['admin','root']),
 	authMiddleware.protectRoot,
 	userController.validateIdParam,
 	validateRequest,
@@ -113,8 +114,8 @@ router.patch(
 router.delete(
 	'/admin/users/:userId',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['root']), // Ensure Array format
-	authMiddleware.protectRoot, // Prevent deleting root user
+	authMiddleware.requireRole(['root']),
+	authMiddleware.protectRoot,
 	userController.validateIdParam,
 	validateRequest,
 	userController.deleteUser

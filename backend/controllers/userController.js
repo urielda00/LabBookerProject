@@ -1,22 +1,15 @@
 const fs = require('fs');
-const crypto = require('crypto');
 const { body, query, param } = require('express-validator');
 const User = require('../models/User');
 const cloudinary = require('../utils/cloudinary');
-const redisClient = require('../utils/redisClient');
-const authMiddleware = require('../middleware/authMiddleware');
-const { sendVerificationEmail } = require('../utils/emailService');
+const redisClient = require('../config/redisClient'); // Fixed path if needed
+const { sendOTP, verifyOTP } = require('../utils/emailService');
 const notificationsController = require('../controllers/notificationsController');
 const asyncHandler = require('../middleware/asyncHandler');
 
 // --- Validators ---
 
 const validateEmailRequired = [body('email').isEmail().withMessage('Valid email is required')];
-
-const validateLoginVerification = [
-	body('email').isEmail().withMessage('Valid email is required'),
-	body('verificationCode').notEmpty().withMessage('Verification code is required'),
-];
 
 const validateEmailChangeInit = [
 	body('newEmail')
@@ -31,7 +24,9 @@ const validateEmailChangeInit = [
 ];
 
 const validateEmailChangeVerify = [
-	body('verificationCode').notEmpty().withMessage('Verification code is required'),
+	body('verificationCode')
+		.notEmpty()
+		.withMessage('Verification code is required'),
 ];
 
 const validateUpdateRole = [
@@ -50,98 +45,10 @@ const validateBlockUser = [
 
 const validateIdParam = [param('userId').isMongoId().withMessage('Invalid User ID')];
 
-// --- Auth Functions ---
-
-const sendVerificationCode = asyncHandler(async (req, res) => {
-	const { email } = req.body;
-
-	const user = await User.findOne({ email });
-	if (!user) {
-		const error = new Error('user.errors.userNotFound');
-		error.statusCode = 404;
-		throw error;
-	}
-
-	const verificationCode = crypto.randomInt(100000, 999999).toString();
-	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-	user.verificationCode = verificationCode;
-	user.verificationExpires = codeExpiration;
-	await user.save();
-
-	// In a real scenario, you'd send an email here.
-	// Returning code for dev/demo purposes as per original logic.
-	res.status(200).json({
-		message: 'user.success.verificationSent',
-		verificationCode, // Remove in production if sensitive
-		codeExpiration: codeExpiration.toISOString(),
-	});
-});
-
-const verifyCodeAndLogin = asyncHandler(async (req, res) => {
-	const { email, verificationCode } = req.body;
-
-	const user = await User.findOne({
-		email,
-		verificationCode,
-		verificationExpires: { $gt: new Date() },
-	});
-
-	if (!user) {
-		const error = new Error('user.errors.invalidCode');
-		error.statusCode = 401;
-		throw error;
-	}
-
-	// Clear verification code
-	user.verificationCode = null;
-	user.verificationExpires = null;
-	await user.save();
-
-	// Generate tokens
-	const { accessToken, refreshToken } = await authMiddleware.generateTokens(user);
-
-	res.status(200).json({
-		message: 'user.success.loginSuccess',
-		user: {
-			id: user._id,
-			username: user.username,
-			email: user.email,
-			role: user.role,
-		},
-		accessToken,
-		refreshToken,
-	});
-});
-
-const resendVerificationCode = asyncHandler(async (req, res) => {
-	const { email } = req.body;
-
-	const user = await User.findOne({ email });
-	if (!user) {
-		const error = new Error('user.errors.userNotFound');
-		error.statusCode = 404;
-		throw error;
-	}
-
-	const verificationCode = crypto.randomInt(100000, 999999).toString();
-	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
-
-	user.verificationCode = verificationCode;
-	user.verificationExpires = codeExpiration;
-	await user.save();
-
-	res.status(200).json({
-		message: 'user.success.resendSuccess',
-		verificationCode,
-		codeExpiration: codeExpiration.toISOString(),
-	});
-});
-
 // --- Profile & User Data Functions ---
 
 const fetchUsers = asyncHandler(async (req, res) => {
-	const users = await User.find().select('-verificationCode -verificationExpires');
+	const users = await User.find().select('-emailChangeRequest');
 	res.status(200).json({
 		message: 'user.success.usersFetched',
 		users,
@@ -157,7 +64,7 @@ const getUserCount = asyncHandler(async (req, res) => {
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
-	const user = await User.findById(req.user._id).select('-verificationCode -verificationExpires');
+	const user = await User.findById(req.user._id).select('-emailChangeRequest');
 	if (!user) {
 		const error = new Error('user.errors.userNotFound');
 		error.statusCode = 404;
@@ -166,7 +73,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
 	res.status(200).json(user);
 });
 
-// Refactored to assume Multer Middleware runs BEFORE this controller
 const updateUserProfile = asyncHandler(async (req, res) => {
 	const { name, removeImage } = req.body;
 	const user = await User.findById(req.user._id);
@@ -177,7 +83,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 		throw error;
 	}
 
-	// Logic 1: Remove Image
 	if (removeImage === 'true' || removeImage === true) {
 		if (user.profilePicture) {
 			const publicId = user.profilePicture.split('/').pop().split('.')[0];
@@ -186,67 +91,36 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 		user.profilePicture = null;
 	}
 
-	// Logic 2: Upload New Image
 	if (req.file) {
 		try {
-			// If existing picture exists and we are not explicitly removing it,
 			if (user.profilePicture && !removeImage) {
-  const publicId = user.profilePicture.split('/').pop().split('.')[0];
-
-  
-  await cloudinary.uploader.destroy(`profile-pictures/${publicId}`)
-    .catch((error) => {
-      if (process.env.NODE_ENV !== 'production') {
-        // Log the full error object for debugging in dev/test
-        console.error('Cloudinary destruction failed:', error);
-      } else {
-        // Log only the sanitized message in production
-        console.error('Cloudinary destruction failed:', error.message);
-      }
-    });
-}
+				const publicId = user.profilePicture.split('/').pop().split('.')[0];
+				await cloudinary.uploader.destroy(`profile-pictures/${publicId}`).catch(console.error);
+			}
 
 			const result = await cloudinary.uploader.upload(req.file.path, {
 				folder: 'profile-pictures',
 			});
 			user.profilePicture = result.secure_url;
 		} catch (uploadError) {
-			if (process.env.NODE_ENV !== 'production') {
-				console.error('Profile upload error:', uploadError);
-			} else {
-				console.error('Profile upload error:', uploadError.message);
-			}
 			const error = new Error('user.errors.uploadFailed');
 			error.statusCode = 500;
 			throw error;
 		} finally {
-			// Always clean up local file
 			if (fs.existsSync(req.file.path)) {
 				fs.unlinkSync(req.file.path);
 			}
 		}
 	}
 
-	// Logic 3: Update Name
 	if (name) user.name = name;
-
 	await user.save();
 
-	// Notify
 	notificationsController
-  .createNotification(user._id, 'user.notify.profileUpdated', {}, 'profileUpdate')
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create notification:', error);
-    } else {
-      console.error('Failed to create notification:', error.message);
-    }
-  });
+		.createNotification(user._id, 'user.notify.profileUpdated', {}, 'profileUpdate')
+		.catch(console.error);
 
-	// Return clean user object
 	const updatedUser = user.toObject();
-	delete updatedUser.verificationCode;
-	delete updatedUser.verificationExpires;
 	delete updatedUser.emailChangeRequest;
 	delete updatedUser.password;
 
@@ -261,7 +135,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 const checkEmailAvailability = asyncHandler(async (req, res) => {
 	const { email } = req.body;
 	const existingUser = await User.findOne({
-		email,
+		email: email.toLowerCase(),
 		_id: { $ne: req.user._id },
 	});
 
@@ -274,9 +148,11 @@ const checkEmailAvailability = asyncHandler(async (req, res) => {
 const initiateEmailChange = asyncHandler(async (req, res) => {
 	const { newEmail } = req.body;
 	const userId = req.user._id;
+	const currentEmail = req.user.email;
+	const normalizedNewEmail = newEmail.toLowerCase();
 
 	const existingUser = await User.findOne({
-		email: newEmail.toLowerCase(),
+		email: normalizedNewEmail,
 		_id: { $ne: userId },
 	});
 
@@ -286,61 +162,49 @@ const initiateEmailChange = asyncHandler(async (req, res) => {
 		throw error;
 	}
 
-	const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-	const codeExpiration = new Date(Date.now() + 15 * 60 * 1000);
-
-	await redisClient.set(`changeEmail:${userId}`, verificationCode, 'EX', 300);
-	await redisClient.set(`changeEmail:newEmail:${userId}`, newEmail, 'EX', 300);
-
+	// 1. Store only the metadata in DB
 	const user = await User.findById(userId);
-	user.emailChangeRequest = {
-		newEmail: newEmail.toLowerCase(),
-		verificationCode,
-		expiresAt: codeExpiration,
-	};
+	user.emailChangeRequest = { newEmail: normalizedNewEmail };
 	await user.save();
 
-	await sendVerificationEmail(req.user.email, verificationCode);
+	// 2. Store new email in Redis for the verification step
+	await redisClient.set(`pendingEmailChange:${userId}`, normalizedNewEmail, 'EX', 600);
+
+	// 3. Send OTP to the CURRENT email for security
+	await sendOTP(currentEmail, 'emailChange');
 
 	res.status(200).json({
 		message: 'user.success.emailChangeInitiated',
-		email: newEmail,
+		email: normalizedNewEmail,
 	});
 });
 
 const verifyEmailChange = asyncHandler(async (req, res) => {
-	const { verificationCode } = req.body;
-	const userId = req.user._id;
+	const code = req.body.code || req.body.verificationCode; 
+	const userId = req.user._id.toString();
+	const currentEmail = req.user.email.toLowerCase().trim();
 
-	const storedCode = await redisClient.get(`changeEmail:${userId}`);
-	if (!storedCode) {
-		const error = new Error('user.errors.noActiveRequest');
-		error.statusCode = 400;
-		throw error;
-	}
-	if (storedCode !== verificationCode) {
+	// 1. Verify OTP from Redis (checks otp:emailChange:currentEmail)
+	const isCodeValid = await verifyOTP(currentEmail, code, 'emailChange');
+	if (!isCodeValid) {
 		const error = new Error('user.errors.invalidCode');
 		error.statusCode = 400;
 		throw error;
 	}
 
-	const pendingNewEmail = await redisClient.get(`changeEmail:newEmail:${userId}`);
+	// 2. Get pending email from Redis
+	const pendingNewEmail = await redisClient.get(`pendingEmailChange:${userId}`);
 	if (!pendingNewEmail) {
-		const error = new Error('user.errors.emailNotFound');
+		const error = new Error('user.errors.noActiveRequest');
 		error.statusCode = 400;
 		throw error;
 	}
 
 	const user = await User.findById(userId);
-	if (!user) {
-		const error = new Error('user.errors.userNotFound');
-		error.statusCode = 404;
-		throw error;
-	}
-
-	// Double check availability before final commit
+	
+	// 3. Final availability check
 	const emailInUse = await User.findOne({
-		email: pendingNewEmail.toLowerCase(),
+		email: pendingNewEmail,
 		_id: { $ne: userId },
 	});
 	if (emailInUse) {
@@ -349,25 +213,16 @@ const verifyEmailChange = asyncHandler(async (req, res) => {
 		throw error;
 	}
 
-	// Update Email
-	user.email = pendingNewEmail.toLowerCase();
+	// 4. Commit changes
+	user.email = pendingNewEmail;
 	user.emailChangeRequest = null;
 	await user.save();
 
-	// Cleanup Redis
-	await redisClient.del(`changeEmail:${userId}`);
-	await redisClient.del(`changeEmail:newEmail:${userId}`);
+	await redisClient.del(`pendingEmailChange:${userId}`);
 
-	// Notify
 	notificationsController
-  .createNotification(user._id, 'user.notify.emailChanged', {}, 'emailChange')
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create email change notification:', error);
-    } else {
-      console.error('Failed to create email change notification:', error.message);
-    }
-  });
+		.createNotification(user._id, 'user.notify.emailChanged', {}, 'emailChange')
+		.catch(console.error);
 
 	res.status(200).json({
 		message: 'user.success.emailUpdated',
@@ -379,29 +234,12 @@ const verifyEmailChange = asyncHandler(async (req, res) => {
 const cancelEmailChange = asyncHandler(async (req, res) => {
 	const userId = req.user._id;
 	const user = await User.findById(userId);
-
-	if (!user) {
-		const error = new Error('user.errors.userNotFound');
-		error.statusCode = 404;
-		throw error;
+	if (user) {
+		user.emailChangeRequest = null;
+		await user.save();
 	}
 
-	user.emailChangeRequest = null;
-	await user.save();
-
-	await redisClient.del(`changeEmail:${userId}`);
-	await redisClient.del(`changeEmail:newEmail:${userId}`);
-
-	notificationsController
-  .createNotification(user._id, 'user.notify.emailChangeCancelled', {}, 'emailChangeCancel')
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create email change cancel notification:', error);
-    } else {
-      console.error('Failed to create email change cancel notification:', error.message);
-    }
-  });
-
+	await redisClient.del(`pendingEmailChange:${userId}`);
 	res.status(200).json({ message: 'user.success.emailChangeCancelled' });
 });
 
@@ -423,21 +261,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
 	const options = {
 		page: parseInt(page),
 		limit: parseInt(limit),
-		select: '-verificationCode -verificationExpires -emailChangeRequest -__v',
+		select: '-emailChangeRequest -__v',
 		sort: { createdAt: -1 },
-		collation: { locale: 'en', strength: 2 },
 	};
 
 	const result = await User.paginate(query, options);
-
-	res.status(200).json({
-		message: 'user.success.usersFetched',
-		docs: result.docs,
-		total: result.totalDocs,
-		limit: result.limit,
-		page: result.page,
-		totalPages: result.totalPages,
-	});
+	res.status(200).json(result);
 });
 
 const updateUserRole = asyncHandler(async (req, res) => {
@@ -450,124 +279,54 @@ const updateUserRole = asyncHandler(async (req, res) => {
 		throw error;
 	}
 
-	const user = await User.findByIdAndUpdate(
-		userId,
-		{ role },
-		{ new: true, runValidators: true }
-	).select('-verificationCode -verificationExpires');
-
+	const user = await User.findByIdAndUpdate(userId, { role }, { new: true });
 	if (!user) {
 		const error = new Error('user.errors.userNotFound');
 		error.statusCode = 404;
 		throw error;
 	}
 
-	notificationsController
-  .createNotification(user._id, 'user.notify.roleUpdated', { role }, 'roleUpdate')
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create role update notification:', error);
-    } else {
-      console.error('Failed to create role update notification:', error.message);
-    }
-  });
-
-	res.status(200).json({
-		message: 'user.success.roleUpdated',
-		role,
-		user,
-	});
+	res.status(200).json({ message: 'user.success.roleUpdated', role, user });
 });
 
 const blockUser = asyncHandler(async (req, res) => {
 	const { userId } = req.params;
 	const { blockDuration } = req.body;
+	const blockUntil = new Date(Date.now() + blockDuration * 3600000);
 
-	if (userId === req.user._id.toString()) {
-		const error = new Error('user.errors.selfAction');
-		error.statusCode = 400;
-		throw error;
-	}
-
-	const user = await User.findById(userId);
+	const user = await User.findByIdAndUpdate(userId, { 'cancellationStats.blockedUntil': blockUntil });
 	if (!user) {
 		const error = new Error('user.errors.userNotFound');
 		error.statusCode = 404;
 		throw error;
 	}
 
-	const blockUntil = new Date(Date.now() + blockDuration * 60 * 60 * 1000);
-	user.cancellationStats.blockedUntil = blockUntil;
-	await user.save();
-
-	notificationsController
-  .createNotification(
-    user._id,
-    'user.notify.accountBlocked',
-    { date: blockUntil.toLocaleDateString() },
-    'accountBlocked'
-  )
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create account block notification:', error);
-    } else {
-      console.error('Failed to create account block notification:', error.message);
-    }
-  });
-
-	res.status(200).json({
-		message: 'user.success.accountBlocked',
-		date: blockUntil.toLocaleDateString('en-IL'),
-	});
+	res.status(200).json({ message: 'user.success.accountBlocked', date: blockUntil.toLocaleDateString('en-IL') });
 });
 
 const unblockUser = asyncHandler(async (req, res) => {
 	const { userId } = req.params;
-	const user = await User.findById(userId);
-
+	const user = await User.findByIdAndUpdate(userId, { 'cancellationStats.blockedUntil': null });
 	if (!user) {
 		const error = new Error('user.errors.userNotFound');
 		error.statusCode = 404;
 		throw error;
 	}
-
-	user.cancellationStats.blockedUntil = null;
-	await user.save();
-
-	notificationsController
-  .createNotification(user._id, 'user.notify.accountUnblocked', {}, 'accountUnblocked')
-  .catch((error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Failed to create account unblock notification:', error);
-    } else {
-      console.error('Failed to create account unblock notification:', error.message);
-    }
-  });
-
 	res.status(200).json({ message: 'user.success.accountUnblocked' });
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
 	const { userId } = req.params;
-
-	if (userId === req.user._id.toString()) {
-		const error = new Error('user.errors.selfAction');
-		error.statusCode = 400;
-		throw error;
-	}
-
 	const user = await User.findByIdAndDelete(userId);
 	if (!user) {
 		const error = new Error('user.errors.userNotFound');
 		error.statusCode = 404;
 		throw error;
 	}
-
 	res.status(200).json({ message: 'user.success.userDeleted' });
 });
 
 module.exports = {
-	// Methods
 	blockUser,
 	fetchUsers,
 	deleteUser,
@@ -579,14 +338,9 @@ module.exports = {
 	updateUserProfile,
 	verifyEmailChange,
 	cancelEmailChange,
-	verifyCodeAndLogin,
 	initiateEmailChange,
-	sendVerificationCode,
-	resendVerificationCode,
 	checkEmailAvailability,
-	// Validators
 	validateEmailRequired,
-	validateLoginVerification,
 	validateEmailChangeInit,
 	validateEmailChangeVerify,
 	validateUpdateRole,
