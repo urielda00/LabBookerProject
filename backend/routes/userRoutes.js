@@ -113,7 +113,7 @@ router.patch(
 router.delete(
 	'/admin/users/:userId',
 	authMiddleware.requireAuth,
-	authMiddleware.requireRole(['admin','root']), // Ensure Array format
+	authMiddleware.requireRole(['root']), // Ensure Array format
 	authMiddleware.protectRoot, // Prevent deleting root user
 	userController.validateIdParam,
 	validateRequest,

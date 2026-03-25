@@ -116,38 +116,45 @@ class AuthMiddleware {
   };
 
   // Middleware to protect root user and prevent manual root role assignment
-  protectRoot = async (req, res, next) => {
-    try {
-      const { userId } = req.params;
-      const { role } = req.body;
+protectRoot = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
 
-      // Prevent any operation on an existing root user
-      if (userId) {
-        const targetUser = await User.findById(userId);
-        if (targetUser && targetUser.role === 'root') {
-          return res.status(403).json({
-            message: "The root user is immutable and cannot be modified or deleted",
-          });
-        }
-      }
-
-      // Prevent setting a user's role to root via API
-      if (role === 'root') {
+    // 1. Prevent any operation on an existing root user
+    if (userId) {
+      const targetUser = await User.findById(userId);
+      if (targetUser && targetUser.role === 'root') {
         return res.status(403).json({
-          message: "Root role can only be assigned via system startup seeding",
+          message: "The root user is immutable and cannot be modified or deleted",
         });
       }
-
-      next();
-    } catch (error) {
-      if(process.env.NODE_ENV !== 'production') {
-        console.error("Protect root middleware error:", error);
-      }else{
-        console.error("Protect root middleware error:", error.message);
-      }
-      res.status(500).json({ message: "Internal server error" });
     }
-  };
+
+    // 2. Prevent setting a user's role to root via API
+    if (role === 'root') {
+      return res.status(403).json({
+        message: "Root role can only be assigned via system startup seeding",
+      });
+    }
+
+    // 3. Only root can assign the admin role
+    if (role === 'admin' && req.user.role !== 'root') {
+      return res.status(403).json({
+        message: "Only the root user has permission to grant admin privileges",
+      });
+    }
+
+    next();
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Protect root middleware error:", error);
+    } else {
+      console.error("Protect root middleware error:", error.message);
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
   // Refresh token handler
   refreshTokens = async (req, res) => {

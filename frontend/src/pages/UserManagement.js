@@ -7,13 +7,16 @@ import RoleEditModal from '../components/modals/RoleEditModal';
 import BlockUserModal from '../components/modals/BlockUserModal';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import useUserManagement from '../hooks/useUserManagement';
+import useAuth from '../hooks/useAuth';
 
 const UserManagement = () => {
 	const { users, loading, pagination, filters, actions } = useUserManagement();
+	const { user: currentUser } = useAuth(); // Get active user context
 	const { t } = useTranslation();
 
 	const [localSearch, setLocalSearch] = useState(filters.search || '');
 
+	// Debounce search input logic
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (localSearch !== filters.search) {
@@ -28,6 +31,13 @@ const UserManagement = () => {
 	const [showBlockModal, setShowBlockModal] = useState(false);
 	const [showUnblockModal, setShowUnblockModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+	// Protect root users and the current user from being managed by themselves
+	const isProtectedUser = (targetUser) => {
+		const isRoot = targetUser.role === 'root';
+		const isSelf = targetUser._id === currentUser?._id || targetUser._id === currentUser?.id;
+		return isRoot || isSelf;
+	};
 
 	const onSearchSubmit = (e) => {
 		e.preventDefault();
@@ -87,6 +97,7 @@ const UserManagement = () => {
 						{t('userManagement.header')}
 					</motion.h1>
 
+					{/* Search and Filters */}
 					<motion.form
 						onSubmit={onSearchSubmit}
 						className='flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6'
@@ -127,7 +138,7 @@ const UserManagement = () => {
 						</select>
 					</motion.form>
 
-					{/* Users Table Container with min-height to prevent jumping */}
+					{/* Users Table */}
 					<motion.div
 						className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-full transition-all duration-500 min-h-[400px] flex flex-col ${
 							isBackgroundLoading ? 'opacity-50 grayscale-[20%]' : 'opacity-100'
@@ -207,7 +218,7 @@ const UserManagement = () => {
 													</span>
 												</td>
 												<td className='px-3 sm:px-5 py-2 sm:py-3'>
-													{user.role === 'root' ? (
+													{isProtectedUser(user) ? (
 														<div className='flex items-center gap-1 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400'>
 															<CheckCircle2 size={14} className='shrink-0' />
 															<span>{t('userManagement.status.active')}</span>
@@ -239,7 +250,7 @@ const UserManagement = () => {
 													)}
 												</td>
 												<td className='px-3 sm:px-5 py-2 sm:py-3'>
-													{user.role !== 'root' && (
+													{!isProtectedUser(user) && (
 														<div className='flex justify-center gap-1 sm:gap-2'>
 															<motion.button
 																whileHover={{ scale: 1.05 }}
@@ -277,17 +288,21 @@ const UserManagement = () => {
 																	<Ban size={16} />
 																</motion.button>
 															)}
-															<motion.button
-																whileHover={{ scale: 1.05 }}
-																whileTap={{ scale: 0.95 }}
-																className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-red-600 dark:text-red-400'
-																onClick={() => {
-																	setSelectedUser(user);
-																	setShowDeleteModal(true);
-																}}
-															>
-																<Trash2 size={16} />
-															</motion.button>
+
+															{/* DELETE BUTTON - ONLY RENDERED FOR ROOT USERS */}
+															{currentUser?.role === 'root' && (
+																<motion.button
+																	whileHover={{ scale: 1.05 }}
+																	whileTap={{ scale: 0.95 }}
+																	className='p-1 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-red-600 dark:text-red-400'
+																	onClick={() => {
+																		setSelectedUser(user);
+																		setShowDeleteModal(true);
+																	}}
+																>
+																	<Trash2 size={16} />
+																</motion.button>
+															)}
 														</div>
 													)}
 												</td>
@@ -299,7 +314,6 @@ const UserManagement = () => {
 						</div>
 					</motion.div>
 
-					{/* Pagination remains fixed because of min-h on the table container */}
 					<motion.div className='flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 gap-3 flex-shrink-0'>
 						<div className='text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
 							{t('userManagement.pagination.page')} {pagination.page} of {pagination.totalPages}
@@ -323,7 +337,7 @@ const UserManagement = () => {
 					</motion.div>
 				</div>
 
-				{/* Modals remain the same */}
+				{/* Modals */}
 				<RoleEditModal isOpen={showRoleModal} onClose={() => setShowRoleModal(false)} user={selectedUser} onSave={handleRoleUpdateWrapper} className='z-[100]' />
 				<BlockUserModal isOpen={showBlockModal} onClose={() => setShowBlockModal(false)} user={selectedUser} onConfirm={handleBlockUserWrapper} className='z-[100]' />
 				<ConfirmationModal

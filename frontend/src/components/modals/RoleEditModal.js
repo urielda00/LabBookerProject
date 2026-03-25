@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import BaseModal from '../common/BaseModal';
 import { User, Shield, Badge, Crown } from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
 
 const RoleEditModal = ({ isOpen, onClose, user, onSave }) => {
+	// Get currently logged-in user data
+	const { user: currentUser } = useAuth();
+	
 	// Initialize state with user's current role
 	const [selectedRole, setSelectedRole] = useState(user?.role);
 
@@ -46,8 +50,12 @@ const RoleEditModal = ({ isOpen, onClose, user, onSave }) => {
 							className='w-full p-3 pl-11 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white dark:bg-gray-800 dark:text-gray-200 transition-colors duration-300'
 						>
 							<option value='user'>User</option>
-							<option value='admin'>Admin</option>
 							<option value='manager'>Manager</option>
+							
+							{/* Show Admin option only if the logged-in user is root */}
+							{currentUser?.role === 'root' && (
+								<option value='admin'>Admin</option>
+							)}
 						</select>
 						
 						{/* Dynamic icon based on selected role */}

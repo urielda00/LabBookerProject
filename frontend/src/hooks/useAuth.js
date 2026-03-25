@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
 const useAuth = () => {
+	const [user, setUser] = useState(() => {
+		const savedUser = localStorage.getItem('user');
+		return savedUser ? JSON.parse(savedUser) : null;
+	});
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [successMessage, setSuccessMessage] = useState('');
@@ -46,6 +50,7 @@ const useAuth = () => {
 			localStorage.setItem('token', data.accessToken);
 			localStorage.setItem('refreshToken', data.refreshToken);
 
+			setUser(data.user);
 			setIsLoading(false);
 			navigate(fromLocation || '/homepage');
 		} catch (err) {
@@ -129,6 +134,7 @@ const useAuth = () => {
 	};
 
 	return {
+		user,
 		isLoading,
 		error,
 		successMessage,
