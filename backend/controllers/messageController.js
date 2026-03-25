@@ -90,7 +90,12 @@ const sendMessage = asyncHandler(async (req, res) => {
 					'mention',
 					messageDoc._id.toString()
 				)
-				.catch((err) => console.error('Notification error:', err));
+				.catch((err) => {
+					if(process.env.NODE_ENV !== 'production') {
+					console.error('Notification error:', err);
+				} else {
+					console.error('Notification error:', err.message);
+				}});
 		}
 	}
 

@@ -107,7 +107,11 @@ const createBookingByNames = asyncHandler(async (req, res) => {
 				'adminBookingCreated'
 			);
 		} catch (e) {
-			console.error('Notif Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		const populatedBooking = await Booking.findById(booking._id)
@@ -214,7 +218,11 @@ const updateBookingStatusByUsername = asyncHandler(async (req, res) => {
 				'bookingUpdateUser'
 			);
 		} catch (e) {
-			console.error('Notify Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		await session.commitTransaction();
@@ -300,7 +308,11 @@ const deleteBookingByUsername = asyncHandler(async (req, res) => {
 				'userCancellation'
 			);
 		} catch (e) {
-			console.error('Notif Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		const updatedBooking = await Booking.findById(booking._id).populate(

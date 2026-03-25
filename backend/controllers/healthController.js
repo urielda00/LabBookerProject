@@ -140,7 +140,11 @@ const logStatus = async () => {
 		await HealthCheck.create({ status, services, timestamp });
 		console.log(`[HEALTH] Status logged: ${status}`);
 	} catch (error) {
-		console.error('[HEALTH] Failed to log status:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('[HEALTH] Failed to log status:', error);
+		}else {
+			console.error('[HEALTH] Failed to log status:', error.message);
+		}
 	}
 };
 

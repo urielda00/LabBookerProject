@@ -54,7 +54,11 @@ const connectDB = async () => {
 
 				console.log('All TTL indexes validated.');
 			} catch (error) {
+				if(process.env.NODE_ENV !== 'production') {
 				console.error('Error setting up TTL indexes:', error);
+				}else{
+					console.error('Error setting up TTL indexes', error.message);
+				}
 			}
 
 			return; // Success - exit the function

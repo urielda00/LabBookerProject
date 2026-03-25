@@ -190,18 +190,32 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 	if (req.file) {
 		try {
 			// If existing picture exists and we are not explicitly removing it,
-			// we should delete the old one to save space (Standard practice)
 			if (user.profilePicture && !removeImage) {
-				const publicId = user.profilePicture.split('/').pop().split('.')[0];
-				await cloudinary.uploader.destroy(`profile-pictures/${publicId}`).catch(console.error);
-			}
+  const publicId = user.profilePicture.split('/').pop().split('.')[0];
+
+  
+  await cloudinary.uploader.destroy(`profile-pictures/${publicId}`)
+    .catch((error) => {
+      if (process.env.NODE_ENV !== 'production') {
+        // Log the full error object for debugging in dev/test
+        console.error('Cloudinary destruction failed:', error);
+      } else {
+        // Log only the sanitized message in production
+        console.error('Cloudinary destruction failed:', error.message);
+      }
+    });
+}
 
 			const result = await cloudinary.uploader.upload(req.file.path, {
 				folder: 'profile-pictures',
 			});
 			user.profilePicture = result.secure_url;
 		} catch (uploadError) {
-			console.error('Profile upload error:', uploadError);
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Profile upload error:', uploadError);
+			} else {
+				console.error('Profile upload error:', uploadError.message);
+			}
 			const error = new Error('user.errors.uploadFailed');
 			error.statusCode = 500;
 			throw error;
@@ -220,8 +234,14 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
 	// Notify
 	notificationsController
-		.createNotification(user._id, 'user.notify.profileUpdated', {}, 'profileUpdate')
-		.catch(console.error);
+  .createNotification(user._id, 'user.notify.profileUpdated', {}, 'profileUpdate')
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create notification:', error);
+    } else {
+      console.error('Failed to create notification:', error.message);
+    }
+  });
 
 	// Return clean user object
 	const updatedUser = user.toObject();
@@ -340,8 +360,14 @@ const verifyEmailChange = asyncHandler(async (req, res) => {
 
 	// Notify
 	notificationsController
-		.createNotification(user._id, 'user.notify.emailChanged', {}, 'emailChange')
-		.catch(console.error);
+  .createNotification(user._id, 'user.notify.emailChanged', {}, 'emailChange')
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create email change notification:', error);
+    } else {
+      console.error('Failed to create email change notification:', error.message);
+    }
+  });
 
 	res.status(200).json({
 		message: 'user.success.emailUpdated',
@@ -367,8 +393,14 @@ const cancelEmailChange = asyncHandler(async (req, res) => {
 	await redisClient.del(`changeEmail:newEmail:${userId}`);
 
 	notificationsController
-		.createNotification(user._id, 'user.notify.emailChangeCancelled', {}, 'emailChangeCancel')
-		.catch(console.error);
+  .createNotification(user._id, 'user.notify.emailChangeCancelled', {}, 'emailChangeCancel')
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create email change cancel notification:', error);
+    } else {
+      console.error('Failed to create email change cancel notification:', error.message);
+    }
+  });
 
 	res.status(200).json({ message: 'user.success.emailChangeCancelled' });
 });
@@ -431,8 +463,14 @@ const updateUserRole = asyncHandler(async (req, res) => {
 	}
 
 	notificationsController
-		.createNotification(user._id, 'user.notify.roleUpdated', { role }, 'roleUpdate')
-		.catch(console.error);
+  .createNotification(user._id, 'user.notify.roleUpdated', { role }, 'roleUpdate')
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create role update notification:', error);
+    } else {
+      console.error('Failed to create role update notification:', error.message);
+    }
+  });
 
 	res.status(200).json({
 		message: 'user.success.roleUpdated',
@@ -463,13 +501,19 @@ const blockUser = asyncHandler(async (req, res) => {
 	await user.save();
 
 	notificationsController
-		.createNotification(
-			user._id,
-			'user.notify.accountBlocked',
-			{ date: blockUntil.toLocaleDateString() },
-			'accountBlocked'
-		)
-		.catch(console.error);
+  .createNotification(
+    user._id,
+    'user.notify.accountBlocked',
+    { date: blockUntil.toLocaleDateString() },
+    'accountBlocked'
+  )
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create account block notification:', error);
+    } else {
+      console.error('Failed to create account block notification:', error.message);
+    }
+  });
 
 	res.status(200).json({
 		message: 'user.success.accountBlocked',
@@ -491,8 +535,14 @@ const unblockUser = asyncHandler(async (req, res) => {
 	await user.save();
 
 	notificationsController
-		.createNotification(user._id, 'user.notify.accountUnblocked', {}, 'accountUnblocked')
-		.catch(console.error);
+  .createNotification(user._id, 'user.notify.accountUnblocked', {}, 'accountUnblocked')
+  .catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create account unblock notification:', error);
+    } else {
+      console.error('Failed to create account unblock notification:', error.message);
+    }
+  });
 
 	res.status(200).json({ message: 'user.success.accountUnblocked' });
 });

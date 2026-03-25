@@ -205,7 +205,11 @@ const deleteRoom = asyncHandler(async (req, res) => {
 	if (room.imageUrl) {
 		const publicId = room.imageUrl.split('/').slice(-1)[0].split('.')[0];
 		await cloudinary.uploader.destroy(publicId).catch((err) => {
-			console.error('Cloudinary delete error:', err);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Cloudinary delete error:', err);
+			} else {
+				console.error('Cloudinary delete error:', err.message);
+			}
 		});
 	}
 

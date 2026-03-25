@@ -26,7 +26,13 @@ module.exports = (app) => {
 	// 3. Standard Middleware
 	app.use(i18nMiddleware);
 	app.use(express.json());
-	app.use(morgan('dev'));
+
+	// Logging Configuration: Use 'dev' only in non-production environments
+	if (process.env.NODE_ENV !== 'production') {
+		app.use(morgan('dev'));
+	} else {
+		app.use(morgan('combined'));
+	}
 
 	// 4. Security Middleware (Helmet)
 	app.use(
@@ -67,7 +73,10 @@ module.exports = (app) => {
 				if (allowedOrigins.indexOf(origin) !== -1) {
 					callback(null, true);
 				} else {
-					console.warn(`Blocked by CORS: ${origin}`);
+					// Gate the warning behind NODE_ENV to prevent log pollution in production
+					if (process.env.NODE_ENV !== 'production') {
+						console.warn(`Blocked by CORS: ${origin}`);
+					}
 					callback(new Error('Not allowed by CORS'));
 				}
 			},

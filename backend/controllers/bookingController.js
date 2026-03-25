@@ -279,7 +279,11 @@ const createBooking = asyncHandler(async (req, res) => {
 				'bookingCreation'
 			);
 		} catch (e) {
-			console.error('Notification Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		const populatedBooking = await Booking.findById(booking._id)
@@ -302,7 +306,11 @@ const createBooking = asyncHandler(async (req, res) => {
 	} catch (error) {
 		await session.abortTransaction();
 		session.endSession();
-		console.error('createBooking - Error:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('createBooking - Error:', error);
+		}else{
+			console.error('createBooking - Error:', error.message);
+		}
 		if (!error.statusCode) error.statusCode = 500;
 		throw error;
 	}
@@ -376,7 +384,11 @@ const deleteBooking = asyncHandler(async (req, res) => {
 				'bookingDeletion'
 			);
 		} catch (e) {
-			console.error('Notif Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		const updatedBooking = await Booking.findById(booking._id)
@@ -394,7 +406,11 @@ const deleteBooking = asyncHandler(async (req, res) => {
 	} catch (error) {
 		await session.abortTransaction();
 		session.endSession();
-		console.error('deleteBooking Error', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('deleteBooking Error:', error);
+		}else{
+			console.error('deleteBooking Error:', error.message);
+		}
 		if (!error.statusCode) error.statusCode = 500;
 		throw error;
 	}
@@ -516,7 +532,11 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
 				);
 			}
 		} catch (e) {
-			console.error('Notif Error', e);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 		}
 
 		await session.commitTransaction();
@@ -695,7 +715,11 @@ const checkInToBooking = asyncHandler(async (req, res) => {
 			'bookingCheckIn'
 		);
 	} catch (e) {
-		console.error('Notif Error', e);
+		if(process.env.NODE_ENV !== 'production') {
+				console.error('Notification Error:', e);
+			}else{
+				console.error('Notification Error:', e.message);
+			}
 	}
 
 	res.status(200).json({
@@ -813,7 +837,11 @@ const updatePastBookingsCron = async () => {
 	} catch (error) {
 		await session.abortTransaction();
 		session.endSession();
-		console.error('Cron Error', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('Cron Error', error);
+		}	else{
+			console.error('Cron Error', error.message);
+		}
 		return { success: false, error: error.message };
 	}
 };

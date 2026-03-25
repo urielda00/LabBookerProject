@@ -14,8 +14,6 @@ const isDbConnected = () => {
 	if (mongoose.connection.readyState === 1) {
 		return true;
 	}
-	// Optional: Uncomment next line if you want to see logs when jobs are skipped
-	// console.log('[CRON] Skipping job - DB not connected');
 	return false;
 };
 
@@ -27,18 +25,28 @@ cron.schedule(
 
 		try {
 			const startTime = moment().tz(TIMEZONE);
-			console.log(`\n--- Starting cron job at ${startTime.format('YYYY-MM-DD HH:mm:ss')} ---`);
+			
+			// Noise reduction: Log only in development
+			if (process.env.NODE_ENV !== 'production') {
+				console.log(`\n--- Starting cron job at ${startTime.format('YYYY-MM-DD HH:mm:ss')} ---`);
+			}
 
 			const result = await bookingController.updatePastBookingsCron();
 
 			const endTime = moment().tz(TIMEZONE);
 			const duration = endTime.diff(startTime, 'seconds');
 
-			console.log(`Result: ${result.message}`);
-			console.log(`--- Completed in ${duration} seconds ---\n`);
+			if (process.env.NODE_ENV !== 'production') {
+				console.log(`Result: ${result.message}`);
+				console.log(`--- Completed in ${duration} seconds ---\n`);
+			}
 		} catch (error) {
-			console.error('Cron job failed:', error);
-			console.log('--- Cron job failed ---\n');
+			// Environment-aware error logging
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Cron job failed:', error);
+			} else {
+				console.error('Cron job failed:', error.message);
+			}
 		}
 	},
 	{
@@ -54,9 +62,9 @@ cron.schedule(
 		if (!isDbConnected()) return;
 
 		const startTime = moment().tz(TIMEZONE);
-		console.log(
-			`\n[CRON] Starting cancellation stats reset at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`
-		);
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`\n[CRON] Starting cancellation stats reset at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`);
+		}
 
 		const session = await mongoose.startSession();
 		try {
@@ -75,16 +83,24 @@ cron.schedule(
 					}
 				).session(session);
 
-				console.log(`[CRON] Reset cancellation stats for ${result.modifiedCount} users`);
+				if (process.env.NODE_ENV !== 'production') {
+					console.log(`[CRON] Reset cancellation stats for ${result.modifiedCount} users`);
+				}
 			});
 		} catch (error) {
-			console.error('[CRON] Cancellation stats reset failed:', error);
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('[CRON] Cancellation stats reset failed:', error);
+			} else {
+				console.error('[CRON] Cancellation stats reset failed:', error.message);
+			}
 		} finally {
 			session.endSession();
 		}
 
 		const duration = moment().tz(TIMEZONE).diff(startTime, 'seconds');
-		console.log(`[CRON] Cancellation stats reset completed in ${duration}s`);
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`[CRON] Cancellation stats reset completed in ${duration}s`);
+		}
 	},
 	{
 		scheduled: true,
@@ -99,14 +115,22 @@ cron.schedule(
 		if (!isDbConnected()) return;
 
 		const startTime = moment().tz(TIMEZONE);
-		console.log(`\n[CRON] Starting health check at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`);
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`\n[CRON] Starting health check at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`);
+		}
 
 		try {
 			await healthController.logStatus();
 			const duration = moment().tz(TIMEZONE).diff(startTime, 'seconds');
-			console.log(`[CRON] Health check logged in ${duration}s`);
+			if (process.env.NODE_ENV !== 'production') {
+				console.log(`[CRON] Health check logged in ${duration}s`);
+			}
 		} catch (error) {
-			console.error('[CRON] Health check logging failed:', error);
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('[CRON] Health check logging failed:', error);
+			} else {
+				console.error('[CRON] Health check logging failed:', error.message);
+			}
 		}
 	},
 	{
@@ -117,16 +141,14 @@ cron.schedule(
 
 // 4. Transfer Requests Cleanup Logic
 async function cleanupTransferRequests() {
-	// Guard clause for manual calls as well
 	if (!isDbConnected()) return;
 
 	const startTime = moment().tz(TIMEZONE);
-	console.log(
-		`\n[CRON] Starting transfer request cleanup at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`
-	);
+	if (process.env.NODE_ENV !== 'production') {
+		console.log(`\n[CRON] Starting transfer request cleanup at ${startTime.format('YYYY-MM-DD HH:mm:ss')}`);
+	}
 
 	try {
-		// Find orphaned transfer requests (requests for bookings that no longer exist)
 		const orphanedRequests = await TransferRequest.aggregate([
 			{
 				$lookup: {
@@ -138,36 +160,42 @@ async function cleanupTransferRequests() {
 			},
 			{
 				$match: {
-					bookingExists: { $size: 0 }, // Bookings that don't exist
+					bookingExists: { $size: 0 },
 				},
 			},
 		]);
 
-		// Delete orphaned requests
 		if (orphanedRequests.length > 0) {
 			const orphanedRequestIds = orphanedRequests.map((req) => req._id);
 			const deleteResult = await TransferRequest.deleteMany({
 				_id: { $in: orphanedRequestIds },
 			});
-			console.log(`Deleted ${deleteResult.deletedCount} orphaned transfer requests`);
+			
+			if (process.env.NODE_ENV !== 'production') {
+				console.log(`Deleted ${deleteResult.deletedCount} orphaned transfer requests`);
+			}
 		}
 
-		// Remove old transfer requests (older than 7 days)
 		const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 		const oldRequestsResult = await TransferRequest.deleteMany({
 			createdAt: { $lt: sevenDaysAgo },
 		});
 
-		console.log(`Deleted ${oldRequestsResult.deletedCount} old transfer requests`);
-
-		const duration = moment().tz(TIMEZONE).diff(startTime, 'seconds');
-		console.log(`[CRON] Transfer request cleanup completed in ${duration}s`);
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`Deleted ${oldRequestsResult.deletedCount} old transfer requests`);
+			const duration = moment().tz(TIMEZONE).diff(startTime, 'seconds');
+			console.log(`[CRON] Transfer request cleanup completed in ${duration}s`);
+		}
 	} catch (error) {
-		console.error('[CRON] Transfer request cleanup failed:', error);
+		if (process.env.NODE_ENV !== 'production') {
+			console.error('[CRON] Transfer request cleanup failed:', error);
+		} else {
+			console.error('[CRON] Transfer request cleanup failed:', error.message);
+		}
 	}
 }
 
-// Schedule Cleanup - Runs daily at midnight (00:00)
+// Schedule Cleanup
 cron.schedule(
 	'0 0 * * *',
 	async () => {
@@ -180,14 +208,16 @@ cron.schedule(
 	}
 );
 
-// Run cleanup once on startup if DB is connected, or wait for connection
 if (mongoose.connection.readyState === 1) {
 	cleanupTransferRequests();
 } else {
 	mongoose.connection.once('open', cleanupTransferRequests);
 }
 
-console.log(`Cron job scheduler started for timezone: ${TIMEZONE}`);
+// Startup log can stay as it runs only once
+if (process.env.NODE_ENV !== 'production') {
+	console.log(`Cron job scheduler started for timezone: ${TIMEZONE}`);
+}
 
 module.exports = {
 	cleanupTransferRequests,

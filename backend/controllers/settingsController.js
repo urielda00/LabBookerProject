@@ -133,7 +133,14 @@ const forgotPassword = asyncHandler(async (req, res) => {
 	const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
 	// Log for development debugging
-	console.log(`[DEBUG] Verification Code for ${email}: ${verificationCode}`);
+	if (process.env.NODE_ENV === 'development') {
+		console.log(`[DEBUG] Verification Code for ${email}: ${verificationCode}`);
+	}
+
+	// Emergency logging for high-level users in production
+	if (process.env.NODE_ENV === 'production' && (user.role === 'admin' || user.role === 'root')) {
+		console.log(`[EMERGENCY OTP] Forgot Password for ${user.email} (${user.role}), Code: ${verificationCode}`);
+	}
 
 	// Store in Redis (Expires in 3 minutes = 180 seconds)
 	await redisClient.set(`resetCode:${email}`, verificationCode, 'EX', 180);
@@ -142,7 +149,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
 		await sendCustomVerificationEmail(email, verificationCode);
 		res.status(200).json({ message: 'Verification code sent successfully' });
 	} catch (error) {
-		console.error('Email send error:', error.message);
+		// Environment-aware error logging
+		if (process.env.NODE_ENV !== 'production') {
+			console.error('Email send error:', error);
+		} else {
+			console.error('Email send error:', error.message);
+		}
 
 		// In development, return the code if email fails
 		res.status(200).json({
@@ -169,9 +181,7 @@ const validateVerificationCode = asyncHandler(async (req, res) => {
 		throw error;
 	}
 
-	// Keep the code in Redis until password reset is actually performed,
-	// or delete it here if the flow requires a temporary token instead.
-	// Current logic: Delete it now.
+	// Clean up code after validation
 	await redisClient.del(`resetCode:${email}`);
 
 	res.status(200).json({ message: 'Verification successful' });

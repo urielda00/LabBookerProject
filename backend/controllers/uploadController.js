@@ -25,7 +25,11 @@ const uploadFile = asyncHandler(async (req, res) => {
 			result = { secure_url: `http://localhost:5000/uploads/${req.file.filename}` };
 		}
 	} catch (error) {
-		console.error('Cloudinary upload error:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('Cloudinary upload error:', error);
+		} else {	
+			console.error('Cloudinary upload error:', error.message);
+		}
 		const uploadError = new Error('Failed to upload file to cloud storage');
 		uploadError.statusCode = 500;
 		throw uploadError;

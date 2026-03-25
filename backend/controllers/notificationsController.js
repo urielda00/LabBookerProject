@@ -19,7 +19,11 @@ const createNotification = async (userId, key, params = {}, type = '') => {
 			isRead: false,
 		});
 	} catch (error) {
-		console.error('Error creating internal notification:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('Error creating internal notification:', error);
+		} else {
+			console.error('Error creating internal notification:', error.message);
+		}
 	}
 };
 
@@ -35,7 +39,11 @@ const notifyAdmins = async (key, params = {}, type = '') => {
 		
 		await Promise.all(notificationPromises);
 	} catch (error) {
-		console.error('Error notifying all admins:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('Error notifying all admins:', error);
+		} else {
+			console.error('Error notifying all admins:', error.message);
+		}
 	}
 };
 

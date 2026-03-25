@@ -1,4 +1,3 @@
-// models/TransferRequest.js
 const mongoose = require("mongoose");
 
 const transferRequestSchema = new mongoose.Schema({
@@ -6,7 +5,7 @@ const transferRequestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: "Booking", 
     required: true,
-    index: true // Add an index for faster lookups
+    index: true 
   },
   fromUser: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -72,7 +71,10 @@ transferRequestSchema.statics.cleanupOrphanedRequests = async function() {
         _id: { $in: orphanedRequestIds }
       });
 
-      console.log(`Deleted ${deleteResult.deletedCount} orphaned transfer requests`);
+      // Log success only in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Deleted ${deleteResult.deletedCount} orphaned transfer requests`);
+      }
     }
 
     // Remove old transfer requests (older than 7 days)
@@ -81,14 +83,22 @@ transferRequestSchema.statics.cleanupOrphanedRequests = async function() {
       createdAt: { $lt: sevenDaysAgo }
     });
 
-    console.log(`Deleted ${oldRequestsResult.deletedCount} old transfer requests`);
+    // Log success only in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Deleted ${oldRequestsResult.deletedCount} old transfer requests`);
+    }
 
     return {
       orphanedRequestsDeleted: orphanedRequests.length,
       oldRequestsDeleted: oldRequestsResult.deletedCount
     };
   } catch (error) {
-    console.error('Transfer request cleanup failed:', error);
+    // Environment-aware error logging
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Transfer request cleanup failed:', error);
+    } else {
+      console.error('Transfer request cleanup failed:', error.message);
+    }
     throw error;
   }
 };

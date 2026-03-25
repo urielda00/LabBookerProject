@@ -19,7 +19,11 @@ const bookingMiddleware = {
 			req.bookingResource = booking;
 			next();
 		} catch (error) {
-			console.error('loadBooking Error:', error);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('loadBooking Error:', error);
+			}else{
+				console.error('loadBooking Error:', error.message);
+			}
 			return R.send(req, res, 500, 'booking.errors.fetchFailed');
 		}
 	},
@@ -41,7 +45,11 @@ const bookingMiddleware = {
 			req.roomResource = room;
 			next();
 		} catch (error) {
-			console.error('loadRoom Error:', error);
+			if(process.env.NODE_ENV !== 'production') {
+				console.error('loadRoom Error:', error);
+			}else{
+				console.error('loadRoom Error:', error.message);
+			}
 			return R.send(req, res, 500, 'booking.errors.fetchFailed');
 		}
 	},

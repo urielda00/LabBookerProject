@@ -6,7 +6,13 @@ const redisClient = redis.createClient({
 });
 
 redisClient.on("connect", () => console.log("Connected to Redis."));
-redisClient.on("error", (err) => console.error("Redis error:", err));
+redisClient.on("error", (err) => {
+  if(process.env.NODE_ENV !== 'production') {
+    console.error("Redis error:", err);
+  }else{
+    console.error("Redis error:", err.message);
+  }
+});
 
 redisClient.connect();
 

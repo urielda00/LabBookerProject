@@ -114,9 +114,15 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.post('remove', async function(doc) {
   try {
     await TransferRequest.deleteMany({ booking: doc._id });
-    console.log(`Deleted transfer requests for booking ${doc._id}`);
+    if(process.env.NODE_ENV !== 'production') {
+      console.log(`Deleted transfer requests for booking ${doc._id}`);
+    }
   } catch (error) {
-    console.error(`Error deleting transfer requests for booking ${doc._id}:`, error);
+    if(process.env.NODE_ENV !== 'production') {
+      console.error(`Error deleting transfer requests for booking ${doc._id}:`, error);
+    }else{
+      console.error(`Error deleting transfer requests for booking ${doc._id}:`, error.message);
+    }
   }
 });
 

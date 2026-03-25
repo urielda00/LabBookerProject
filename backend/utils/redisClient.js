@@ -26,7 +26,11 @@ class RedisClient {
 			});
 
 			this.client.on('error', (err) => {
-				console.error('Redis Client Error:', err);
+				if (process.env.NODE_ENV !== 'production') {
+					console.error('Redis Client Error:', err);
+				} else {				
+						console.error('Redis Client Error:', err.message);
+				}
 			});
 
 			this.client.on('connect', () => {
@@ -35,7 +39,11 @@ class RedisClient {
 
 			await this.client.connect();
 		} catch (error) {
-			console.error('Redis connection initial error:', error);
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Redis connection initial error:', error);
+			} else {
+				console.error('Redis connection initial error:', error.message);
+			}
 		}
 	}
 

@@ -1,26 +1,31 @@
 const R = require('../utils/response');
 
 const errorHandler = (err, req, res, next) => {
-	console.error('Error Log:', err);
+	// Logging Controls
+	if (process.env.NODE_ENV !== 'production') {
+		// Development: All debug info can be printed
+		console.error('Error Log:', err);
+	} else {
+		// Production: Log only sanitized error messages (message only, no stack)
+		console.error('Error Log:', err.message);
+	}
 
 	let statusCode = err.statusCode || 500;
 	let message = err.message || 'server.errors.internal';
 	let data = {};
 
-	// Mongoose: Bad ObjectId
+	// Mongoose & JWT Error Logic
 	if (err.name === 'CastError' && err.kind === 'ObjectId') {
 		statusCode = 404;
 		message = 'resource.errors.notFound';
 	}
 
-	// Mongoose: Duplicate Key (e.g.: email already exists)
 	if (err.code === 11000) {
 		statusCode = 409;
 		message = 'resource.errors.duplicate';
 		data = { field: Object.keys(err.keyValue) };
 	}
 
-	// Mongoose: Validation Error
 	if (err.name === 'ValidationError') {
 		statusCode = 400;
 		message = 'resource.errors.validation';
@@ -29,7 +34,6 @@ const errorHandler = (err, req, res, next) => {
 		};
 	}
 
-	// JWT Errors
 	if (err.name === 'JsonWebTokenError') {
 		statusCode = 401;
 		message = 'auth.errors.invalidToken';
@@ -40,12 +44,11 @@ const errorHandler = (err, req, res, next) => {
 		message = 'auth.errors.tokenExpired';
 	}
 
-	// If headers are already sent, delegate to default express handler
 	if (res.headersSent) {
 		return next(err);
 	}
 
-	// Use R utility if available, otherwise fallback to json
+	// Response - No stack trace included
 	if (R && typeof R.send === 'function') {
 		return R.send(req, res, statusCode, message, {}, data);
 	} else {

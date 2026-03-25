@@ -23,7 +23,11 @@ const roleMiddleware = {
 
         next();
       } catch (error) {
-        console.error("Role middleware error:", error);
+        if(process.env.NODE_ENV !== 'production') {
+          console.error("Role middleware error:", error);
+        }else{
+          console.error("Role middleware error:", error.message);
+        }
         return res.status(500).json({
           message: "Internal server error in role verification",
           error: error.message,

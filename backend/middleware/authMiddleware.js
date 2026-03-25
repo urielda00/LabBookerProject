@@ -35,12 +35,20 @@ class AuthMiddleware {
           7 * 24 * 60 * 60,
         );
       } catch (redisError) {
-        console.error("Redis token storage error:", redisError);
+        if(process.env.NODE_ENV !== 'production') {
+          console.error("Redis token storage error:", redisError);
+        }else{ 
+          console.error("Redis token storage error:", redisError.message);
+        }
       }
 
       return { accessToken, refreshToken };
     } catch (error) {
-      console.error("Token generation error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Token generation error:", error);
+      }else{
+        console.error("Token generation error:", error.message);
+      }
       throw error;
     }
   }
@@ -69,14 +77,22 @@ class AuthMiddleware {
         req.user = user;
         next();
       } catch (error) {
-        console.error("Token verification error:", error);
+        if(process.env.NODE_ENV !== 'production') {
+          console.error("Token verification error:", error);
+        }else{
+          console.error("Token verification error:", error.message);
+        }
         if (error.name === "TokenExpiredError") {
           return res.status(401).json({ message: "Token expired" });
         }
         return res.status(401).json({ message: "Invalid token" });
       }
     } catch (error) {
-      console.error("Auth middleware error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Auth middleware error:", error);
+      }else{
+        console.error("Auth middleware error:", error.message);
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -124,7 +140,11 @@ class AuthMiddleware {
 
       next();
     } catch (error) {
-      console.error("Protect root middleware error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Protect root middleware error:", error);
+      }else{
+        console.error("Protect root middleware error:", error.message);
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -158,14 +178,22 @@ class AuthMiddleware {
 
         res.json(tokens);
       } catch (error) {
-        console.error("Token refresh error:", error);
+        if(process.env.NODE_ENV !== 'production') {
+          console.error("Token refresh error:", error);
+        }else{
+          console.error("Token refresh error:", error.message);
+        }
         if (error.name === "TokenExpiredError") {
           return res.status(401).json({ message: "Refresh token expired" });
         }
         return res.status(401).json({ message: "Invalid refresh token" });
       }
     } catch (error) {
-      console.error("Refresh token error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Refresh token error:", error);
+      }else{
+        console.error("Refresh token error:", error.message);
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -190,7 +218,11 @@ class AuthMiddleware {
         res.json({ message: "Logged out successfully" });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Logout error:", error);
+      }else{
+        console.error("Logout error:", error.message);
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -201,7 +233,11 @@ class AuthMiddleware {
       const decoded = jwt.verify(token, process.env.JWT_EMAIL_SECRET);
       return decoded;
     } catch (error) {
-      console.error("Email verification token error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Email verification token error:", error);
+      }else{
+        console.error("Email verification token error:", error.message);
+      }
       throw error;
     }
   };
@@ -222,7 +258,11 @@ class AuthMiddleware {
 
       return token;
     } catch (error) {
-      console.error("Password reset token generation error:", error);
+        if(process.env.NODE_ENV !== 'production') {
+          console.error("Password reset token generation error:", error);
+        }else{
+          console.error("Password reset token generation error:", error.message);
+        }
       throw error;
     }
   };
@@ -239,7 +279,11 @@ class AuthMiddleware {
 
       return decoded;
     } catch (error) {
-      console.error("Password reset token verification error:", error);
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Password reset token verification error:", error);
+      }else{
+        console.error("Password reset token verification error:", error.message);
+      }
       throw error;
     }
   };

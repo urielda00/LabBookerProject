@@ -47,7 +47,11 @@ const getGrowthStats = async () => {
 			previousMonth: prevMonthStart.format('MMMM YYYY'),
 		};
 	} catch (error) {
-		console.error('Growth stats calculation error:', error);
+		if(process.env.NODE_ENV !== 'production') {
+			console.error('Growth stats calculation error:', error);
+		}else{
+			console.error('Growth stats calculation error:', error.message);
+		}
 		// Return default values so the dashboard still loads partial data
 		return {
 			userGrowth: 0,
